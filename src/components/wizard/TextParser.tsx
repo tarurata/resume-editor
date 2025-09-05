@@ -138,8 +138,8 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
                         <div
                             key={index}
                             className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedSections.has(index)
-                                    ? 'border-primary-500 bg-primary-50'
-                                    : 'border-gray-200 hover:border-gray-300'
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-gray-200 hover:border-gray-300'
                                 }`}
                             onClick={() => toggleSection(index)}
                         >
