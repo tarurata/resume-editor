@@ -1,0 +1,68 @@
+{
+    "title": "Full Stack Developer",
+    "summary": "Full-stack developer specializing in React, Node.js, and cloud technologies. 3+ years experience building scalable applications.",
+    "experience": [
+        {
+            "role": "Full Stack Developer",
+            "organization": "Tech Startup",
+            "location": "Remote",
+            "startDate": "2021-01",
+            "endDate": null,
+            "bullets": [
+                "Built React applications with TypeScript and modern tooling",
+                "Developed Node.js APIs with Express and PostgreSQL",
+                "Deployed applications on AWS with Docker containers",
+                "Led feature development from design to production"
+            ]
+        },
+        {
+            "role": "Frontend Developer",
+            "organization": "Digital Agency",
+            "location": "New York, NY",
+            "startDate": "2019-08",
+            "endDate": "2020-12",
+            "bullets": [
+                "Created responsive web applications using React and Redux",
+                "Collaborated with designers to implement pixel-perfect UIs",
+                "Optimized performance and accessibility for mobile devices"
+            ]
+        }
+    ],
+    "skills": [
+        "React",
+        "Node.js",
+        "TypeScript",
+        "AWS",
+        "PostgreSQL",
+        "Docker"
+    ],
+    "factsInventory": {
+        "skills": [
+            "React",
+            "Node.js",
+            "TypeScript",
+            "AWS",
+            "PostgreSQL",
+            "Docker"
+        ],
+        "organizations": [
+            "Tech Startup",
+            "Digital Agency"
+        ],
+        "roles": [
+            "Full Stack Developer",
+            "Frontend Developer"
+        ],
+        "dates": [
+            {
+                "start": "2021-01",
+                "end": null
+            },
+            {
+                "start": "2019-08",
+                "end": "2020-12"
+            }
+        ],
+        "certifications": []
+    }
+}

@@ -41,6 +41,7 @@ npm run dev
 ## 📖 Documentation
 
 - **[Product Requirements Document (PRD)](docs/PRD.md)** - Complete feature specifications and acceptance criteria
+- **[Schema Documentation](docs/SCHEMA.md)** - Resume data model and JSON schema
 - **[Issue Templates](.github/ISSUE_TEMPLATE/)** - Bug reports and feature requests
 
 ## 🛠️ Technology Stack
@@ -49,6 +50,21 @@ npm run dev
 - **Styling:** Tailwind CSS
 - **Storage:** Browser localStorage (M1), Database (M2)
 - **Export:** Print-css → PDF (M1), Server-side PDF (M2)
+
+## 📊 Data Model
+
+The application uses a canonical JSON format for resume data:
+
+```bash
+# Validate resume schema
+npm run validate-schema
+
+# View sample data
+cat fixtures/sample-resume.json
+```
+
+**Schema Location:** `schemas/resume-schema.json`
+**Sample Data:** `fixtures/` directory
 
 ## 🎯 Roadmap
 
@@ -59,8 +75,9 @@ npm run dev
 ## 🤝 Contributing
 
 1. Check the [PRD](docs/PRD.md) for feature specifications
-2. Use the [issue templates](.github/ISSUE_TEMPLATE/) for bug reports and feature requests
-3. Follow the [Cursor rules](.cursorrules) for development guidelines
+2. Review the [Schema Documentation](docs/SCHEMA.md) for data model details
+3. Use the [issue templates](.github/ISSUE_TEMPLATE/) for bug reports and feature requests
+4. Follow the [Cursor rules](.cursorrules) for development guidelines
 
 ## 📄 License
 
