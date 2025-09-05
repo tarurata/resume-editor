@@ -10,10 +10,19 @@
         "validate-schema": "node scripts/validate-schema.js"
     },
     "dependencies": {
+        "@tiptap/extension-bold": "^3.4.1",
+        "@tiptap/extension-bullet-list": "^3.4.1",
+        "@tiptap/extension-italic": "^3.4.1",
+        "@tiptap/extension-list-item": "^3.4.1",
+        "@tiptap/extension-underline": "^3.4.1",
+        "@tiptap/react": "^3.4.1",
+        "@tiptap/starter-kit": "^3.4.1",
+        "ajv": "^8.17.1",
+        "autoprefixer": "^10.4.21",
+        "msw": "^2.11.1",
         "next": "14.0.0",
         "react": "^18.0.0",
-        "react-dom": "^18.0.0",
-        "ajv": "^8.17.1"
+        "react-dom": "^18.0.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",

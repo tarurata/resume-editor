@@ -4,16 +4,80 @@ import { useState, useEffect } from 'react'
 import { Resume } from '@/types/resume'
 import { loadResumeFromLocalStorage } from '@/lib/storage'
 import Link from 'next/link'
+import { SectionsTree } from '@/components/editor/SectionsTree'
+import { RichEditor } from '@/components/editor/RichEditor'
+import { JobDescriptionPanel } from '@/components/editor/JobDescriptionPanel'
+import { StrategyPresets } from '@/components/editor/StrategyPresets'
+import { DiffPreview } from '@/components/editor/DiffPreview'
+
+export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
+export type SectionId = string
+
+export interface EditorState {
+    selectedSection: SectionId | null
+    originalContent: string
+    currentContent: string
+    hasChanges: boolean
+    jdText: string
+}
 
 export default function EditorPage() {
     const [resume, setResume] = useState<Resume | null>(null)
     const [loading, setLoading] = useState(true)
+    const [editorState, setEditorState] = useState<EditorState>({
+        selectedSection: null,
+        originalContent: '',
+        currentContent: '',
+        hasChanges: false,
+        jdText: ''
+    })
 
     useEffect(() => {
         const loadedResume = loadResumeFromLocalStorage()
         setResume(loadedResume)
         setLoading(false)
     }, [])
+
+    const handleSectionSelect = (sectionId: SectionId, content: string) => {
+        setEditorState(prev => ({
+            ...prev,
+            selectedSection: sectionId,
+            originalContent: content,
+            currentContent: content,
+            hasChanges: false
+        }))
+    }
+
+    const handleContentChange = (content: string) => {
+        setEditorState(prev => ({
+            ...prev,
+            currentContent: content,
+            hasChanges: content !== prev.originalContent
+        }))
+    }
+
+    const handleJdChange = (jdText: string) => {
+        setEditorState(prev => ({
+            ...prev,
+            jdText
+        }))
+    }
+
+    const handleAcceptChanges = () => {
+        setEditorState(prev => ({
+            ...prev,
+            originalContent: prev.currentContent,
+            hasChanges: false
+        }))
+    }
+
+    const handleRejectChanges = () => {
+        setEditorState(prev => ({
+            ...prev,
+            currentContent: prev.originalContent,
+            hasChanges: false
+        }))
+    }
 
     if (loading) {
         return (
@@ -42,98 +106,73 @@ export default function EditorPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-4 py-8">
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Resume Editor</h1>
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-gray-900">Resume Editor</h1>
+                    <div className="flex items-center space-x-4">
+                        {editorState.hasChanges && (
+                            <span className="text-sm text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
+                                Unsaved changes
+                            </span>
+                        )}
                         <Link href="/" className="btn-secondary">
                             ← Back to Wizard
                         </Link>
                     </div>
+                </div>
+            </div>
 
-                    <div className="card">
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your Resume</h2>
+            {/* Main Editor Layout */}
+            <div className="flex h-[calc(100vh-80px)]">
+                {/* Left Panel - Sections Tree */}
+                <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+                    <SectionsTree
+                        resume={resume}
+                        selectedSection={editorState.selectedSection}
+                        onSectionSelect={handleSectionSelect}
+                    />
+                </div>
 
-                        <div className="space-y-6">
-                            {/* Title */}
-                            {resume.title && (
-                                <div>
-                                    <h3 className="text-lg font-medium text-gray-700 mb-2">Title</h3>
-                                    <p className="text-gray-900 text-xl">{resume.title}</p>
-                                </div>
-                            )}
+                {/* Center Panel - Rich Editor */}
+                <div className="flex-1 flex flex-col">
+                    <div className="flex-1 p-6">
+                        <RichEditor
+                            content={editorState.currentContent}
+                            onChange={handleContentChange}
+                            selectedSection={editorState.selectedSection}
+                        />
+                    </div>
 
-                            {/* Summary */}
-                            {resume.summary && (
-                                <div>
-                                    <h3 className="text-lg font-medium text-gray-700 mb-2">Summary</h3>
-                                    <p className="text-gray-900">{resume.summary}</p>
-                                </div>
-                            )}
-
-                            {/* Experience */}
-                            {resume.experience && resume.experience.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-medium text-gray-700 mb-4">Experience</h3>
-                                    <div className="space-y-4">
-                                        {resume.experience.map((exp, index) => (
-                                            <div key={index} className="border-l-4 border-primary-500 pl-4">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h4 className="font-semibold text-gray-900 text-lg">{exp.role}</h4>
-                                                        <p className="text-gray-700">{exp.organization}</p>
-                                                        {exp.location && <p className="text-gray-500 text-sm">{exp.location}</p>}
-                                                        <p className="text-gray-500 text-sm">
-                                                            {exp.startDate} - {exp.endDate || 'Present'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {exp.bullets && exp.bullets.length > 0 && (
-                                                    <ul className="mt-3 space-y-1">
-                                                        {exp.bullets.map((bullet, bulletIndex) => (
-                                                            <li key={bulletIndex} className="text-gray-700 flex items-start">
-                                                                <span className="text-primary-500 mr-2">•</span>
-                                                                {bullet}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Skills */}
-                            {resume.skills && resume.skills.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-medium text-gray-700 mb-4">Skills</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {resume.skills.map((skill, index) => (
-                                            <span
-                                                key={index}
-                                                className="px-3 py-1 bg-primary-100 text-primary-800 text-sm rounded-full"
-                                            >
-                                                {skill}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                    {/* Strategy Presets */}
+                    {editorState.selectedSection && (
+                        <div className="border-t border-gray-200 p-4 bg-gray-50">
+                            <StrategyPresets
+                                sectionId={editorState.selectedSection}
+                                jdText={editorState.jdText}
+                                currentContent={editorState.currentContent}
+                                onContentChange={handleContentChange}
+                            />
                         </div>
-                    </div>
+                    )}
 
-                    <div className="mt-8 text-center">
-                        <p className="text-gray-600 mb-4">
-                            This is a preview of your resume. In a full implementation, you would have editing capabilities here.
-                        </p>
-                        <button
-                            onClick={() => window.print()}
-                            className="btn-primary"
-                        >
-                            Print Resume
-                        </button>
-                    </div>
+                    {/* Diff Preview */}
+                    {editorState.hasChanges && editorState.selectedSection && (
+                        <DiffPreview
+                            originalContent={editorState.originalContent}
+                            currentContent={editorState.currentContent}
+                            onAccept={handleAcceptChanges}
+                            onReject={handleRejectChanges}
+                        />
+                    )}
+                </div>
+
+                {/* Right Panel - Job Description */}
+                <div className="w-80 bg-white border-l border-gray-200">
+                    <JobDescriptionPanel
+                        jdText={editorState.jdText}
+                        onJdChange={handleJdChange}
+                    />
                 </div>
             </div>
         </main>

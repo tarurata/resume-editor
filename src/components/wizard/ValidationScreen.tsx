@@ -20,7 +20,7 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
         const hasExperienceOrSkills = (resume.experience && resume.experience.length > 0) ||
             (resume.skills && resume.skills.length > 0)
 
-        setIsValid(hasTitleOrSummary && hasExperienceOrSkills && validationErrors.length === 0)
+        setIsValid(Boolean(hasTitleOrSummary && hasExperienceOrSkills && validationErrors.length === 0))
     }, [resume, validationErrors])
 
     const handleSaveAndContinue = async () => {
