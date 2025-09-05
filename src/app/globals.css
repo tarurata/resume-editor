@@ -24,4 +24,33 @@
     .card {
         @apply bg-white rounded-lg shadow-md border border-gray-200 p-6;
     }
+
+    /* Rich Editor Styles */
+    .ProseMirror {
+        @apply outline-none min-h-[400px] p-4;
+    }
+
+    .ProseMirror p {
+        @apply mb-2;
+    }
+
+    .ProseMirror ul {
+        @apply list-disc list-inside mb-2;
+    }
+
+    .ProseMirror li {
+        @apply mb-1;
+    }
+
+    .ProseMirror strong {
+        @apply font-semibold;
+    }
+
+    .ProseMirror em {
+        @apply italic;
+    }
+
+    .ProseMirror:focus {
+        @apply outline-none;
+    }
 }
