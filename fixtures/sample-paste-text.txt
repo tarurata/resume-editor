@@ -1,0 +1,27 @@
+John Doe
+Software Engineer
+
+SUMMARY
+Experienced full-stack developer with 5+ years building scalable web applications using React, Node.js, and cloud technologies. Passionate about clean code, user experience, and mentoring junior developers.
+
+EXPERIENCE
+Senior Software Engineer
+TechCorp Inc.
+San Francisco, CA
+2021-03 - Present
+• Led development of microservices architecture serving 1M+ daily active users
+• Improved application performance by 40% through code optimization and caching strategies
+• Mentored 3 junior developers and established code review best practices
+• Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes
+
+Software Engineer
+StartupXYZ
+Remote
+2019-06 - 2021-02
+• Built responsive React applications with TypeScript and Redux
+• Developed RESTful APIs using Node.js and Express
+• Collaborated with design team to implement pixel-perfect UI components
+• Participated in agile development process with 2-week sprints
+
+SKILLS
+JavaScript, TypeScript, React, Node.js, Python, AWS, Docker, PostgreSQL, MongoDB, Git, Agile/Scrum, RESTful APIs
