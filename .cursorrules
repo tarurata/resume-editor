@@ -1,0 +1,54 @@
+# Resume Editor M1 - Cursor Rules
+
+## Project Scope (M1 Only)
+This is a **frontend-only core editor** for a resume editor. Focus on core editing functionality only.
+
+### Technology Stack
+- **Frontend:** Next.js (React), TypeScript, Tailwind CSS
+- **No Backend:** Python backend will be added in M2
+- **Storage:** Browser localStorage only (no database in M1)
+- **Export:** Print-css to PDF (browser-based)
+
+### Core Features (M1)
+- Create from template or paste → build resume.json
+- Select & edit sections with presets and constraints
+- View inline diff; accept/reject; per-section history
+- Export to PDF (print-css)
+- Real-time HTML preview
+- JSON data persistence (localStorage)
+
+### M1 Constraints - DO NOT IMPLEMENT
+- ❌ PDF import functionality (planned for M1.5)
+- ❌ Backend API endpoints
+- ❌ User authentication or login
+- ❌ Cloud storage or database
+- ❌ Server-side PDF rendering
+- ❌ Advanced AI suggestions
+- ❌ Collaboration or sharing features
+- ❌ User accounts or profiles
+
+### Code Guidelines
+- Use TypeScript for all components
+- Follow Next.js 13+ app directory structure
+- Use Tailwind CSS for styling
+- Keep components simple and focused
+- Use localStorage for data persistence
+- Implement proper error handling
+- Write clean, readable code with comments
+
+### File Structure
+```
+src/
+├── app/                 # Next.js app directory
+├── components/          # Reusable components
+├── lib/                # Utilities and helpers
+├── types/              # TypeScript type definitions
+└── styles/             # Global styles
+```
+
+### Development Focus
+- Prioritize core editing functionality
+- Ensure mobile responsiveness
+- Focus on user experience for resume creation
+- Keep dependencies minimal
+- Test PDF export thoroughly
