@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import BulletList from '@tiptap/extension-bullet-list'
 import ListItem from '@tiptap/extension-list-item'
 import { SectionId } from '@/app/editor/page'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface RichEditorProps {
     content: string
@@ -14,6 +14,12 @@ interface RichEditorProps {
 }
 
 export function RichEditor({ content, onChange, selectedSection }: RichEditorProps) {
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -21,6 +27,7 @@ export function RichEditor({ content, onChange, selectedSection }: RichEditorPro
             ListItem,
         ],
         content: content,
+        immediatelyRender: false,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML())
         },
@@ -38,7 +45,7 @@ export function RichEditor({ content, onChange, selectedSection }: RichEditorPro
         }
     }, [content, editor])
 
-    if (!editor) {
+    if (!isMounted || !editor) {
         return (
             <div className="h-full flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
