@@ -9,6 +9,7 @@ import { RichEditor } from '@/components/editor/RichEditor'
 import { JobDescriptionPanel } from '@/components/editor/JobDescriptionPanel'
 import { StrategyPresets } from '@/components/editor/StrategyPresets'
 import { DiffPreview } from '@/components/editor/DiffPreview'
+import { ClientOnly } from '@/components/ClientOnly'
 
 export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
 export type SectionId = string
@@ -137,11 +138,17 @@ export default function EditorPage() {
                 {/* Center Panel - Rich Editor */}
                 <div className="flex-1 flex flex-col">
                     <div className="flex-1 p-6">
-                        <RichEditor
-                            content={editorState.currentContent}
-                            onChange={handleContentChange}
-                            selectedSection={editorState.selectedSection}
-                        />
+                        <ClientOnly fallback={
+                            <div className="h-full flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                            </div>
+                        }>
+                            <RichEditor
+                                content={editorState.currentContent}
+                                onChange={handleContentChange}
+                                selectedSection={editorState.selectedSection}
+                            />
+                        </ClientOnly>
                     </div>
 
                     {/* Strategy Presets */}
