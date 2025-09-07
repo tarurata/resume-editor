@@ -48,3 +48,25 @@ export interface Template {
     description: string;
     data: Resume;
 }
+
+export interface ChangeEntry {
+    id: string;
+    timestamp: Date;
+    sectionId: string;
+    originalContent: string;
+    newContent: string;
+    rationale?: string;
+    action: 'accept' | 'reject' | 'restore';
+}
+
+export interface SectionHistory {
+    sectionId: string;
+    changes: ChangeEntry[];
+    originalContent: string;
+    currentContent: string;
+}
+
+export interface DiffState {
+    viewMode: 'clean' | 'diff';
+    showHistory: boolean;
+}
