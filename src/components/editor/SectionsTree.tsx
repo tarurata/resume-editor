@@ -32,17 +32,19 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect }: Secti
     const getSectionContent = (sectionId: SectionId): string => {
         switch (sectionId) {
             case 'title':
-                return resume.title || ''
+                return `<h1>${resume.title || ''}</h1>`
             case 'summary':
-                return resume.summary || ''
+                return `<p>${resume.summary || ''}</p>`
             case 'skills':
-                return resume.skills?.join(', ') || ''
+                const skillsList = resume.skills?.map(skill => `<li>${skill}</li>`).join('') || ''
+                return `<ul>${skillsList}</ul>`
             default:
                 if (sectionId.startsWith('experience-')) {
                     const index = parseInt(sectionId.split('-')[1])
                     const exp = resume.experience?.[index]
                     if (exp) {
-                        return exp.bullets?.join('\n') || ''
+                        const bulletsList = exp.bullets?.map(bullet => `<li>${bullet}</li>`).join('') || ''
+                        return `<ul>${bulletsList}</ul>`
                     }
                 }
                 return ''
@@ -62,8 +64,8 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect }: Secti
                         <button
                             onClick={() => handleSectionClick('title', getSectionContent('title'))}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === 'title'
-                                    ? 'bg-primary-100 text-primary-800'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-primary-100 text-primary-800'
+                                : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             📄 Title
@@ -75,8 +77,8 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect }: Secti
                         <button
                             onClick={() => handleSectionClick('summary', getSectionContent('summary'))}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === 'summary'
-                                    ? 'bg-primary-100 text-primary-800'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-primary-100 text-primary-800'
+                                : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             📝 Summary
@@ -104,8 +106,8 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect }: Secti
                                             key={index}
                                             onClick={() => handleSectionClick(sectionId, getSectionContent(sectionId))}
                                             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedSection === sectionId
-                                                    ? 'bg-primary-100 text-primary-800'
-                                                    : 'text-gray-600 hover:bg-gray-50'
+                                                ? 'bg-primary-100 text-primary-800'
+                                                : 'text-gray-600 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <div className="truncate">
@@ -124,8 +126,8 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect }: Secti
                         <button
                             onClick={() => handleSectionClick('skills', getSectionContent('skills'))}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === 'skills'
-                                    ? 'bg-primary-100 text-primary-800'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-primary-100 text-primary-800'
+                                : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             🛠️ Skills

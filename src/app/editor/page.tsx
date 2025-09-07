@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Resume } from '@/types/resume'
-import { loadResumeFromLocalStorage } from '@/lib/storage'
+import { Resume, DiffState, ChangeEntry } from '@/types/resume'
+import { loadResumeFromLocalStorage, saveResumeToLocalStorage } from '@/lib/storage'
+import { addChangeToHistory, getSectionHistory } from '@/lib/history'
 import Link from 'next/link'
 import { SectionsTree } from '@/components/editor/SectionsTree'
 import { RichEditor } from '@/components/editor/RichEditor'
 import { JobDescriptionPanel } from '@/components/editor/JobDescriptionPanel'
 import { StrategyPresets } from '@/components/editor/StrategyPresets'
 import { DiffPreview } from '@/components/editor/DiffPreview'
+import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { ClientOnly } from '@/components/ClientOnly'
 
 export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
@@ -20,6 +22,8 @@ export interface EditorState {
     currentContent: string
     hasChanges: boolean
     jdText: string
+    diffState: DiffState
+    sectionHistory: Record<string, string> // sectionId -> original content when first loaded
 }
 
 export default function EditorPage() {
@@ -30,7 +34,9 @@ export default function EditorPage() {
         originalContent: '',
         currentContent: '',
         hasChanges: false,
-        jdText: ''
+        jdText: '',
+        diffState: { viewMode: 'clean', showHistory: false },
+        sectionHistory: {}
     })
 
     useEffect(() => {
@@ -40,13 +46,22 @@ export default function EditorPage() {
     }, [])
 
     const handleSectionSelect = (sectionId: SectionId, content: string) => {
-        setEditorState(prev => ({
-            ...prev,
-            selectedSection: sectionId,
-            originalContent: content,
-            currentContent: content,
-            hasChanges: false
-        }))
+        setEditorState(prev => {
+            // Store the original content for this section if not already stored
+            const sectionHistory = { ...prev.sectionHistory }
+            if (!sectionHistory[sectionId]) {
+                sectionHistory[sectionId] = content
+            }
+
+            return {
+                ...prev,
+                selectedSection: sectionId,
+                originalContent: content,
+                currentContent: content,
+                hasChanges: false,
+                sectionHistory
+            }
+        })
     }
 
     const handleContentChange = (content: string) => {
@@ -65,6 +80,56 @@ export default function EditorPage() {
     }
 
     const handleAcceptChanges = () => {
+        if (!editorState.selectedSection || !resume) return
+
+        // Record the change in history
+        addChangeToHistory(
+            editorState.selectedSection,
+            editorState.originalContent,
+            editorState.currentContent,
+            'accept',
+            'User accepted changes'
+        )
+
+        // Update the resume data
+        const updatedResume = { ...resume }
+        const content = editorState.currentContent
+
+        switch (editorState.selectedSection) {
+            case 'title':
+                // Extract text from HTML
+                updatedResume.title = content.replace(/<[^>]*>/g, '')
+                break
+            case 'summary':
+                updatedResume.summary = content.replace(/<[^>]*>/g, '')
+                break
+            case 'skills':
+                // Extract list items from HTML
+                const skillMatches = content.match(/<li>(.*?)<\/li>/g)
+                if (skillMatches) {
+                    updatedResume.skills = skillMatches.map(match =>
+                        match.replace(/<\/?li>/g, '').trim()
+                    )
+                }
+                break
+            default:
+                if (editorState.selectedSection.startsWith('experience-')) {
+                    const index = parseInt(editorState.selectedSection.split('-')[1])
+                    if (updatedResume.experience?.[index]) {
+                        const bulletMatches = content.match(/<li>(.*?)<\/li>/g)
+                        if (bulletMatches) {
+                            updatedResume.experience[index].bullets = bulletMatches.map(match =>
+                                match.replace(/<\/?li>/g, '').trim()
+                            )
+                        }
+                    }
+                }
+                break
+        }
+
+        setResume(updatedResume)
+        saveResumeToLocalStorage(updatedResume)
+
         setEditorState(prev => ({
             ...prev,
             originalContent: prev.currentContent,
@@ -73,10 +138,71 @@ export default function EditorPage() {
     }
 
     const handleRejectChanges = () => {
+        if (!editorState.selectedSection) return
+
+        // Record the rejection in history
+        addChangeToHistory(
+            editorState.selectedSection,
+            editorState.originalContent,
+            editorState.currentContent,
+            'reject',
+            'User rejected changes'
+        )
+
         setEditorState(prev => ({
             ...prev,
             currentContent: prev.originalContent,
             hasChanges: false
+        }))
+    }
+
+    const handleRestoreOriginal = () => {
+        if (!editorState.selectedSection) return
+
+        const originalContent = editorState.sectionHistory[editorState.selectedSection]
+        if (!originalContent) return
+
+        // Record the restore in history
+        addChangeToHistory(
+            editorState.selectedSection,
+            editorState.currentContent,
+            originalContent,
+            'restore',
+            'User restored to original'
+        )
+
+        setEditorState(prev => ({
+            ...prev,
+            originalContent,
+            currentContent: originalContent,
+            hasChanges: false
+        }))
+    }
+
+    const handleRestoreToChange = (change: ChangeEntry) => {
+        if (!editorState.selectedSection) return
+
+        // Record the restore to specific change in history
+        addChangeToHistory(
+            editorState.selectedSection,
+            editorState.currentContent,
+            change.newContent,
+            'restore',
+            `Restored to change from ${change.timestamp.toLocaleString()}`
+        )
+
+        setEditorState(prev => ({
+            ...prev,
+            originalContent: change.newContent,
+            currentContent: change.newContent,
+            hasChanges: false
+        }))
+    }
+
+    const handleDiffStateChange = (newDiffState: DiffState) => {
+        setEditorState(prev => ({
+            ...prev,
+            diffState: newDiffState
         }))
     }
 
@@ -170,6 +296,19 @@ export default function EditorPage() {
                             currentContent={editorState.currentContent}
                             onAccept={handleAcceptChanges}
                             onReject={handleRejectChanges}
+                            onRestore={handleRestoreOriginal}
+                            diffState={editorState.diffState}
+                            onDiffStateChange={handleDiffStateChange}
+                        />
+                    )}
+
+                    {/* Change History Panel */}
+                    {editorState.selectedSection && (
+                        <ChangeHistoryPanel
+                            sectionId={editorState.selectedSection}
+                            diffState={editorState.diffState}
+                            onDiffStateChange={handleDiffStateChange}
+                            onRestoreToChange={handleRestoreToChange}
                         />
                     )}
                 </div>
