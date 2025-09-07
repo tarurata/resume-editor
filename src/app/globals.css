@@ -54,3 +54,115 @@
         @apply outline-none;
     }
 }
+
+/* Print Styles for PDF Export */
+@page {
+    margin: 0.75in;
+    size: letter;
+}
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 11pt;
+        line-height: 1.4;
+        color: #000;
+        background: white;
+    }
+    
+    .print-resume {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .print-resume h1 {
+        font-size: 24pt;
+        font-weight: bold;
+        margin-bottom: 12pt;
+        page-break-after: avoid;
+    }
+    
+    .print-resume h2 {
+        font-size: 14pt;
+        font-weight: bold;
+        margin-top: 18pt;
+        margin-bottom: 8pt;
+        page-break-after: avoid;
+        border-bottom: 1pt solid #000;
+        padding-bottom: 2pt;
+    }
+    
+    .print-resume h3 {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-top: 12pt;
+        margin-bottom: 4pt;
+        page-break-after: avoid;
+    }
+    
+    .print-resume p {
+        margin-bottom: 6pt;
+        orphans: 2;
+        widows: 2;
+    }
+    
+    .print-resume ul {
+        margin-bottom: 8pt;
+        padding-left: 0;
+    }
+    
+    .print-resume li {
+        margin-bottom: 3pt;
+        break-inside: avoid;
+        orphans: 2;
+        widows: 2;
+    }
+    
+    .print-resume .break-inside-avoid {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .print-resume .break-words {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Ensure sections don't break awkwardly */
+    .print-resume > div {
+        page-break-inside: avoid;
+    }
+    
+    /* Skills section styling for print */
+    .print-resume .flex.flex-wrap {
+        display: block;
+    }
+    
+    .print-resume .flex.flex-wrap span {
+        display: inline-block;
+        background: #f5f5f5 !important;
+        border: 1pt solid #ddd;
+        margin-right: 6pt;
+        margin-bottom: 4pt;
+        padding: 2pt 6pt;
+        border-radius: 3pt;
+        font-size: 10pt;
+    }
+    
+    /* Hide non-printable elements */
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Ensure proper spacing between sections */
+    .print-resume > div:not(:last-child) {
+        margin-bottom: 18pt;
+    }
+}
