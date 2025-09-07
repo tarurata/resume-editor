@@ -72,9 +72,9 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return 'Present'
         const date = new Date(dateStr + '-01')
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short' 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
         })
     }
 

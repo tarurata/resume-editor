@@ -70,16 +70,44 @@ export default function StartScreen({ onNext }: StartScreenProps) {
                     </p>
 
                     <div className="space-y-4">
-                        <textarea
-                            value={pastedText}
-                            onChange={(e) => setPastedText(e.target.value)}
-                            placeholder="Paste your resume text here..."
-                            className="input-field h-32 resize-none"
-                        />
+                        <div>
+                            <textarea
+                                value={pastedText}
+                                onChange={(e) => setPastedText(e.target.value)}
+                                placeholder="Paste your resume text here...
+
+Example:
+John Doe
+Senior Software Engineer
+john.doe@email.com | (555) 123-4567
+
+EXPERIENCE
+Senior Software Engineer at TechCorp (2021-Present)
+• Led development of microservices architecture
+• Improved application performance by 40%
+• Mentored 3 junior developers
+
+SKILLS
+JavaScript, TypeScript, React, Node.js, Python, AWS"
+                                className="input-field h-32 resize-none"
+                            />
+                            <div className="flex justify-between items-center mt-2">
+                                <span className={`text-sm ${pastedText.trim() ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {pastedText.trim() ? '✓ Ready to parse' : 'Enter resume text to continue'}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                    {pastedText.length} characters
+                                </span>
+                            </div>
+                        </div>
                         <button
                             onClick={handlePasteSubmit}
                             disabled={!pastedText.trim()}
-                            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${
+                                pastedText.trim() 
+                                    ? 'bg-primary-600 hover:bg-primary-700 text-white cursor-pointer' 
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
                         >
                             Parse Resume Text
                         </button>
