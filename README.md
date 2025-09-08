@@ -16,6 +16,18 @@ npm run dev
 # Open http://localhost:3000 in your browser
 ```
 
+### Production (Standalone)
+
+```bash
+# Build the application
+npm run build
+
+# Start production server with static assets
+npm run start:standalone
+
+# Open http://localhost:3000 in your browser
+```
+
 ### Docker (Production-Ready)
 
 ```bash

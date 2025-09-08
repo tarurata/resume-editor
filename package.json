@@ -6,6 +6,7 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
+        "start:standalone": "cp -r .next/static .next/standalone/.next/ && cd .next/standalone && node server.js",
         "lint": "next lint",
         "validate-schema": "node scripts/validate-schema.js"
     },
