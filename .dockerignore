@@ -1,0 +1,34 @@
+# Node
+node_modules/
+.next/
+out/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Documentation
+README.md
+docs/
+
+# Test files
+test-*.md
+
+# Development files
+tsconfig.tsbuildinfo

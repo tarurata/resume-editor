@@ -4,6 +4,8 @@ A modern, web-based resume editor that allows you to create, edit, and export pr
 
 ## 🚀 Quick Start
 
+### Local Development
+
 ```bash
 # Install dependencies
 npm install
@@ -13,6 +15,28 @@ npm run dev
 
 # Open http://localhost:3000 in your browser
 ```
+
+### Docker (Production-Ready)
+
+```bash
+# Build the Docker image
+docker build -t resume-editor .
+
+# Run the container
+docker run -p 3000:3000 resume-editor
+
+# Or run with custom port
+docker run -p 8080:3000 resume-editor
+
+# Check health status
+curl http://localhost:3000/health
+```
+
+The Docker setup includes:
+- Multi-stage build for optimized image size
+- Health check endpoint at `/health`
+- Non-root user for security
+- Production-ready configuration
 
 ## 📋 Scope
 
