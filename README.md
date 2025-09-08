@@ -127,6 +127,9 @@ API_V1_PREFIX=/api/v1
 - ✅ FastAPI service with health check
 - ✅ Containerized with Docker
 - ✅ Pydantic settings for environment variables
+- ✅ API contracts with OpenAPI documentation
+- ✅ /edit endpoints with validation and change tracking
+- ✅ /export endpoints for PDF, HTML, and JSON formats
 - 🔄 Real /edit with guardrails + diffHtml (in progress)
 - 🔄 /export server PDF renderer (planned)
 - 🔄 End-to-end edit suggestions within target latency (planned)
@@ -135,6 +138,7 @@ API_V1_PREFIX=/api/v1
 
 - **[Product Requirements Document (PRD)](docs/PRD.md)** - Complete feature specifications and acceptance criteria
 - **[Schema Documentation](docs/SCHEMA.md)** - Resume data model and JSON schema
+- **[API Contracts](API_CONTRACTS.md)** - Request/response contracts and OpenAPI documentation
 - **[Issue Templates](.github/ISSUE_TEMPLATE/)** - Bug reports and feature requests
 
 ## 🛠️ Technology Stack
