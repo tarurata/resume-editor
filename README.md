@@ -28,25 +28,48 @@ npm run start:standalone
 # Open http://localhost:3000 in your browser
 ```
 
-### Docker (Production-Ready)
+### Docker (Frontend Only)
 
 ```bash
-# Build the Docker image
-docker build -t resume-editor .
+# Build the frontend Docker image
+docker build -f Dockerfile.frontend -t resume-editor-frontend .
 
-# Run the container
-docker run -p 3000:3000 resume-editor
-
-# Or run with custom port
-docker run -p 8080:3000 resume-editor
+# Run the frontend container
+docker run -p 3000:3000 resume-editor-frontend
 
 # Check health status
 curl http://localhost:3000/health
 ```
 
+### Docker (Backend Only)
+
+```bash
+# Build the backend Docker image
+docker build -f Dockerfile.backend -t resume-editor-backend .
+
+# Run the backend container
+docker run -p 8000:8000 resume-editor-backend
+
+# Check health status
+curl http://localhost:8000/api/v1/health
+```
+
+### Docker Compose (Full Stack)
+
+```bash
+# Run both frontend and backend
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+
+# Stop services
+docker-compose down
+```
+
 The Docker setup includes:
 - Multi-stage build for optimized image size
-- Health check endpoint at `/health`
+- Health check endpoints at `/health` (frontend) and `/api/v1/health` (backend)
 - Non-root user for security
 - Production-ready configuration
 
@@ -66,19 +89,6 @@ python -m app.main
 
 # The API will be available at http://localhost:8000
 # Health check: http://localhost:8000/api/v1/health
-```
-
-### Docker (Backend Only)
-
-```bash
-# Build the FastAPI Docker image
-docker build -t resume-editor-api .
-
-# Run the container
-docker run -p 8000:8000 resume-editor-api
-
-# Check health status
-curl http://localhost:8000/api/v1/health
 ```
 
 ### Environment Variables
