@@ -50,6 +50,51 @@ The Docker setup includes:
 - Non-root user for security
 - Production-ready configuration
 
+## 🐍 FastAPI Backend
+
+### Local Development
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Run the FastAPI server
+uvicorn app.main:app --reload
+
+# Or run directly with Python
+python -m app.main
+
+# The API will be available at http://localhost:8000
+# Health check: http://localhost:8000/api/v1/health
+```
+
+### Docker (Backend Only)
+
+```bash
+# Build the FastAPI Docker image
+docker build -t resume-editor-api .
+
+# Run the container
+docker run -p 8000:8000 resume-editor-api
+
+# Check health status
+curl http://localhost:8000/api/v1/health
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root to customize settings:
+
+```bash
+# Server settings
+HOST=0.0.0.0
+PORT=8000
+DEBUG=false
+
+# API settings
+API_V1_PREFIX=/api/v1
+```
+
 ## 📋 Scope
 
 ### M1 - Core Editor (Current)
@@ -68,11 +113,13 @@ The Docker setup includes:
 - Typical 1-column resumes segment with ≥80% accuracy
 - User can correct misclassified sections
 
-### M2 - Python Backend (Planned)
-- Real /edit with guardrails + diffHtml
-- /export server PDF renderer
-- Basic logs, healthcheck
-- End-to-end edit suggestions within target latency
+### M2 - Python Backend (Current)
+- ✅ FastAPI service with health check
+- ✅ Containerized with Docker
+- ✅ Pydantic settings for environment variables
+- 🔄 Real /edit with guardrails + diffHtml (in progress)
+- 🔄 /export server PDF renderer (planned)
+- 🔄 End-to-end edit suggestions within target latency (planned)
 
 ## 📖 Documentation
 
@@ -83,9 +130,11 @@ The Docker setup includes:
 ## 🛠️ Technology Stack
 
 - **Frontend:** Next.js 13+, React, TypeScript
+- **Backend:** FastAPI, Python 3.12, Uvicorn
 - **Styling:** Tailwind CSS
 - **Storage:** Browser localStorage (M1), Database (M2)
 - **Export:** Print-css → PDF (M1), Server-side PDF (M2)
+- **Containerization:** Docker
 
 ## 📊 Data Model
 
