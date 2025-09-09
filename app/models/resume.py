@@ -254,3 +254,68 @@ class EditResponse(BaseModel):
         description="Unique identifier for this change (for history tracking)",
         example="chg_1234567890"
     )
+
+
+# Strategy-based editing models
+
+class StrategyEditRequest(BaseModel):
+    """Request model for strategy-based editing"""
+    sectionId: str = Field(
+        ...,
+        description="Unique identifier for the section being edited",
+        example="experience_0"
+    )
+    sectionType: SectionType = Field(
+        ...,
+        description="Type of section being edited",
+        example="experience"
+    )
+    strategyId: str = Field(
+        ...,
+        description="Strategy to apply for editing",
+        example="quantify"
+    )
+    currentContent: str = Field(
+        ...,
+        description="Current content of the section",
+        example="Led development of microservices architecture serving 1M+ daily active users"
+    )
+    jdText: Optional[str] = Field(
+        None,
+        description="Job description text for context",
+        example="We're looking for a Software Engineer to build scalable web applications..."
+    )
+    constraints: Optional[dict] = Field(
+        None,
+        description="Strategy-specific constraints",
+        example={"maxWords": 50, "tone": "professional"}
+    )
+
+
+class StrategyEditResponse(BaseModel):
+    """Response model for strategy-based editing"""
+    sectionId: str = Field(
+        ...,
+        description="Identifier of the section that was edited",
+        example="experience_0"
+    )
+    suggestion: str = Field(
+        ...,
+        description="Generated suggestion for the section",
+        example="Led development of microservices architecture serving 2M+ daily active users, improving system performance by 40%"
+    )
+    rationale: Optional[str] = Field(
+        None,
+        description="Explanation of the suggestion",
+        example="Added metrics and mirrored job description language"
+    )
+    strategyId: str = Field(
+        ...,
+        description="Strategy that was applied",
+        example="quantify"
+    )
+    wordCount: Optional[int] = Field(
+        None,
+        description="Word count of the suggestion",
+        example=25
+    )
