@@ -1,0 +1,52 @@
+{
+  "title": {
+    "extract-from-jd": {
+      "prompt": "Extract the most appropriate job title from this job description: {jdText}\n\nCurrent resume title: {currentContent}\n\nReturn only the extracted title, no additional text.",
+      "variables": ["jdText", "currentContent"]
+    }
+  },
+  "summary": {
+    "rewrite-short": {
+      "prompt": "Rewrite this professional summary to be concise and impactful in 50 words or less:\n\nCurrent summary: {currentContent}\n\nJob description context: {jdText}\n\nReturn only the rewritten summary.",
+      "variables": ["currentContent", "jdText"],
+      "constraints": {"maxWords": 50}
+    },
+    "rewrite-medium": {
+      "prompt": "Rewrite this professional summary with more detail in 100 words or less:\n\nCurrent summary: {currentContent}\n\nJob description context: {jdText}\n\nReturn only the rewritten summary.",
+      "variables": ["currentContent", "jdText"],
+      "constraints": {"maxWords": 100}
+    },
+    "match-jd": {
+      "prompt": "Rewrite this professional summary to match the tone and language of the job description:\n\nCurrent summary: {currentContent}\n\nJob description: {jdText}\n\nReturn only the rewritten summary.",
+      "variables": ["currentContent", "jdText"]
+    }
+  },
+  "experience": {
+    "quantify": {
+      "prompt": "Rewrite these experience bullets to add metrics and mirror the job description language:\n\nCurrent bullets:\n{currentContent}\n\nJob description: {jdText}\n\nReturn only the rewritten bullets, one per line.",
+      "variables": ["currentContent", "jdText"]
+    },
+    "action-verbs": {
+      "prompt": "Replace weak verbs with strong action verbs in these experience bullets:\n\nCurrent bullets:\n{currentContent}\n\nReturn only the rewritten bullets, one per line.",
+      "variables": ["currentContent"]
+    },
+    "achievements": {
+      "prompt": "Focus on achievements and results in these experience bullets:\n\nCurrent bullets:\n{currentContent}\n\nJob description context: {jdText}\n\nReturn only the rewritten bullets, one per line.",
+      "variables": ["currentContent", "jdText"]
+    }
+  },
+  "skills": {
+    "map-jd": {
+      "prompt": "Filter and prioritize these skills based on the job description:\n\nCurrent skills: {currentContent}\n\nJob description: {jdText}\n\nReturn only the relevant skills, one per line.",
+      "variables": ["currentContent", "jdText"]
+    },
+    "categorize": {
+      "prompt": "Categorize these skills into logical groups:\n\nCurrent skills: {currentContent}\n\nReturn skills grouped by category, one per line.",
+      "variables": ["currentContent"]
+    },
+    "prioritize": {
+      "prompt": "Prioritize these skills by relevance and importance:\n\nCurrent skills: {currentContent}\n\nJob description context: {jdText}\n\nReturn only the prioritized skills, one per line.",
+      "variables": ["currentContent", "jdText"]
+    }
+  }
+}

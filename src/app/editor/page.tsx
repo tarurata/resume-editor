@@ -11,6 +11,7 @@ import { JobDescriptionPanel } from '@/components/editor/JobDescriptionPanel'
 import { StrategyPresets } from '@/components/editor/StrategyPresets'
 import { DiffPreview } from '@/components/editor/DiffPreview'
 import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
+import { PrintView } from '@/components/editor/PrintView'
 import { ClientOnly } from '@/components/ClientOnly'
 
 export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
@@ -24,6 +25,7 @@ export interface EditorState {
     jdText: string
     diffState: DiffState
     sectionHistory: Record<string, string> // sectionId -> original content when first loaded
+    showPrintView: boolean
 }
 
 export default function EditorPage() {
@@ -36,7 +38,8 @@ export default function EditorPage() {
         hasChanges: false,
         jdText: '',
         diffState: { viewMode: 'clean', showHistory: false },
-        sectionHistory: {}
+        sectionHistory: {},
+        showPrintView: false
     })
 
     useEffect(() => {
@@ -206,6 +209,20 @@ export default function EditorPage() {
         }))
     }
 
+    const handleExportPDF = () => {
+        setEditorState(prev => ({
+            ...prev,
+            showPrintView: true
+        }))
+    }
+
+    const handleClosePrintView = () => {
+        setEditorState(prev => ({
+            ...prev,
+            showPrintView: false
+        }))
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -243,6 +260,12 @@ export default function EditorPage() {
                                 Unsaved changes
                             </span>
                         )}
+                        <button
+                            onClick={handleExportPDF}
+                            className="btn-primary"
+                        >
+                            Export PDF
+                        </button>
                         <Link href="/" className="btn-secondary">
                             ← Back to Wizard
                         </Link>
@@ -321,6 +344,14 @@ export default function EditorPage() {
                     />
                 </div>
             </div>
+
+            {/* Print View Modal */}
+            {editorState.showPrintView && resume && (
+                <PrintView
+                    resume={resume}
+                    onClose={handleClosePrintView}
+                />
+            )}
         </main>
     )
 }
