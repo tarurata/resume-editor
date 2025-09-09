@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 from app.models import EditRequest, EditResponse, StrategyEditRequest, StrategyEditResponse, Resume
+from app.services.fact_checker import FactChecker
 import uuid
 from datetime import datetime
 
@@ -19,7 +20,16 @@ async def edit_resume_section(edit_request: EditRequest) -> EditResponse:
         # Generate a unique change ID for tracking
         change_id = f"chg_{uuid.uuid4().hex[:10]}"
         
-        # For now, we'll just return a success response
+        # Initialize fact checker
+        fact_checker = FactChecker()
+        risk_flags = None
+        
+        # Perform fact-checking if resume data is provided
+        if edit_request.resume:
+            facts_inventory = fact_checker.build_facts_inventory(edit_request.resume)
+            risk_flags = fact_checker.check_suggestion(edit_request.newContent, facts_inventory)
+        
+        # For now, we'll just return a success response with risk flags
         # In a real implementation, this would validate the edit and apply it
         response = EditResponse(
             success=True,
@@ -27,7 +37,8 @@ async def edit_resume_section(edit_request: EditRequest) -> EditResponse:
             sectionId=edit_request.sectionId,
             updatedContent=edit_request.newContent,
             timestamp=datetime.utcnow(),
-            changeId=change_id
+            changeId=change_id,
+            riskFlags=risk_flags
         )
         
         return response

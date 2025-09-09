@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Set
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
@@ -220,6 +220,11 @@ class EditRequest(BaseModel):
         description="Action to perform on the edit",
         example="accept"
     )
+    resume: Optional[Resume] = Field(
+        None,
+        description="Complete resume data for fact-checking (optional)",
+        example=None
+    )
 
 
 class EditResponse(BaseModel):
@@ -253,6 +258,34 @@ class EditResponse(BaseModel):
         None,
         description="Unique identifier for this change (for history tracking)",
         example="chg_1234567890"
+    )
+    riskFlags: Optional['RiskFlags'] = Field(
+        None,
+        description="Risk flags indicating potential issues with the edit suggestion",
+        example={
+            "new_skill": ["Python", "Django"],
+            "new_org": ["Facebook"],
+            "unverifiable_metric": ["team of 5"]
+        }
+    )
+
+
+class RiskFlags(BaseModel):
+    """Risk flags for edit suggestions indicating potential issues"""
+    new_skill: List[str] = Field(
+        default_factory=list,
+        description="Skills mentioned in suggestion that are not in the original resume",
+        example=["Python", "Django", "Machine Learning"]
+    )
+    new_org: List[str] = Field(
+        default_factory=list,
+        description="Organizations mentioned in suggestion that are not in the original resume",
+        example=["Facebook", "Netflix", "Amazon"]
+    )
+    unverifiable_metric: List[str] = Field(
+        default_factory=list,
+        description="Metrics or claims in suggestion that cannot be verified against resume data",
+        example=["team of 5", "increased revenue by 200%", "served 10M users"]
     )
 
 
@@ -319,3 +352,7 @@ class StrategyEditResponse(BaseModel):
         description="Word count of the suggestion",
         example=25
     )
+
+
+# Forward reference resolution
+EditResponse.model_rebuild()
