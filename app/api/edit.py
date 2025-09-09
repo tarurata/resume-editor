@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from app.models import EditRequest, EditResponse, Resume
+from app.models import EditRequest, EditResponse, StrategyEditRequest, StrategyEditResponse, Resume
 import uuid
 from datetime import datetime
 
@@ -64,3 +64,79 @@ async def restore_edit(change_id: str) -> EditResponse:
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Restore functionality not yet implemented"
     )
+
+
+@router.post("/strategy", response_model=StrategyEditResponse)
+async def edit_with_strategy(strategy_request: StrategyEditRequest) -> StrategyEditResponse:
+    """
+    Edit a resume section using AI strategy-based prompts.
+    
+    This endpoint applies strategy-specific prompts to generate suggestions
+    for improving resume sections based on job descriptions.
+    """
+    try:
+        # For now, we'll return a mock response
+        # In a real implementation, this would:
+        # 1. Load the strategy prompt library
+        # 2. Validate the strategy exists
+        # 3. Check JD requirements
+        # 4. Call the LLM service
+        # 5. Parse and return the response
+        
+        # Mock response based on strategy type
+        mock_suggestion = generate_mock_suggestion(
+            strategy_request.sectionType,
+            strategy_request.strategyId,
+            strategy_request.currentContent
+        )
+        
+        response = StrategyEditResponse(
+            sectionId=strategy_request.sectionId,
+            suggestion=mock_suggestion,
+            rationale=f"Applied {strategy_request.strategyId} strategy to {strategy_request.sectionType}",
+            strategyId=strategy_request.strategyId,
+            wordCount=len(mock_suggestion.split())
+        )
+        
+        return response
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process strategy edit: {str(e)}"
+        )
+
+
+def generate_mock_suggestion(section_type: str, strategy_id: str, current_content: str) -> str:
+    """Generate mock suggestions for testing purposes"""
+    
+    if section_type == "title":
+        if strategy_id == "extract-from-jd":
+            return "Senior Software Engineer - Full Stack"
+    
+    elif section_type == "summary":
+        if strategy_id == "rewrite-short":
+            return "Experienced software engineer with 5+ years building scalable web applications using React, Node.js, and cloud technologies."
+        elif strategy_id == "rewrite-medium":
+            return "Results-driven software engineer with 5+ years of experience in full-stack development. Proven track record of delivering scalable web applications using React, Node.js, and cloud technologies. Strong background in agile methodologies and team leadership."
+        elif strategy_id == "match-jd":
+            return "Passionate software engineer with expertise in building scalable web applications. Experienced in React, Node.js, and TypeScript with a track record of contributing to mission-driven tech companies."
+    
+    elif section_type == "experience":
+        if strategy_id == "quantify":
+            return "Led development of microservices architecture serving 2M+ daily active users, improving system performance by 40%"
+        elif strategy_id == "action-verbs":
+            return "Spearheaded development of microservices architecture serving 1M+ daily active users"
+        elif strategy_id == "achievements":
+            return "Delivered microservices architecture serving 1M+ daily active users, resulting in 40% performance improvement"
+    
+    elif section_type == "skills":
+        if strategy_id == "map-jd":
+            return "JavaScript\nTypeScript\nReact\nNode.js\nAWS\nPostgreSQL"
+        elif strategy_id == "categorize":
+            return "Programming: JavaScript, TypeScript, Python\nFrameworks: React, Node.js\nCloud: AWS, Docker\nDatabase: PostgreSQL, MongoDB"
+        elif strategy_id == "prioritize":
+            return "JavaScript\nReact\nNode.js\nTypeScript\nAWS\nPostgreSQL"
+    
+    # Default fallback
+    return f"Improved {section_type} using {strategy_id} strategy"

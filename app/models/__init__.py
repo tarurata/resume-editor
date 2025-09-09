@@ -5,6 +5,8 @@ from .resume import (
     DateRange,
     EditRequest,
     EditResponse,
+    StrategyEditRequest,
+    StrategyEditResponse,
     SectionType,
     EditAction
 )
@@ -16,6 +18,8 @@ __all__ = [
     "DateRange",
     "EditRequest",
     "EditResponse",
+    "StrategyEditRequest",
+    "StrategyEditResponse",
     "SectionType",
     "EditAction"
 ]
