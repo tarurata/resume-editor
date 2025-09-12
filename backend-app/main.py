@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import Response
 from app.api.health import router as health_router
 from app.api.edit import router as edit_router
 from app.api.export import router as export_router
@@ -18,6 +20,15 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=False,  # Set to False when using allow_origins=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers with version prefix
@@ -82,6 +93,18 @@ app.openapi = custom_openapi
 @app.get("/")
 async def root():
     return {"message": "Resume Editor API"}
+
+# Manual CORS handler for OPTIONS requests
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn
