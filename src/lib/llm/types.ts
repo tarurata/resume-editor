@@ -46,6 +46,7 @@ export interface LLMTelemetry {
 export interface LLMAdapter {
   generate(prompt: string, params?: LLMParams): Promise<LLMResponse>;
   getConfig(): LLMConfig;
+  addTelemetryHook(hook: (telemetry: LLMTelemetry) => void): void;
 }
 
 export interface LLMProvider {

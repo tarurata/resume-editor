@@ -49,7 +49,11 @@ export class LLMAdapterImpl implements LLMAdapter {
           status: 'success',
           provider: this.config.provider,
           model: mergedParams.model,
-          tokens: response.usage,
+          tokens: response.usage ? {
+            prompt: response.usage.promptTokens,
+            completion: response.usage.completionTokens,
+            total: response.usage.totalTokens,
+          } : undefined,
           retryCount,
         });
 
@@ -72,7 +76,7 @@ export class LLMAdapterImpl implements LLMAdapter {
 
         retryCount++;
         const delay = this.calculateRetryDelay(retryCount);
-        
+
         this.emitTelemetry({
           duration,
           status: 'retry',

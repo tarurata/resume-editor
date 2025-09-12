@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { DiffState } from '@/types/resume'
+import { generateHtmlDiff, createHtmlDiff, DiffOptions } from '@/lib/htmlDiff'
 
 interface DiffPreviewProps {
     originalContent: string
@@ -11,6 +12,7 @@ interface DiffPreviewProps {
     onRestore?: () => void
     diffState?: DiffState
     onDiffStateChange?: (state: DiffState) => void
+    diffOptions?: DiffOptions
 }
 
 export function DiffPreview({
@@ -20,88 +22,29 @@ export function DiffPreview({
     onReject,
     onRestore,
     diffState = { viewMode: 'clean', showHistory: false },
-    onDiffStateChange
+    onDiffStateChange,
+    diffOptions = { ignoreWhitespace: false, ignoreCase: false }
 }: DiffPreviewProps) {
     const [viewMode, setViewMode] = useState<'side-by-side' | 'unified'>('side-by-side')
+    const [ignoreWhitespace, setIgnoreWhitespace] = useState(diffOptions.ignoreWhitespace || false)
 
     if (originalContent === currentContent) {
         return null
     }
 
-    // HTML-safe diff rendering
-    const createHtmlDiff = (original: string, current: string) => {
-        // Simple word-level diff for HTML content
-        const originalWords = original.split(/(\s+)/)
-        const currentWords = current.split(/(\s+)/)
-
-        const diff = []
-        let i = 0, j = 0
-
-        while (i < originalWords.length || j < currentWords.length) {
-            const origWord = originalWords[i] || ''
-            const currWord = currentWords[j] || ''
-
-            if (origWord === currWord) {
-                diff.push({ type: 'unchanged', content: origWord })
-                i++
-                j++
-            } else if (origWord === '') {
-                diff.push({ type: 'added', content: currWord })
-                j++
-            } else if (currWord === '') {
-                diff.push({ type: 'removed', content: origWord })
-                i++
-            } else {
-                // Check if we can find a match further ahead
-                let found = false
-                for (let k = j + 1; k < Math.min(j + 5, currentWords.length); k++) {
-                    if (originalWords[i] === currentWords[k]) {
-                        // Add all words between j and k as added
-                        for (let l = j; l < k; l++) {
-                            diff.push({ type: 'added', content: currentWords[l] })
-                        }
-                        j = k
-                        found = true
-                        break
-                    }
-                }
-
-                if (!found) {
-                    diff.push({ type: 'removed', content: origWord })
-                    diff.push({ type: 'added', content: currWord })
-                    i++
-                    j++
-                }
-            }
-        }
-
-        return diff
+    // Generate HTML diff using the new utility
+    const generateDiffHtml = (original: string, current: string) => {
+        return generateHtmlDiff(original, current, { ...diffOptions, ignoreWhitespace })
     }
 
     const renderHtmlDiff = (original: string, current: string) => {
-        const diff = createHtmlDiff(original, current)
+        const diffHtml = generateDiffHtml(original, current)
 
         return (
-            <div className="prose prose-sm max-w-none">
-                {diff.map((item, index) => {
-                    if (item.type === 'unchanged') {
-                        return <span key={index}>{item.content}</span>
-                    } else if (item.type === 'added') {
-                        return (
-                            <span key={index} className="bg-green-100 text-green-800 px-1 rounded">
-                                {item.content}
-                            </span>
-                        )
-                    } else if (item.type === 'removed') {
-                        return (
-                            <span key={index} className="bg-red-100 text-red-800 px-1 rounded line-through">
-                                {item.content}
-                            </span>
-                        )
-                    }
-                    return null
-                })}
-            </div>
+            <div
+                className="prose prose-sm max-w-none diff-container"
+                dangerouslySetInnerHTML={{ __html: diffHtml }}
+            />
         )
     }
 
@@ -187,6 +130,15 @@ export function DiffPreview({
                             }`}
                     >
                         Unified
+                    </button>
+                    <button
+                        onClick={() => setIgnoreWhitespace(!ignoreWhitespace)}
+                        className={`px-3 py-1 text-xs rounded ${ignoreWhitespace
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                    >
+                        Ignore Whitespace
                     </button>
                 </div>
             </div>
