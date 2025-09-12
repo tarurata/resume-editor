@@ -1,0 +1,271 @@
+import { Resume } from '@/types/resume'
+
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
+
+// Temporary user ID for M1 (no authentication required)
+const TEMP_USER_ID = 'temp-user-m1'
+
+// API Response Types
+interface ApiResponse<T> {
+    data?: T
+    error?: string
+    status: number
+}
+
+interface ResumeVersion {
+    id: string
+    user_id: string
+    company_name: string
+    company_email: string
+    job_title: string
+    job_description?: string
+    resume_data: Resume
+    is_active: boolean
+    created_at: string
+    updated_at: string
+}
+
+interface PersonalInfo {
+    user_id: string
+    full_name: string
+    email: string
+    phone?: string
+    location?: string
+    linkedin_url?: string
+    portfolio_url?: string
+}
+
+// API Error class
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public status: number,
+        public response?: any
+    ) {
+        super(message)
+        this.name = 'ApiError'
+    }
+}
+
+// Generic API request function
+async function apiRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+    const url = `${API_BASE_URL}${endpoint}`
+
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+    }
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...defaultHeaders,
+                ...options.headers,
+            },
+        })
+
+        const data = response.ok ? await response.json() : null
+
+        if (!response.ok) {
+            const errorMessage = data?.detail || `HTTP ${response.status}: ${response.statusText}`
+            throw new ApiError(errorMessage, response.status, data)
+        }
+
+        return {
+            data,
+            status: response.status,
+        }
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw error
+        }
+
+        // Network or other errors
+        throw new ApiError(
+            error instanceof Error ? error.message : 'Network error',
+            0
+        )
+    }
+}
+
+// Resume Version API functions
+export const resumeVersionApi = {
+    // Create a new resume version
+    async create(resumeData: Resume, companyName: string, jobTitle: string, companyEmail?: string, jobDescription?: string): Promise<ResumeVersion> {
+        const response = await apiRequest<ResumeVersion>(
+            `/resume-versions/?user_id=${TEMP_USER_ID}`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    company_name: companyName,
+                    company_email: companyEmail || '',
+                    job_title: jobTitle,
+                    job_description: jobDescription,
+                    resume_data: resumeData,
+                    is_active: true
+                }),
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to create resume version', response.status)
+        }
+
+        return response.data
+    },
+
+    // Get all resume versions for user
+    async getAll(): Promise<ResumeVersion[]> {
+        const response = await apiRequest<ResumeVersion[]>(`/resume-versions/user/${TEMP_USER_ID}`)
+
+        if (!response.data) {
+            throw new ApiError('Failed to fetch resume versions', response.status)
+        }
+
+        return response.data
+    },
+
+    // Get specific resume version
+    async getById(versionId: string): Promise<ResumeVersion> {
+        const response = await apiRequest<ResumeVersion>(`/resume-versions/${versionId}`)
+
+        if (!response.data) {
+            throw new ApiError('Failed to fetch resume version', response.status)
+        }
+
+        return response.data
+    },
+
+    // Get active resume version
+    async getActive(): Promise<ResumeVersion | null> {
+        try {
+            const response = await apiRequest<ResumeVersion>(`/resume-versions/user/${TEMP_USER_ID}/active`)
+            return response.data || null
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 404) {
+                return null
+            }
+            throw error
+        }
+    },
+
+    // Update resume version
+    async update(versionId: string, updates: Partial<ResumeVersion>): Promise<ResumeVersion> {
+        const response = await apiRequest<ResumeVersion>(
+            `/resume-versions/${versionId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(updates),
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to update resume version', response.status)
+        }
+
+        return response.data
+    },
+
+    // Set active resume version
+    async setActive(versionId: string): Promise<ResumeVersion> {
+        const response = await apiRequest<ResumeVersion>(
+            `/resume-versions/${versionId}/activate?user_id=${TEMP_USER_ID}`,
+            {
+                method: 'POST',
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to set active resume version', response.status)
+        }
+
+        return response.data
+    },
+
+    // Delete resume version
+    async delete(versionId: string): Promise<void> {
+        await apiRequest(`/resume-versions/${versionId}`, {
+            method: 'DELETE',
+        })
+    }
+}
+
+// Personal Info API functions
+export const personalInfoApi = {
+    // Create personal info
+    async create(personalInfo: Omit<PersonalInfo, 'user_id'>): Promise<PersonalInfo> {
+        const response = await apiRequest<PersonalInfo>(
+            '/personal-info/',
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    ...personalInfo,
+                    user_id: TEMP_USER_ID,
+                }),
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to create personal info', response.status)
+        }
+
+        return response.data
+    },
+
+    // Get personal info
+    async get(): Promise<PersonalInfo | null> {
+        try {
+            const response = await apiRequest<PersonalInfo>(`/personal-info/${TEMP_USER_ID}`)
+            return response.data || null
+        } catch (error) {
+            if (error instanceof ApiError && error.status === 404) {
+                return null
+            }
+            throw error
+        }
+    },
+
+    // Update personal info
+    async update(updates: Partial<Omit<PersonalInfo, 'user_id'>>): Promise<PersonalInfo> {
+        const response = await apiRequest<PersonalInfo>(
+            `/personal-info/${TEMP_USER_ID}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(updates),
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to update personal info', response.status)
+        }
+
+        return response.data
+    },
+
+    // Delete personal info
+    async delete(): Promise<void> {
+        await apiRequest(`/personal-info/${TEMP_USER_ID}`, {
+            method: 'DELETE',
+        })
+    }
+}
+
+// Health check
+export const healthApi = {
+    async check(): Promise<{ status: string; timestamp: string }> {
+        const response = await apiRequest<{ status: string; timestamp: string }>('/health')
+
+        if (!response.data) {
+            throw new ApiError('Health check failed', response.status)
+        }
+
+        return response.data
+    }
+}
+
+// Export the temporary user ID for use in other parts of the app
+export { TEMP_USER_ID }
