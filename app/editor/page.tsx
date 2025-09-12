@@ -47,10 +47,8 @@ export default function EditorPage() {
 
     useEffect(() => {
         const loadResume = async () => {
-            console.log('Editor useEffect running')
             try {
                 const loadedResume = await loadResumeFromDatabase()
-                console.log('Loaded resume:', loadedResume)
 
                 if (loadedResume) {
                     setResume(loadedResume)
@@ -102,7 +100,6 @@ export default function EditorPage() {
                             "RESTful APIs"
                         ]
                     }
-                    console.log('Setting sample resume:', sampleResume)
                     setResume(sampleResume)
                 }
             } catch (error) {
@@ -112,7 +109,6 @@ export default function EditorPage() {
                     saveError: 'Failed to load resume from database'
                 }))
             } finally {
-                console.log('Setting loading to false')
                 setLoading(false)
             }
         }
@@ -296,8 +292,12 @@ export default function EditorPage() {
     }
 
     const handleSaveResume = async () => {
-        if (!resume) return
+        if (!resume) {
+            console.error('No resume data to save')
+            return
+        }
 
+        console.log('Starting save process for resume:', resume)
         setEditorState(prev => ({
             ...prev,
             isSaving: true,
@@ -305,7 +305,9 @@ export default function EditorPage() {
         }))
 
         try {
+            console.log('Calling saveResumeToDatabase...')
             await saveResumeToDatabase(resume, 'Default Company', resume.title || 'Software Engineer')
+            console.log('Resume saved successfully')
 
             setEditorState(prev => ({
                 ...prev,
@@ -375,7 +377,7 @@ export default function EditorPage() {
                         )}
                         <button
                             onClick={handleSaveResume}
-                            disabled={editorState.isSaving || !editorState.hasChanges}
+                            disabled={editorState.isSaving}
                             className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {editorState.isSaving ? 'Saving...' : 'Save Resume'}

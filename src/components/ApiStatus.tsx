@@ -19,6 +19,7 @@ export default function ApiStatus({ className = '' }: ApiStatusProps) {
         } catch (error) {
             setStatus('offline')
             setLastChecked(new Date())
+            console.warn('API is offline, using localStorage fallback')
         }
     }
 
@@ -58,8 +59,8 @@ export default function ApiStatus({ className = '' }: ApiStatusProps) {
     return (
         <div className={`flex items-center space-x-2 ${className}`}>
             <div className={`w-2 h-2 rounded-full ${status === 'online' ? 'bg-green-500' :
-                    status === 'offline' ? 'bg-red-500' :
-                        'bg-yellow-500 animate-pulse'
+                status === 'offline' ? 'bg-red-500' :
+                    'bg-yellow-500 animate-pulse'
                 }`} />
             <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor()}`}>
                 {getStatusText()}
