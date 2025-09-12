@@ -21,12 +21,14 @@ export default function StartScreen({ onNext }: StartScreenProps) {
     }
 
     const handlePasteSubmit = () => {
-        if (pastedText.trim()) {
-            onNext({
-                step: 'parse',
-                pastedText: pastedText.trim()
-            })
+        if (!pastedText.trim()) {
+            return
         }
+
+        onNext({
+            step: 'parse',
+            pastedText: pastedText.trim()
+        })
     }
 
     return (
@@ -104,8 +106,8 @@ JavaScript, TypeScript, React, Node.js, Python, AWS"
                             onClick={handlePasteSubmit}
                             disabled={!pastedText.trim()}
                             className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${pastedText.trim()
-                                ? 'bg-primary-600 hover:bg-primary-700 text-white cursor-pointer'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    ? 'btn-primary'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             Parse Resume Text

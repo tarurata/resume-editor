@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { WizardState, Resume } from '@/types/resume'
-import { saveResumeToLocalStorage } from '@/lib/storage'
+import { saveResumeToDatabase } from '@/lib/storage'
 
 interface ValidationScreenProps {
     resume: Resume
@@ -28,8 +28,8 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
 
         setIsSaving(true)
         try {
-            // Save to localStorage
-            await saveResumeToLocalStorage(resume)
+            // Save to database
+            await saveResumeToDatabase(resume, 'Default Company', resume.title || 'Software Engineer')
 
             // Navigate to editor
             window.location.href = '/editor'

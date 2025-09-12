@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
-import { loadResumeFromLocalStorage, saveResumeToLocalStorage } from '@/lib/storage'
+import { loadResumeFromDatabase, saveResumeToDatabase } from '@/lib/storage'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
 import Link from 'next/link'
 import { SectionsTree } from '@/components/editor/SectionsTree'
@@ -13,6 +13,7 @@ import { DiffPreview } from '@/components/editor/DiffPreview'
 import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
 import { ClientOnly } from '@/components/ClientOnly'
+import ApiStatus from '@/components/ApiStatus'
 
 
 export interface EditorState {
@@ -24,6 +25,8 @@ export interface EditorState {
     diffState: DiffState
     sectionHistory: Record<string, string> // sectionId -> original content when first loaded
     showPrintView: boolean
+    isSaving: boolean
+    saveError: string | null
 }
 
 export default function EditorPage() {
@@ -37,69 +40,84 @@ export default function EditorPage() {
         jdText: '',
         diffState: { viewMode: 'clean', showHistory: false },
         sectionHistory: {},
-        showPrintView: false
+        showPrintView: false,
+        isSaving: false,
+        saveError: null
     })
 
     useEffect(() => {
-        console.log('Editor useEffect running')
-        const loadedResume = loadResumeFromLocalStorage()
-        console.log('Loaded resume:', loadedResume)
+        const loadResume = async () => {
+            console.log('Editor useEffect running')
+            try {
+                const loadedResume = await loadResumeFromDatabase()
+                console.log('Loaded resume:', loadedResume)
 
-        if (loadedResume) {
-            setResume(loadedResume)
-        } else {
-            // Load sample data for testing
-            const sampleResume: Resume = {
-                title: "Senior Software Engineer",
-                summary: "Experienced full-stack developer with 5+ years building scalable web applications using React, Node.js, and cloud technologies. Passionate about clean code, user experience, and mentoring junior developers.",
-                experience: [
-                    {
-                        role: "Senior Software Engineer",
-                        organization: "TechCorp Inc.",
-                        location: "San Francisco, CA",
-                        startDate: "2021-03",
-                        endDate: null,
-                        bullets: [
-                            "Led development of microservices architecture serving 1M+ daily active users",
-                            "Improved application performance by 40% through code optimization and caching strategies",
-                            "Mentored 3 junior developers and established code review best practices",
-                            "Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes"
-                        ]
-                    },
-                    {
-                        role: "Software Engineer",
-                        organization: "StartupXYZ",
-                        location: "Remote",
-                        startDate: "2019-06",
-                        endDate: "2021-02",
-                        bullets: [
-                            "Built responsive React applications with TypeScript and Redux",
-                            "Developed RESTful APIs using Node.js and Express",
-                            "Collaborated with design team to implement pixel-perfect UI components",
-                            "Participated in agile development process with 2-week sprints"
+                if (loadedResume) {
+                    setResume(loadedResume)
+                } else {
+                    // Load sample data for testing
+                    const sampleResume: Resume = {
+                        title: "Senior Software Engineer",
+                        summary: "Experienced full-stack developer with 5+ years building scalable web applications using React, Node.js, and cloud technologies. Passionate about clean code, user experience, and mentoring junior developers.",
+                        experience: [
+                            {
+                                role: "Senior Software Engineer",
+                                organization: "TechCorp Inc.",
+                                location: "San Francisco, CA",
+                                startDate: "2021-03",
+                                endDate: null,
+                                bullets: [
+                                    "Led development of microservices architecture serving 1M+ daily active users",
+                                    "Improved application performance by 40% through code optimization and caching strategies",
+                                    "Mentored 3 junior developers and established code review best practices",
+                                    "Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes"
+                                ]
+                            },
+                            {
+                                role: "Software Engineer",
+                                organization: "StartupXYZ",
+                                location: "Remote",
+                                startDate: "2019-06",
+                                endDate: "2021-02",
+                                bullets: [
+                                    "Built responsive React applications with TypeScript and Redux",
+                                    "Developed RESTful APIs using Node.js and Express",
+                                    "Collaborated with design team to implement pixel-perfect UI components",
+                                    "Participated in agile development process with 2-week sprints"
+                                ]
+                            }
+                        ],
+                        skills: [
+                            "JavaScript",
+                            "TypeScript",
+                            "React",
+                            "Node.js",
+                            "Python",
+                            "AWS",
+                            "Docker",
+                            "PostgreSQL",
+                            "MongoDB",
+                            "Git",
+                            "Agile/Scrum",
+                            "RESTful APIs"
                         ]
                     }
-                ],
-                skills: [
-                    "JavaScript",
-                    "TypeScript",
-                    "React",
-                    "Node.js",
-                    "Python",
-                    "AWS",
-                    "Docker",
-                    "PostgreSQL",
-                    "MongoDB",
-                    "Git",
-                    "Agile/Scrum",
-                    "RESTful APIs"
-                ]
+                    console.log('Setting sample resume:', sampleResume)
+                    setResume(sampleResume)
+                }
+            } catch (error) {
+                console.error('Failed to load resume:', error)
+                setEditorState(prev => ({
+                    ...prev,
+                    saveError: 'Failed to load resume from database'
+                }))
+            } finally {
+                console.log('Setting loading to false')
+                setLoading(false)
             }
-            console.log('Setting sample resume:', sampleResume)
-            setResume(sampleResume)
         }
-        console.log('Setting loading to false')
-        setLoading(false)
+
+        loadResume()
     }, [])
 
     const handleSectionSelect = (sectionId: SectionId, content: string) => {
@@ -125,7 +143,8 @@ export default function EditorPage() {
         setEditorState(prev => ({
             ...prev,
             currentContent: content,
-            hasChanges: content !== prev.originalContent
+            hasChanges: content !== prev.originalContent,
+            saveError: null // Clear any previous save errors
         }))
     }
 
@@ -185,7 +204,6 @@ export default function EditorPage() {
         }
 
         setResume(updatedResume)
-        saveResumeToLocalStorage(updatedResume)
 
         setEditorState(prev => ({
             ...prev,
@@ -277,6 +295,39 @@ export default function EditorPage() {
         }))
     }
 
+    const handleSaveResume = async () => {
+        if (!resume) return
+
+        setEditorState(prev => ({
+            ...prev,
+            isSaving: true,
+            saveError: null
+        }))
+
+        try {
+            await saveResumeToDatabase(resume, 'Default Company', resume.title || 'Software Engineer')
+
+            setEditorState(prev => ({
+                ...prev,
+                isSaving: false,
+                hasChanges: false
+            }))
+        } catch (error) {
+            console.error('Failed to save resume:', error)
+            let errorMessage = 'Failed to save resume'
+
+            if (error instanceof Error) {
+                errorMessage = error.message
+            }
+
+            setEditorState(prev => ({
+                ...prev,
+                isSaving: false,
+                saveError: errorMessage
+            }))
+        }
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -307,13 +358,28 @@ export default function EditorPage() {
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Resume Editor</h1>
+                    <div className="flex items-center space-x-4">
+                        <h1 className="text-2xl font-bold text-gray-900">Resume Editor</h1>
+                        <ApiStatus />
+                    </div>
                     <div className="flex items-center space-x-4">
                         {editorState.hasChanges && (
                             <span className="text-sm text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
                                 Unsaved changes
                             </span>
                         )}
+                        {editorState.saveError && (
+                            <span className="text-sm text-red-600 bg-red-100 px-3 py-1 rounded-full">
+                                {editorState.saveError}
+                            </span>
+                        )}
+                        <button
+                            onClick={handleSaveResume}
+                            disabled={editorState.isSaving || !editorState.hasChanges}
+                            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {editorState.isSaving ? 'Saving...' : 'Save Resume'}
+                        </button>
                         <button
                             onClick={handleExportPDF}
                             className="btn-primary"
