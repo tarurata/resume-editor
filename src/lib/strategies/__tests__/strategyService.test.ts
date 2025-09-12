@@ -1,14 +1,14 @@
 import { StrategyService } from '../strategyService';
-import { MockProvider } from '../../llm/providers/mock';
+import { LLMAdapterImpl } from '../../llm/adapter';
 import { StrategyRequest } from '../types';
 
 describe('StrategyService', () => {
   let strategyService: StrategyService;
-  let mockProvider: MockProvider;
+  let mockAdapter: LLMAdapterImpl;
 
   beforeEach(() => {
-    mockProvider = new MockProvider();
-    strategyService = new StrategyService(mockProvider);
+    mockAdapter = new LLMAdapterImpl({ provider: 'mock' });
+    strategyService = new StrategyService(mockAdapter);
   });
 
   describe('generateSuggestion', () => {

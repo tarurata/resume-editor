@@ -53,6 +53,15 @@
     .ProseMirror:focus {
         @apply outline-none;
     }
+
+    /* Diff Styles */
+    .diff-container .diff-added {
+        @apply bg-green-100 text-green-800 px-1 rounded;
+    }
+
+    .diff-container .diff-removed {
+        @apply bg-red-100 text-red-800 px-1 rounded line-through;
+    }
 }
 
 /* Print Styles for PDF Export */

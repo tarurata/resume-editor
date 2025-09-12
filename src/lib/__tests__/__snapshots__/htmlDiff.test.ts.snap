@@ -1,0 +1,295 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HTML Diff Snapshot Tests createHtmlDiff should create token-level diff for HTML content 1`] = `
+[
+  {
+    "content": "<p>",
+    "isHtml": true,
+    "type": "unchanged",
+  },
+  {
+    "content": "Hello",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "<strong>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "<em>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "world",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "beautiful",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "</strong>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "</em>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "</p>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "<strong>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "world",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "</strong>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "</p>",
+    "isHtml": true,
+    "type": "added",
+  },
+]
+`;
+
+exports[`HTML Diff Snapshot Tests createHtmlDiff should handle mixed HTML and text changes 1`] = `
+[
+  {
+    "content": "Text",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "before",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "<span>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "<div>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "HTML",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "</span>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "content",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "text",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "</div>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "unchanged",
+  },
+  {
+    "content": "after",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "text",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "after",
+    "isHtml": false,
+    "type": "added",
+  },
+]
+`;
+
+exports[`HTML Diff Snapshot Tests createHtmlDiff should preserve HTML structure in unchanged parts 1`] = `
+[
+  {
+    "content": "<div>",
+    "isHtml": true,
+    "type": "unchanged",
+  },
+  {
+    "content": "<h1>",
+    "isHtml": true,
+    "type": "unchanged",
+  },
+  {
+    "content": "Title",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "New",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "</h1>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": " ",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "<p>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "Title",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "Content",
+    "isHtml": false,
+    "type": "removed",
+  },
+  {
+    "content": "</h1>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "</p>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "<p>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "</div>",
+    "isHtml": true,
+    "type": "removed",
+  },
+  {
+    "content": "Content",
+    "isHtml": false,
+    "type": "added",
+  },
+  {
+    "content": "</p>",
+    "isHtml": true,
+    "type": "added",
+  },
+  {
+    "content": "</div>",
+    "isHtml": true,
+    "type": "added",
+  },
+]
+`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should generate diff for HTML content changes 1`] = `"<p>Hello <span class="diff-removed"><strong></span><span class="diff-added"><em></span><span class="diff-removed">world</span><span class="diff-added">beautiful</span><span class="diff-removed"></strong></span><span class="diff-added"></em></span><span class="diff-removed"></p></span><span class="diff-added"> </span><span class="diff-added"><strong></span><span class="diff-added">world</span><span class="diff-added"></strong></span><span class="diff-added"></p></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should generate diff for complex HTML structure changes 1`] = `"<div><h2><span class="diff-removed">Experience</span><span class="diff-added">Professional</span><span class="diff-removed"></h2></span><span class="diff-added"> </span><span class="diff-removed"><p></span><span class="diff-added">Experience</span><span class="diff-removed">Worked</span><span class="diff-added"></h2></span><span class="diff-removed"> </span><span class="diff-added"><p></span><span class="diff-removed">at</span><span class="diff-added">Worked</span> <span class="diff-removed">Company</span><span class="diff-added">at</span> <span class="diff-removed">A</span><span class="diff-added">Company</span><span class="diff-removed"></p></span><span class="diff-added"> </span><span class="diff-removed"></div></span><span class="diff-added">A</span><span class="diff-added"> </span><span class="diff-added">and</span><span class="diff-added"> </span><span class="diff-added">Company</span><span class="diff-added"> </span><span class="diff-added">B</span><span class="diff-added"></p></span><span class="diff-added"></div></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should generate diff for list changes 1`] = `"<ul><li>Item 1</li><li><span class="diff-removed">Item</span><span class="diff-added">New</span> <span class="diff-removed">2</span><span class="diff-added">Item</span></li><span class="diff-removed"></ul></span><span class="diff-added"><li></span><span class="diff-added">Item</span><span class="diff-added"> </span><span class="diff-added">2</span><span class="diff-added"></li></span><span class="diff-added"></ul></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should generate diff for simple text changes 1`] = `"Hello <span class="diff-removed">world</span><span class="diff-added">beautiful</span><span class="diff-added"> </span><span class="diff-added">world</span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle case sensitivity when ignoreCase is true 1`] = `"Hello World"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle empty content 1`] = `"<span class="diff-added"><p></span><span class="diff-added">New</span><span class="diff-added"> </span><span class="diff-added">content</span><span class="diff-added"></p></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle identical content 1`] = `"<p>Same content</p>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle malformed HTML safely 1`] = `"<p>Hello <span class="diff-removed"><unclosed></span><span class="diff-added"><strong></span>world<span class="diff-removed"></p></span><span class="diff-added"></strong></span><span class="diff-added"></p></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle script tags safely 1`] = `"<p>Hello <span class="diff-removed">world</span><span class="diff-added"><script></span><span class="diff-removed"></p></span><span class="diff-added">alert("xss")</span><span class="diff-added"></script></span><span class="diff-added">world</span><span class="diff-added"></p></span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should handle whitespace changes when ignoreWhitespace is true 1`] = `"Helloworld"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should show case changes when ignoreCase is false 1`] = `"<span class="diff-removed">Hello</span><span class="diff-added">hello</span> <span class="diff-removed">World</span><span class="diff-added">world</span>"`;
+
+exports[`HTML Diff Snapshot Tests generateHtmlDiff should show whitespace changes when ignoreWhitespace is false 1`] = `"Hello<span class="diff-removed">    </span><span class="diff-added"> </span>world"`;
