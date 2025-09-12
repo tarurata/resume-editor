@@ -2,32 +2,24 @@
 .git
 .gitignore
 
-# Documentation
-README.md
-docs/
-*.md
-
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+__pycache__
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache
 
 # Virtual environments
 venv/
@@ -39,9 +31,15 @@ ENV/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Node.js (for frontend)
@@ -50,26 +48,32 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Next.js
-.next/
-out/
+# Build artifacts
+dist/
+build/
 
-# Environment files
+# Database files (will be mounted as volumes)
+*.db
+*.sqlite
+*.sqlite3
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Documentation
+*.md
+docs/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Other
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Logs
-logs
-*.log
-
-# Testing
-coverage/
-.pytest_cache/
-.coverage
-
-# Other
-*.tmp
-*.temp

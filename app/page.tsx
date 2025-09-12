@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { WizardState } from '@/types/resume'
-import StartScreen from '@/components/wizard/StartScreen'
-import TextParser from '@/components/wizard/TextParser'
-import SectionEditor from '@/components/wizard/SectionEditor'
-import ValidationScreen from '@/components/wizard/ValidationScreen'
+import { WizardState } from '../src/types/resume'
+import StartScreen from '../src/components/wizard/StartScreen'
+import TextParser from '../src/components/wizard/TextParser'
+import SectionEditor from '../src/components/wizard/SectionEditor'
+import ValidationScreen from '../src/components/wizard/ValidationScreen'
 
 export default function Home() {
     const [wizardState, setWizardState] = useState<WizardState>({

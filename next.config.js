@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // App directory is enabled by default in Next.js 13+
+    // Ensure all pages are included in the build
+    trailingSlash: false,
+    // Enable standalone output for Docker
     output: 'standalone',
 }
 

@@ -90,6 +90,14 @@ class DatabaseService:
             conn.commit()
             return personal_info
     
+    def delete_personal_info(self, user_id: str) -> bool:
+        """Delete personal information"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM personal_info WHERE user_id = ?", (user_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    
     # Education operations
     def create_education(self, education: Education) -> Education:
         """Create education entry"""
@@ -201,6 +209,26 @@ class DatabaseService:
             cursor.execute("DELETE FROM certifications WHERE id = ?", (certification_id,))
             conn.commit()
             return cursor.rowcount > 0
+    
+    def get_education_by_id(self, education_id: str) -> Optional[Education]:
+        """Get education entry by ID"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM education WHERE id = ?", (education_id,))
+            row = cursor.fetchone()
+            if row:
+                return Education(**dict(row))
+            return None
+    
+    def get_certification_by_id(self, certification_id: str) -> Optional[Certification]:
+        """Get certification by ID"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM certifications WHERE id = ?", (certification_id,))
+            row = cursor.fetchone()
+            if row:
+                return Certification(**dict(row))
+            return None
     
     # Resume Version operations
     def create_resume_version(self, resume_version: ResumeVersionCreate, user_id: str) -> ResumeVersion:
