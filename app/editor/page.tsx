@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Resume, DiffState, ChangeEntry } from '@/types/resume'
+import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
 import { loadResumeFromLocalStorage, saveResumeToLocalStorage } from '@/lib/storage'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
 import Link from 'next/link'
@@ -14,8 +14,6 @@ import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
 import { ClientOnly } from '@/components/ClientOnly'
 
-export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
-export type SectionId = string
 
 export interface EditorState {
     selectedSection: SectionId | null
@@ -43,8 +41,64 @@ export default function EditorPage() {
     })
 
     useEffect(() => {
+        console.log('Editor useEffect running')
         const loadedResume = loadResumeFromLocalStorage()
-        setResume(loadedResume)
+        console.log('Loaded resume:', loadedResume)
+
+        if (loadedResume) {
+            setResume(loadedResume)
+        } else {
+            // Load sample data for testing
+            const sampleResume: Resume = {
+                title: "Senior Software Engineer",
+                summary: "Experienced full-stack developer with 5+ years building scalable web applications using React, Node.js, and cloud technologies. Passionate about clean code, user experience, and mentoring junior developers.",
+                experience: [
+                    {
+                        role: "Senior Software Engineer",
+                        organization: "TechCorp Inc.",
+                        location: "San Francisco, CA",
+                        startDate: "2021-03",
+                        endDate: null,
+                        bullets: [
+                            "Led development of microservices architecture serving 1M+ daily active users",
+                            "Improved application performance by 40% through code optimization and caching strategies",
+                            "Mentored 3 junior developers and established code review best practices",
+                            "Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes"
+                        ]
+                    },
+                    {
+                        role: "Software Engineer",
+                        organization: "StartupXYZ",
+                        location: "Remote",
+                        startDate: "2019-06",
+                        endDate: "2021-02",
+                        bullets: [
+                            "Built responsive React applications with TypeScript and Redux",
+                            "Developed RESTful APIs using Node.js and Express",
+                            "Collaborated with design team to implement pixel-perfect UI components",
+                            "Participated in agile development process with 2-week sprints"
+                        ]
+                    }
+                ],
+                skills: [
+                    "JavaScript",
+                    "TypeScript",
+                    "React",
+                    "Node.js",
+                    "Python",
+                    "AWS",
+                    "Docker",
+                    "PostgreSQL",
+                    "MongoDB",
+                    "Git",
+                    "Agile/Scrum",
+                    "RESTful APIs"
+                ]
+            }
+            console.log('Setting sample resume:', sampleResume)
+            setResume(sampleResume)
+        }
+        console.log('Setting loading to false')
         setLoading(false)
     }, [])
 

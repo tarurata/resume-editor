@@ -1,7 +1,7 @@
 'use client'
 
 import { Resume } from '@/types/resume'
-import { SectionId } from '@/app/editor/page'
+import { SectionId } from '@/types/resume'
 import { useState } from 'react'
 
 interface SectionsTreeProps {

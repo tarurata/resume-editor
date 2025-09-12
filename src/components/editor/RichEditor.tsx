@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import BulletList from '@tiptap/extension-bullet-list'
 import ListItem from '@tiptap/extension-list-item'
-import { SectionId } from '@/app/editor/page'
+import { SectionId } from '@/types/resume'
 import { useEffect, useState } from 'react'
 
 interface RichEditorProps {

@@ -70,3 +70,6 @@ export interface DiffState {
     viewMode: 'clean' | 'diff';
     showHistory: boolean;
 }
+
+export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
+export type SectionId = string
