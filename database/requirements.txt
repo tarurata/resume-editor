@@ -1,0 +1,9 @@
+# Database requirements for Resume Editor
+# These are additional to the main requirements.txt
+
+# SQLite is built into Python, no additional package needed
+# Pydantic is already in main requirements.txt
+# Pathlib is built into Python 3.4+
+# UUID is built into Python
+# JSON is built into Python
+# Datetime is built into Python
