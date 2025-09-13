@@ -14,6 +14,7 @@
         "test:coverage": "jest --coverage"
     },
     "dependencies": {
+        "@heroicons/react": "^2.2.0",
         "@tiptap/extension-bold": "^3.4.1",
         "@tiptap/extension-bullet-list": "^3.4.1",
         "@tiptap/extension-italic": "^3.4.1",
