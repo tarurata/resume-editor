@@ -57,12 +57,28 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
     const parseDate = (dateString: string) => {
         if (!dateString) return { month: '', year: '' }
         const [year, month] = dateString.split('-')
-        return { month: month || '', year: year || '' }
+
+        // Handle partial dates
+        if (month && !isNaN(parseInt(month))) {
+            // Full date or year-month format
+            const monthIndex = parseInt(month) - 1
+            const monthName = monthIndex >= 0 && monthIndex < months.length ? months[monthIndex] : ''
+            return { month: monthName, year: year || '' }
+        } else if (month && isNaN(parseInt(month))) {
+            // Partial date with month name like "2024-January"
+            const monthIndex = months.indexOf(month)
+            const monthNumber = monthIndex >= 0 ? (monthIndex + 1).toString().padStart(2, '0') : ''
+            return { month: month, year: year || '' }
+        } else {
+            // Just year or empty
+            return { month: '', year: year || '' }
+        }
     }
 
     const formatDate = (month: string, year: string) => {
         if (!month || !year) return ''
         const monthIndex = months.indexOf(month) + 1
+        if (monthIndex === 0) return '' // Invalid month
         return `${year}-${monthIndex.toString().padStart(2, '0')}`
     }
 
@@ -72,11 +88,21 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
     }
 
     const handleEndDateChange = (month: string, year: string) => {
-        const dateString = formatDate(month, year)
-        handleFieldChange('endDate', dateString)
+        // If both month and year are present, format as YYYY-MM
+        if (month && year) {
+            const dateString = formatDate(month, year)
+            handleFieldChange('endDate', dateString)
+        } else if (month || year) {
+            // If only one is present, store as partial date for now
+            const partialDate = `${year}-${month}`
+            handleFieldChange('endDate', partialDate)
+        } else {
+            // Both empty, clear the field
+            handleFieldChange('endDate', '')
+        }
     }
 
-    const startDate = parseDate(editedExperience.startDate)
+    const startDate = parseDate(editedExperience.startDate || '')
     const endDate = parseDate(editedExperience.endDate || '')
 
     return (
@@ -151,7 +177,7 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                         >
                             <option value="">Year</option>
                             {years.map(year => (
-                                <option key={year} value={year}>{year}</option>
+                                <option key={year} value={year.toString()}>{year}</option>
                             ))}
                         </select>
                     </div>
@@ -178,9 +204,8 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         >
                             <option value="">Year</option>
-                            <option value="">Present</option>
                             {years.map(year => (
-                                <option key={year} value={year}>{year}</option>
+                                <option key={year} value={year.toString()}>{year}</option>
                             ))}
                         </select>
                     </div>

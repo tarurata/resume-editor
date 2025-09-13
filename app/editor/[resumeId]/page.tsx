@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
 import { ResumeService, ResumeListItem } from '@/lib/resumeService'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
-import { syncExperiencesToDatabase } from '@/lib/experiencesApi'
+import { syncExperiencesToDatabase, experienceApi } from '@/lib/experiencesApi'
 import Link from 'next/link'
 import { SectionsTree } from '@/components/editor/SectionsTree'
 import { RichEditor } from '@/components/editor/RichEditor'
@@ -79,6 +79,40 @@ export default function EditorPage({ params }: EditorPageProps) {
                         jdText: resumeData.job_description || ''
                     }))
                 }
+
+                // Fetch latest experiences and achievements from API
+                try {
+                    console.log('Fetching experiences from API on load...')
+                    const experiences = await experienceApi.getWithAchievements(resumeId)
+                    console.log('Fetched experiences from API:', experiences)
+
+                    // Convert API data to frontend format
+                    const convertedExperiences = experiences.map(exp => ({
+                        role: exp.role,
+                        organization: exp.organization,
+                        location: exp.location || '',
+                        startDate: exp.start_date,
+                        endDate: exp.end_date || '',
+                        bullets: exp.achievements?.map(ach => ach.achievement_text) || []
+                    }))
+
+                    // Update the resume data with API data
+                    const updatedResume = {
+                        ...resumeData.resume_data,
+                        experience: convertedExperiences
+                    }
+
+                    const updatedResumeListItem = {
+                        ...resumeData,
+                        resume_data: updatedResume
+                    }
+
+                    setResumeListItem(updatedResumeListItem)
+                    console.log('Updated resume with API data on load')
+                } catch (error) {
+                    console.error('Failed to fetch experiences from API on load:', error)
+                    // Continue with existing data if API fails
+                }
             } catch (err) {
                 console.error('Failed to load resume:', err)
                 setError('Failed to load resume')
@@ -92,7 +126,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         }
     }, [resumeId])
 
-    const handleSectionSelect = (sectionId: SectionId, content: string) => {
+    const handleSectionSelect = async (sectionId: SectionId, content: string) => {
         setEditorState(prev => {
             // Store the original content for this section if not already stored
             const sectionHistory = { ...prev.sectionHistory }
@@ -109,6 +143,11 @@ export default function EditorPage({ params }: EditorPageProps) {
                 sectionHistory
             }
         })
+
+        // If selecting an experience section, fetch latest data from API
+        if (sectionId.startsWith('experience-')) {
+            await fetchExperiencesFromAPI()
+        }
     }
 
     const handleContentChange = (content: string) => {
@@ -125,6 +164,44 @@ export default function EditorPage({ params }: EditorPageProps) {
             ...prev,
             jdText
         }))
+    }
+
+    // Fetch experiences and achievements from API
+    const fetchExperiencesFromAPI = async () => {
+        if (!resumeListItem) return
+
+        try {
+            console.log('Fetching experiences from API...')
+            const experiences = await experienceApi.getWithAchievements(resumeId)
+            console.log('Fetched experiences from API:', experiences)
+
+            // Convert API data to frontend format
+            const convertedExperiences = experiences.map(exp => ({
+                role: exp.role,
+                organization: exp.organization,
+                location: exp.location || '',
+                startDate: exp.start_date,
+                endDate: exp.end_date || '',
+                bullets: exp.achievements?.map(ach => ach.achievement_text) || []
+            }))
+
+            // Update the resume data with API data
+            const updatedResume = {
+                ...resumeListItem.resume_data,
+                experience: convertedExperiences
+            }
+
+            const updatedResumeListItem = {
+                ...resumeListItem,
+                resume_data: updatedResume
+            }
+
+            setResumeListItem(updatedResumeListItem)
+            console.log('Updated resume with API data')
+        } catch (error) {
+            console.error('Failed to fetch experiences from API:', error)
+            // Continue with existing data if API fails
+        }
     }
 
     const handleExperienceUpdate = async (index: number, updatedExperience: any) => {
