@@ -1,6 +1,6 @@
 {
   "personal_info": {
-    "id": "35ce6ec5-148d-47e1-9a36-fe4c78f9bcfe",
+    "id": "personal_001",
     "full_name": "John Doe",
     "email": "john.doe@example.com",
     "phone": "+1 (555) 123-4567",
@@ -10,7 +10,7 @@
   },
   "education": [
     {
-      "id": "2f2bf37a-5309-47a3-82fe-dfd8d8d77284",
+      "id": "edu_002",
       "degree": "Master of Science",
       "institution": "Stanford University",
       "field_of_study": "Software Engineering",
@@ -19,7 +19,25 @@
       "location": "Stanford, CA"
     },
     {
-      "id": "711d5bdc-a2c7-43b4-8594-c828e6babd6f",
+      "id": "f5ac6fe0-0021-400b-a15a-76dd88bb378c",
+      "degree": "Master of Science",
+      "institution": "Stanford University",
+      "field_of_study": "Software Engineering",
+      "graduation_date": "2020-06",
+      "gpa": 3.9,
+      "location": "Stanford, CA"
+    },
+    {
+      "id": "edu_001",
+      "degree": "Bachelor of Science",
+      "institution": "University of California, Berkeley",
+      "field_of_study": "Computer Science",
+      "graduation_date": "2018-05",
+      "gpa": 3.7,
+      "location": "Berkeley, CA"
+    },
+    {
+      "id": "18aef527-430a-4d8d-8f89-59a8b4ec2b59",
       "degree": "Bachelor of Science",
       "institution": "University of California, Berkeley",
       "field_of_study": "Computer Science",
@@ -30,7 +48,7 @@
   ],
   "certifications": [
     {
-      "id": "d1e1f94d-38a8-4ad7-baab-5f4ff5c80507",
+      "id": "cert_002",
       "name": "Google Cloud Professional Developer",
       "issuer": "Google Cloud",
       "issue_date": "2021-08",
@@ -38,7 +56,23 @@
       "credential_id": "GCP-PROD-789012"
     },
     {
-      "id": "b6342783-8a03-40a5-9c57-7cdbdd53b0ca",
+      "id": "d5cf6b7d-8960-4a03-a03e-9ae7b2870186",
+      "name": "Google Cloud Professional Developer",
+      "issuer": "Google Cloud",
+      "issue_date": "2021-08",
+      "expiry_date": null,
+      "credential_id": "GCP-PROD-789012"
+    },
+    {
+      "id": "cert_001",
+      "name": "AWS Certified Developer",
+      "issuer": "Amazon Web Services",
+      "issue_date": "2021-03",
+      "expiry_date": "2024-03",
+      "credential_id": "AWS-DEV-123456"
+    },
+    {
+      "id": "9a9aae92-bf32-492b-8495-c8ca6ec64280",
       "name": "AWS Certified Developer",
       "issuer": "Amazon Web Services",
       "issue_date": "2021-03",
@@ -48,7 +82,7 @@
   ],
   "resume_versions": [
     {
-      "id": "9aabd151-dc98-49ad-95c9-636f12811f4f",
+      "id": "c175c8b3-c8ed-417d-a0ab-3487b5083f83",
       "company_name": "StartupXYZ",
       "company_email": "careers@startupxyz.com",
       "job_title": "Full Stack Developer",
@@ -85,11 +119,11 @@
         ]
       },
       "is_active": false,
-      "created_at": "2025-09-11T20:09:20.467950",
-      "updated_at": "2025-09-11T20:09:20.467950"
+      "created_at": "2025-09-13T02:26:44.758802",
+      "updated_at": "2025-09-13T02:26:44.758802"
     },
     {
-      "id": "cc7769ef-3731-4cc8-9f2a-db1dae8053c1",
+      "id": "1023f0f8-c676-4667-8578-79f3d3c38c8c",
       "company_name": "TechCorp Inc.",
       "company_email": "jobs@techcorp.com",
       "job_title": "Senior Software Engineer",
@@ -128,14 +162,14 @@
         ]
       },
       "is_active": true,
-      "created_at": "2025-09-11T20:09:20.466934",
-      "updated_at": "2025-09-12T03:09:20"
+      "created_at": "2025-09-13T02:26:44.753447",
+      "updated_at": "2025-09-13T09:26:44"
     }
   ],
   "applications": [
     {
-      "id": "c10f3a0f-cbde-4614-a3e2-337649d4c205",
-      "resume_version_id": "cc7769ef-3731-4cc8-9f2a-db1dae8053c1",
+      "id": "a1f00da2-ff50-4365-9a72-e32910053005",
+      "resume_version_id": "1023f0f8-c676-4667-8578-79f3d3c38c8c",
       "company": "TechCorp Inc.",
       "position": "Senior Software Engineer",
       "application_date": "2024-01-15",
@@ -144,8 +178,8 @@
       "follow_up_date": "2024-01-25"
     },
     {
-      "id": "aac63223-8056-4d7f-affb-62ec5d2a125c",
-      "resume_version_id": "9aabd151-dc98-49ad-95c9-636f12811f4f",
+      "id": "efa9bcb4-01bd-45ff-9f9b-df6d95fc1bb2",
+      "resume_version_id": "c175c8b3-c8ed-417d-a0ab-3487b5083f83",
       "company": "StartupXYZ",
       "position": "Full Stack Developer",
       "application_date": "2024-01-10",
