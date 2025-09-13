@@ -13,7 +13,9 @@ from pathlib import Path
 from .models import (
     PersonalInfo, Education, Certification, ResumeVersion, ResumeHistory,
     Application, Template, ResumeVersionCreate, ResumeVersionUpdate,
-    ApplicationCreate, ApplicationUpdate, ExtendedResume
+    ApplicationCreate, ApplicationUpdate, ExtendedResume,
+    Experience, Achievement, ExperienceCreate, ExperienceUpdate,
+    AchievementCreate, AchievementUpdate
 )
 
 
@@ -492,3 +494,235 @@ class DatabaseService:
                 data['new_value'] = json.loads(data['new_value']) if data['new_value'] else None
                 history.append(ResumeHistory(**data))
             return history
+
+    # Experience operations
+    def create_experience(self, experience: ExperienceCreate) -> Experience:
+        """Create a new experience entry"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            experience_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            cursor.execute("""
+                INSERT INTO experiences (id, resume_version_id, role, organization, 
+                                      location, start_date, end_date, order_index, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                experience_id, experience.resume_version_id, experience.role,
+                experience.organization, experience.location, experience.start_date,
+                experience.end_date, experience.order_index, now, now
+            ))
+            conn.commit()
+            
+            return Experience(
+                id=experience_id, resume_version_id=experience.resume_version_id,
+                role=experience.role, organization=experience.organization,
+                location=experience.location, start_date=experience.start_date,
+                end_date=experience.end_date, order_index=experience.order_index,
+                created_at=now, updated_at=now
+            )
+
+    def get_experiences(self, resume_version_id: str) -> List[Experience]:
+        """Get all experiences for a resume version"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM experiences 
+                WHERE resume_version_id = ? 
+                ORDER BY order_index ASC, created_at ASC
+            """, (resume_version_id,))
+            rows = cursor.fetchall()
+            return [Experience(**dict(row)) for row in rows]
+
+    def get_experience(self, experience_id: str) -> Optional[Experience]:
+        """Get specific experience by ID"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM experiences WHERE id = ?", (experience_id,))
+            row = cursor.fetchone()
+            if row:
+                return Experience(**dict(row))
+            return None
+
+    def update_experience(self, experience_id: str, update_data: ExperienceUpdate) -> Optional[Experience]:
+        """Update experience entry"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Build dynamic update query
+            update_fields = []
+            values = []
+            
+            if update_data.role is not None:
+                update_fields.append("role = ?")
+                values.append(update_data.role)
+            
+            if update_data.organization is not None:
+                update_fields.append("organization = ?")
+                values.append(update_data.organization)
+            
+            if update_data.location is not None:
+                update_fields.append("location = ?")
+                values.append(update_data.location)
+            
+            if update_data.start_date is not None:
+                update_fields.append("start_date = ?")
+                values.append(update_data.start_date)
+            
+            if update_data.end_date is not None:
+                update_fields.append("end_date = ?")
+                values.append(update_data.end_date)
+            
+            if update_data.order_index is not None:
+                update_fields.append("order_index = ?")
+                values.append(update_data.order_index)
+            
+            if not update_fields:
+                return self.get_experience(experience_id)
+            
+            update_fields.append("updated_at = ?")
+            values.append(datetime.now())
+            values.append(experience_id)
+            
+            query = f"UPDATE experiences SET {', '.join(update_fields)} WHERE id = ?"
+            cursor.execute(query, values)
+            conn.commit()
+            
+            return self.get_experience(experience_id)
+
+    def delete_experience(self, experience_id: str) -> bool:
+        """Delete experience entry and all its achievements"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Delete all achievements first (CASCADE should handle this, but being explicit)
+            cursor.execute("DELETE FROM achievements WHERE experience_id = ?", (experience_id,))
+            
+            # Delete the experience
+            cursor.execute("DELETE FROM experiences WHERE id = ?", (experience_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+
+    # Achievement operations
+    def create_achievement(self, achievement: AchievementCreate) -> Achievement:
+        """Create a new achievement"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            achievement_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            cursor.execute("""
+                INSERT INTO achievements (id, experience_id, achievement_text, order_index, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                achievement_id, achievement.experience_id, achievement.achievement_text,
+                achievement.order_index, now, now
+            ))
+            conn.commit()
+            
+            return Achievement(
+                id=achievement_id, experience_id=achievement.experience_id,
+                achievement_text=achievement.achievement_text, order_index=achievement.order_index,
+                created_at=now, updated_at=now
+            )
+
+    def get_achievements(self, experience_id: str) -> List[Achievement]:
+        """Get all achievements for an experience"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM achievements 
+                WHERE experience_id = ? 
+                ORDER BY order_index ASC, created_at ASC
+            """, (experience_id,))
+            rows = cursor.fetchall()
+            return [Achievement(**dict(row)) for row in rows]
+
+    def get_achievement(self, achievement_id: str) -> Optional[Achievement]:
+        """Get specific achievement by ID"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM achievements WHERE id = ?", (achievement_id,))
+            row = cursor.fetchone()
+            if row:
+                return Achievement(**dict(row))
+            return None
+
+    def update_achievement(self, achievement_id: str, update_data: AchievementUpdate) -> Optional[Achievement]:
+        """Update achievement"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Build dynamic update query
+            update_fields = []
+            values = []
+            
+            if update_data.achievement_text is not None:
+                update_fields.append("achievement_text = ?")
+                values.append(update_data.achievement_text)
+            
+            if update_data.order_index is not None:
+                update_fields.append("order_index = ?")
+                values.append(update_data.order_index)
+            
+            if not update_fields:
+                return self.get_achievement(achievement_id)
+            
+            update_fields.append("updated_at = ?")
+            values.append(datetime.now())
+            values.append(achievement_id)
+            
+            query = f"UPDATE achievements SET {', '.join(update_fields)} WHERE id = ?"
+            cursor.execute(query, values)
+            conn.commit()
+            
+            return self.get_achievement(achievement_id)
+
+    def delete_achievement(self, achievement_id: str) -> bool:
+        """Delete achievement"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM achievements WHERE id = ?", (achievement_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def get_experiences_with_achievements(self, resume_version_id: str) -> List[Dict[str, Any]]:
+        """Get experiences with their achievements for a resume version"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT e.*, a.id as achievement_id, a.achievement_text, a.order_index as achievement_order
+                FROM experiences e
+                LEFT JOIN achievements a ON e.id = a.experience_id
+                WHERE e.resume_version_id = ?
+                ORDER BY e.order_index ASC, e.created_at ASC, a.order_index ASC, a.created_at ASC
+            """, (resume_version_id,))
+            rows = cursor.fetchall()
+            
+            # Group experiences with their achievements
+            experiences = {}
+            for row in rows:
+                exp_id = row['id']
+                if exp_id not in experiences:
+                    experiences[exp_id] = {
+                        'id': row['id'],
+                        'resume_version_id': row['resume_version_id'],
+                        'role': row['role'],
+                        'organization': row['organization'],
+                        'location': row['location'],
+                        'start_date': row['start_date'],
+                        'end_date': row['end_date'],
+                        'order_index': row['order_index'],
+                        'created_at': row['created_at'],
+                        'updated_at': row['updated_at'],
+                        'achievements': []
+                    }
+                
+                if row['achievement_id']:
+                    experiences[exp_id]['achievements'].append({
+                        'id': row['achievement_id'],
+                        'achievement_text': row['achievement_text'],
+                        'order_index': row['achievement_order']
+                    })
+            
+            return list(experiences.values())

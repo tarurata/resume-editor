@@ -76,6 +76,40 @@ class Certification(BaseModel):
         return v
 
 
+class Experience(BaseModel):
+    """Experience model for work experience entries"""
+    id: Optional[str] = None
+    resume_version_id: str
+    role: str = Field(..., min_length=1, max_length=100)
+    organization: str = Field(..., min_length=1, max_length=100)
+    location: Optional[str] = Field(None, max_length=100)
+    start_date: str = Field(..., description="YYYY-MM format")
+    end_date: Optional[str] = Field(None, description="YYYY-MM format or null for current")
+    order_index: int = Field(0, ge=0)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    @field_validator('start_date', 'end_date')
+    @classmethod
+    def validate_date_format(cls, v):
+        if v is None:
+            return v
+        import re
+        if not re.match(r'^\d{4}-\d{2}$', v):
+            raise ValueError('Date must be in YYYY-MM format')
+        return v
+
+
+class Achievement(BaseModel):
+    """Achievement model for key achievements within experiences"""
+    id: Optional[str] = None
+    experience_id: str
+    achievement_text: str = Field(..., min_length=1, max_length=500)
+    order_index: int = Field(0, ge=0)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
 class ResumeVersion(BaseModel):
     """Resume version model for multi-company management"""
     id: Optional[str] = None
@@ -194,3 +228,57 @@ class ApplicationUpdate(BaseModel):
     status: Optional[Literal['applied', 'interview', 'rejected', 'offer', 'withdrawn']] = None
     notes: Optional[str] = None
     follow_up_date: Optional[date] = None
+
+
+class ExperienceCreate(BaseModel):
+    """Model for creating a new experience entry"""
+    resume_version_id: str
+    role: str = Field(..., min_length=1, max_length=100)
+    organization: str = Field(..., min_length=1, max_length=100)
+    location: Optional[str] = Field(None, max_length=100)
+    start_date: str = Field(..., description="YYYY-MM format")
+    end_date: Optional[str] = Field(None, description="YYYY-MM format or null for current")
+    order_index: int = Field(0, ge=0)
+
+    @field_validator('start_date', 'end_date')
+    @classmethod
+    def validate_date_format(cls, v):
+        if v is None:
+            return v
+        import re
+        if not re.match(r'^\d{4}-\d{2}$', v):
+            raise ValueError('Date must be in YYYY-MM format')
+        return v
+
+
+class ExperienceUpdate(BaseModel):
+    """Model for updating an experience entry"""
+    role: Optional[str] = Field(None, min_length=1, max_length=100)
+    organization: Optional[str] = Field(None, min_length=1, max_length=100)
+    location: Optional[str] = Field(None, max_length=100)
+    start_date: Optional[str] = Field(None, description="YYYY-MM format")
+    end_date: Optional[str] = Field(None, description="YYYY-MM format or null for current")
+    order_index: Optional[int] = Field(None, ge=0)
+
+    @field_validator('start_date', 'end_date')
+    @classmethod
+    def validate_date_format(cls, v):
+        if v is None:
+            return v
+        import re
+        if not re.match(r'^\d{4}-\d{2}$', v):
+            raise ValueError('Date must be in YYYY-MM format')
+        return v
+
+
+class AchievementCreate(BaseModel):
+    """Model for creating a new achievement"""
+    experience_id: str
+    achievement_text: str = Field(..., min_length=1, max_length=500)
+    order_index: int = Field(0, ge=0)
+
+
+class AchievementUpdate(BaseModel):
+    """Model for updating an achievement"""
+    achievement_text: Optional[str] = Field(None, min_length=1, max_length=500)
+    order_index: Optional[int] = Field(None, ge=0)
