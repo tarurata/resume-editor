@@ -181,19 +181,19 @@ export const syncExperiencesToDatabase = async (
 ): Promise<void> => {
     try {
         console.log('Syncing experiences to database:', { resumeVersionId, experiences })
-        
+
         // Get existing experiences from database
         const existingExperiences = await experienceApi.getByResumeVersion(resumeVersionId)
         console.log('Existing experiences:', existingExperiences)
-        
+
         // Create a map of existing experiences by their order index
         const existingMap = new Map(existingExperiences.map(exp => [exp.order_index, exp]))
-        
+
         // Process each experience from the frontend
         for (let i = 0; i < experiences.length; i++) {
             const exp = experiences[i]
             const existingExp = existingMap.get(i)
-            
+
             if (existingExp) {
                 // Update existing experience
                 console.log('Updating existing experience:', existingExp.id)
@@ -205,16 +205,16 @@ export const syncExperiencesToDatabase = async (
                     end_date: exp.endDate,
                     order_index: i
                 })
-                
+
                 // Update achievements for this experience
                 if (exp.bullets && exp.bullets.length > 0) {
                     const existingAchievements = await achievementApi.getByExperience(existingExp.id)
-                    
+
                     // Delete existing achievements
                     for (const achievement of existingAchievements) {
                         await achievementApi.delete(achievement.id)
                     }
-                    
+
                     // Create new achievements
                     for (let j = 0; j < exp.bullets.length; j++) {
                         if (exp.bullets[j].trim()) {
@@ -237,7 +237,7 @@ export const syncExperiencesToDatabase = async (
                     end_date: exp.endDate,
                     order_index: i
                 })
-                
+
                 // Create achievements for this experience
                 if (exp.bullets && exp.bullets.length > 0) {
                     for (let j = 0; j < exp.bullets.length; j++) {
@@ -251,18 +251,18 @@ export const syncExperiencesToDatabase = async (
                 }
             }
         }
-        
+
         // Delete any remaining experiences that are no longer in the frontend data
-        const frontendIndices = new Set(Array.from({length: experiences.length}, (_, i) => i))
+        const frontendIndices = new Set(Array.from({ length: experiences.length }, (_, i) => i))
         for (const existingExp of existingExperiences) {
             if (!frontendIndices.has(existingExp.order_index)) {
                 console.log('Deleting experience:', existingExp.id)
                 await experienceApi.delete(existingExp.id)
             }
         }
-        
+
         console.log('Successfully synced experiences to database')
-        
+
     } catch (error) {
         console.error('Failed to sync experiences to database:', error)
         throw error

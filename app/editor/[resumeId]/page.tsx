@@ -358,7 +358,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 ...resumeListItem,
                 job_description: editorState.jdText
             }
-            
+
             // Save the main resume data (existing functionality)
             const { saveResumeToDatabase } = await import('@/lib/storage')
             await saveResumeToDatabase(

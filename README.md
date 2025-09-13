@@ -4,17 +4,23 @@ A modern, web-based resume editor that allows you to create, edit, and export pr
 
 ## 🚀 Quick Start
 
-### Local Development
+### Development Setup (Recommended)
 
 ```bash
-# Install dependencies
+# Install frontend dependencies
 npm install
 
-# Start development server
+# Start frontend development server
 npm run dev
 
-# Open http://localhost:3000 in your browser
+# In another terminal, start backend with Docker
+docker compose up backend
+
+# Frontend: http://localhost:3001 (or 3000 if available)
+# Backend API: http://localhost:8000
 ```
+
+**Note:** Frontend runs locally for fast development. Backend runs in Docker for consistency.
 
 ### Production (Standalone)
 
@@ -26,19 +32,6 @@ npm run build
 npm run start:standalone
 
 # Open http://localhost:3000 in your browser
-```
-
-### Docker (Frontend Only)
-
-```bash
-# Build the frontend Docker image
-docker build -f Dockerfile.frontend -t resume-editor-frontend .
-
-# Run the frontend container
-docker run -p 3000:3000 resume-editor-frontend
-
-# Check health status
-curl http://localhost:3000/health
 ```
 
 ### Docker (Backend Only)
@@ -53,6 +46,21 @@ docker run -p 8000:8000 resume-editor-backend
 # Check health status
 curl http://localhost:8000/api/v1/health
 ```
+
+### Docker (Frontend Only - When Needed)
+
+```bash
+# Build the frontend Docker image
+docker build -f Dockerfile.frontend -t resume-editor-frontend .
+
+# Run the frontend container
+docker run -p 3000:3000 resume-editor-frontend
+
+# Check health status
+curl http://localhost:3000/health
+```
+
+**Note:** For development, use `npm run dev` instead of Docker for faster hot reload.
 
 ### Docker Compose (Full Stack)
 
