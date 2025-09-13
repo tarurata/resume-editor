@@ -79,6 +79,11 @@ async function apiRequest<T>(
         const data = response.ok ? await response.json() : null
 
         if (!response.ok) {
+            console.error('API Error Response:', {
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+            })
             const errorMessage = data?.detail || `HTTP ${response.status}: ${response.statusText}`
             throw new ApiError(errorMessage, response.status, data)
         }
@@ -194,15 +199,37 @@ export const syncExperiencesToDatabase = async (
             const exp = experiences[i]
             const existingExp = existingMap.get(i)
 
+            // Validate required fields
+            if (!exp.role || !exp.organization || !exp.startDate) {
+                console.warn(`Skipping experience ${i} - missing required fields:`, {
+                    role: exp.role,
+                    organization: exp.organization,
+                    startDate: exp.startDate
+                })
+                continue
+            }
+
+            // Validate date format - must be YYYY-MM
+            const dateRegex = /^\d{4}-\d{2}$/
+            if (!dateRegex.test(exp.startDate)) {
+                console.warn(`Skipping experience ${i} - invalid start date format:`, exp.startDate)
+                continue
+            }
+
+            if (exp.endDate && !dateRegex.test(exp.endDate)) {
+                console.warn(`Skipping experience ${i} - invalid end date format:`, exp.endDate)
+                continue
+            }
+
             if (existingExp) {
                 // Update existing experience
                 console.log('Updating existing experience:', existingExp.id)
                 await experienceApi.update(existingExp.id, {
                     role: exp.role,
                     organization: exp.organization,
-                    location: exp.location,
+                    location: exp.location || null,
                     start_date: exp.startDate,
-                    end_date: exp.endDate,
+                    end_date: exp.endDate || null,
                     order_index: i
                 })
 
@@ -232,9 +259,9 @@ export const syncExperiencesToDatabase = async (
                     resume_version_id: resumeVersionId,
                     role: exp.role,
                     organization: exp.organization,
-                    location: exp.location,
+                    location: exp.location || null,
                     start_date: exp.startDate,
-                    end_date: exp.endDate,
+                    end_date: exp.endDate || null,
                     order_index: i
                 })
 
