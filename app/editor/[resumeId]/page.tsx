@@ -13,6 +13,7 @@ import { StrategyPresets } from '@/components/editor/StrategyPresets'
 import { DiffPreview } from '@/components/editor/DiffPreview'
 import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
+import { ExperienceEditor } from '@/components/editor/ExperienceEditor'
 import { ClientOnly } from '@/components/ClientOnly'
 import ApiStatus from '@/components/ApiStatus'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
@@ -125,8 +126,59 @@ export default function EditorPage({ params }: EditorPageProps) {
         }))
     }
 
-    const handleAcceptChanges = () => {
+    const handleExperienceUpdate = async (index: number, updatedExperience: any) => {
+        if (!resumeListItem) return
+
+        const updatedResume = { ...resumeListItem.resume_data }
+        if (updatedResume.experience) {
+            updatedResume.experience[index] = updatedExperience
+        }
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        setResumeListItem(updatedResumeListItem)
+
+        // Auto-save the changes
+        try {
+            const { saveResumeToDatabase } = await import('@/lib/storage')
+            await saveResumeToDatabase(
+                updatedResume,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                editorState.jdText
+            )
+            console.log('Experience changes auto-saved successfully')
+        } catch (error) {
+            console.error('Failed to auto-save experience changes:', error)
+            // Don't show error to user for auto-save failures
+        }
+    }
+
+    const handleAcceptChanges = async () => {
         if (!editorState.selectedSection || !resumeListItem) return
+
+        // For experience sections, changes are already saved via handleExperienceUpdate
+        if (editorState.selectedSection.startsWith('experience-')) {
+            // Just auto-save the current state
+            try {
+                const { saveResumeToDatabase } = await import('@/lib/storage')
+                await saveResumeToDatabase(
+                    resumeListItem.resume_data,
+                    resumeListItem.company_name,
+                    resumeListItem.job_title,
+                    resumeListItem.company_email,
+                    editorState.jdText
+                )
+                console.log('Experience changes auto-saved successfully')
+            } catch (error) {
+                console.error('Failed to auto-save experience changes:', error)
+            }
+            return
+        }
 
         // Record the change in history
         addChangeToHistory(
@@ -158,31 +210,38 @@ export default function EditorPage({ params }: EditorPageProps) {
                     )
                 }
                 break
-            default:
-                if (editorState.selectedSection.startsWith('experience-')) {
-                    const index = parseInt(editorState.selectedSection.split('-')[1])
-                    if (updatedResume.experience?.[index]) {
-                        const bulletMatches = content.match(/<li>(.*?)<\/li>/g)
-                        if (bulletMatches) {
-                            updatedResume.experience[index].bullets = bulletMatches.map(match =>
-                                match.replace(/<\/?li>/g, '').trim()
-                            )
-                        }
-                    }
-                }
-                break
         }
 
-        setResumeListItem(prev => prev ? {
-            ...prev,
-            resume_data: updatedResume
-        } : null)
+        // Update local state
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume,
+            job_description: editorState.jdText
+        }
+
+        setResumeListItem(updatedResumeListItem)
 
         setEditorState(prev => ({
             ...prev,
             originalContent: prev.currentContent,
             hasChanges: false
         }))
+
+        // Auto-save the changes
+        try {
+            const { saveResumeToDatabase } = await import('@/lib/storage')
+            await saveResumeToDatabase(
+                updatedResume,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                updatedResumeListItem.job_description
+            )
+            console.log('Changes auto-saved successfully')
+        } catch (error) {
+            console.error('Failed to auto-save changes:', error)
+            // Don't show error to user for auto-save failures
+        }
     }
 
     const handleRejectChanges = () => {
@@ -283,15 +342,26 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         try {
             console.log('Calling ResumeService to update resume...')
+            // Update the resume list item with current job description
+            const updatedResumeListItem = {
+                ...resumeListItem,
+                job_description: editorState.jdText
+            }
+
             // For now, we'll use the existing saveResumeToDatabase function
             // In a real implementation, we'd have an update method
             const { saveResumeToDatabase } = await import('@/lib/storage')
             await saveResumeToDatabase(
-                resumeListItem.resume_data,
-                resumeListItem.company_name,
-                resumeListItem.job_title
+                updatedResumeListItem.resume_data,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                updatedResumeListItem.job_description
             )
             console.log('Resume saved successfully')
+
+            // Update the local state with the saved data
+            setResumeListItem(updatedResumeListItem)
 
             setEditorState(prev => ({
                 ...prev,
@@ -417,11 +487,30 @@ export default function EditorPage({ params }: EditorPageProps) {
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                             </div>
                         }>
-                            <RichEditor
-                                content={editorState.currentContent}
-                                onChange={handleContentChange}
-                                selectedSection={editorState.selectedSection}
-                            />
+                            {editorState.selectedSection && editorState.selectedSection.startsWith('experience-') ? (
+                                <div className="h-full overflow-y-auto">
+                                    {(() => {
+                                        const index = parseInt(editorState.selectedSection.split('-')[1])
+                                        const experience = resume.experience?.[index]
+                                        if (experience) {
+                                            return (
+                                                <ExperienceEditor
+                                                    experience={experience}
+                                                    index={index}
+                                                    onUpdate={handleExperienceUpdate}
+                                                />
+                                            )
+                                        }
+                                        return <div>Experience not found</div>
+                                    })()}
+                                </div>
+                            ) : (
+                                <RichEditor
+                                    content={editorState.currentContent}
+                                    onChange={handleContentChange}
+                                    selectedSection={editorState.selectedSection}
+                                />
+                            )}
                         </ClientOnly>
                     </div>
 

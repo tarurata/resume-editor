@@ -9,7 +9,9 @@ const STORAGE_KEY = 'resume-editor-data'
 export const saveResumeToDatabase = async (
     resume: Resume,
     companyName: string = 'Default Company',
-    jobTitle: string = 'Software Engineer'
+    jobTitle: string = 'Software Engineer',
+    companyEmail?: string,
+    jobDescription?: string
 ): Promise<void> => {
     console.log('saveResumeToDatabase called with:', { resume, companyName, jobTitle })
 
@@ -41,19 +43,25 @@ export const saveResumeToDatabase = async (
             await resumeVersionApi.update(activeVersion.id, {
                 resume_data: sanitizedResume,
                 job_title: jobTitle,
-                company_name: companyName
+                company_name: companyName,
+                company_email: companyEmail,
+                job_description: jobDescription
             })
             console.log('Updated existing version successfully')
         } else {
             // Create new resume version
             console.log('Creating new resume version...')
-            await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, 'default@company.com')
+            await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
             console.log('Created new version successfully')
         }
 
         // Also save to localStorage as backup
         console.log('Saving to localStorage as backup...')
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizedResume))
+        const resumeWithJobDescription = {
+            ...sanitizedResume,
+            job_description: jobDescription
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeWithJobDescription))
         console.log('Saved to localStorage successfully')
     } catch (error) {
         console.error('Failed to save resume to database:', error)
@@ -61,7 +69,11 @@ export const saveResumeToDatabase = async (
         // Fallback to localStorage only
         try {
             console.log('Falling back to localStorage only...')
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(resume))
+            const resumeWithJobDescription = {
+                ...resume,
+                job_description: jobDescription
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeWithJobDescription))
             console.warn('Saved to localStorage as fallback (API unavailable)')
             // Don't throw error - localStorage save was successful
             return
@@ -93,9 +105,11 @@ export const loadResumeFromDatabase = async (): Promise<Resume | null> => {
             const data = localStorage.getItem(STORAGE_KEY)
             if (!data) return null
 
-            const resume = JSON.parse(data) as Resume
+            const resumeData = JSON.parse(data)
+            // Extract job_description if it exists in the stored data
+            const { job_description, ...resume } = resumeData
             console.warn('Loaded from localStorage as fallback (API unavailable)')
-            return resume
+            return resume as Resume
         } catch (localError) {
             console.error('Failed to load resume from localStorage:', localError)
             return null

@@ -11,6 +11,7 @@ from app.api.certifications import router as certifications_router
 from app.api.resume_versions import router as resume_versions_router
 from app.api.applications import router as applications_router
 from app.api.templates import router as templates_router
+from app.api.experiences import router as experiences_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -43,6 +44,7 @@ app.include_router(certifications_router, prefix="/api/v1/certifications", tags=
 app.include_router(resume_versions_router, prefix="/api/v1/resume-versions", tags=["resume-versions"])
 app.include_router(applications_router, prefix="/api/v1/applications", tags=["applications"])
 app.include_router(templates_router, prefix="/api/v1/templates", tags=["templates"])
+app.include_router(experiences_router, prefix="/api/v1/experiences", tags=["experiences"])
 
 
 def custom_openapi():

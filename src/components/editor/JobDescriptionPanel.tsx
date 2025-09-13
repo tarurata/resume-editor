@@ -78,7 +78,7 @@ export function JobDescriptionPanel({ jdText, onJdChange }: JobDescriptionPanelP
                                 value={jdText}
                                 onChange={handleTextChange}
                                 placeholder="Paste job description here..."
-                                className="w-full h-full resize-none border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                                className="w-full h-3/4 resize-none border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                             />
                         </div>
 
