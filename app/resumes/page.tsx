@@ -10,12 +10,12 @@ export default function ResumesPage() {
 
     const handleEditResume = (id: string) => {
         // Navigate to the editor with the specific resume ID
-        router.push(`/editor?id=${id}`)
+        router.push(`/editor/${id}`)
     }
 
     const handleCreateResume = () => {
-        // Navigate to the editor to create a new resume
-        router.push('/editor')
+        // Navigate to the new resume creation page
+        router.push('/resumes/new')
     }
 
     return (
