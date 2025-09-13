@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
 import { ResumeService, ResumeListItem } from '@/lib/resumeService'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
+import { syncExperiencesToDatabase } from '@/lib/experiencesApi'
 import Link from 'next/link'
 import { SectionsTree } from '@/components/editor/SectionsTree'
 import { RichEditor } from '@/components/editor/RichEditor'
@@ -152,6 +153,16 @@ export default function EditorPage({ params }: EditorPageProps) {
                 editorState.jdText
             )
             console.log('Experience changes auto-saved successfully')
+
+            // NEW: Also sync to database tables for immediate persistence
+            if (updatedResume.experience && updatedResume.experience.length > 0) {
+                console.log('Auto-syncing experiences to database...')
+                await syncExperiencesToDatabase(
+                    resumeId,
+                    updatedResume.experience
+                )
+                console.log('Experiences auto-synced successfully')
+            }
         } catch (error) {
             console.error('Failed to auto-save experience changes:', error)
             // Don't show error to user for auto-save failures
@@ -347,9 +358,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                 ...resumeListItem,
                 job_description: editorState.jdText
             }
-
-            // For now, we'll use the existing saveResumeToDatabase function
-            // In a real implementation, we'd have an update method
+            
+            // Save the main resume data (existing functionality)
             const { saveResumeToDatabase } = await import('@/lib/storage')
             await saveResumeToDatabase(
                 updatedResumeListItem.resume_data,
@@ -359,6 +369,16 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.job_description
             )
             console.log('Resume saved successfully')
+
+            // NEW: Sync experiences and achievements to database tables
+            if (updatedResumeListItem.resume_data.experience && updatedResumeListItem.resume_data.experience.length > 0) {
+                console.log('Syncing experiences and achievements to database...')
+                await syncExperiencesToDatabase(
+                    resumeId, // resume version ID
+                    updatedResumeListItem.resume_data.experience
+                )
+                console.log('Experiences and achievements synced successfully')
+            }
 
             // Update the local state with the saved data
             setResumeListItem(updatedResumeListItem)
