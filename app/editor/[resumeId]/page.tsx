@@ -139,7 +139,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         if (!searchParams) return
         const urlParams = parseURLParams(searchParams)
         const validation = validateURLParams(urlParams)
-        
+
         if (!validation.valid) {
             console.warn('Invalid URL parameters:', validation.errors)
             setEditorState(prev => ({
@@ -152,7 +152,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 urlError: null
             }))
         }
-        
+
         const urlState = paramsToState(urlParams)
         setEditorState(prev => ({
             ...prev,
@@ -163,7 +163,7 @@ export default function EditorPage({ params }: EditorPageProps) {
     // Handle URL state changes
     useEffect(() => {
         const { section, mode, jd } = editorState.urlState
-        
+
         // Handle section parameter
         if (section && section !== editorState.selectedSection) {
             // Find the content for this section
@@ -190,12 +190,12 @@ export default function EditorPage({ params }: EditorPageProps) {
                         }
                 }
             }
-            
+
             if (content) {
                 handleSectionSelect(section, content)
             }
         }
-        
+
         // Handle mode parameter
         if (mode === 'print' && !editorState.showPrintView) {
             setEditorState(prev => ({
@@ -208,7 +208,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 showPrintView: false
             }))
         }
-        
+
         // Handle job description parameter
         if (jd && jd !== editorState.jdText) {
             setEditorState(prev => ({
