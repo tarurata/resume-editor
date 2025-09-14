@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
 import { ResumeService, ResumeListItem } from '@/lib/resumeService'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
@@ -18,6 +18,9 @@ import { ExperienceEditor } from '@/components/editor/ExperienceEditor'
 import { ClientOnly } from '@/components/ClientOnly'
 import ApiStatus from '@/components/ApiStatus'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import { URLStateManager } from '@/components/editor/URLStateManager'
+import { SectionNavigation } from '@/components/editor/SectionNavigation'
+import { URLState, parseURLParams, paramsToState, validateURLParams } from '@/lib/urlUtils'
 
 export interface EditorState {
     selectedSection: SectionId | null
@@ -30,6 +33,8 @@ export interface EditorState {
     showPrintView: boolean
     isSaving: boolean
     saveError: string | null
+    urlState: URLState
+    urlError: string | null
 }
 
 interface EditorPageProps {
@@ -41,6 +46,7 @@ interface EditorPageProps {
 export default function EditorPage({ params }: EditorPageProps) {
     const { resumeId } = params
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [resumeListItem, setResumeListItem] = useState<ResumeListItem | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -54,7 +60,9 @@ export default function EditorPage({ params }: EditorPageProps) {
         sectionHistory: {},
         showPrintView: false,
         isSaving: false,
-        saveError: null
+        saveError: null,
+        urlState: { section: null, mode: 'edit', jd: null },
+        urlError: null
     })
 
     useEffect(() => {
@@ -93,7 +101,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                         location: exp.location || '',
                         startDate: exp.start_date,
                         endDate: exp.end_date || '',
-                        bullets: exp.achievements?.map(ach => ach.achievement_text) || []
+                        bullets: exp.achievements?.map((ach: any) => ach.achievement_text) || []
                     }))
 
                     // Update the resume data with API data
@@ -125,6 +133,90 @@ export default function EditorPage({ params }: EditorPageProps) {
             loadResume()
         }
     }, [resumeId])
+
+    // Handle URL parameters
+    useEffect(() => {
+        if (!searchParams) return
+        const urlParams = parseURLParams(searchParams)
+        const validation = validateURLParams(urlParams)
+        
+        if (!validation.valid) {
+            console.warn('Invalid URL parameters:', validation.errors)
+            setEditorState(prev => ({
+                ...prev,
+                urlError: `Invalid URL parameters: ${validation.errors.join(', ')}`
+            }))
+        } else {
+            setEditorState(prev => ({
+                ...prev,
+                urlError: null
+            }))
+        }
+        
+        const urlState = paramsToState(urlParams)
+        setEditorState(prev => ({
+            ...prev,
+            urlState
+        }))
+    }, [searchParams])
+
+    // Handle URL state changes
+    useEffect(() => {
+        const { section, mode, jd } = editorState.urlState
+        
+        // Handle section parameter
+        if (section && section !== editorState.selectedSection) {
+            // Find the content for this section
+            let content = ''
+            if (resumeListItem?.resume_data) {
+                const resume = resumeListItem.resume_data
+                switch (section) {
+                    case 'title':
+                        content = resume.title || ''
+                        break
+                    case 'summary':
+                        content = resume.summary || ''
+                        break
+                    case 'skills':
+                        content = resume.skills ? resume.skills.map(skill => `<li>${skill}</li>`).join('') : ''
+                        break
+                    default:
+                        if (section.startsWith('experience-')) {
+                            const index = parseInt(section.split('-')[1])
+                            const experience = resume.experience?.[index]
+                            if (experience) {
+                                content = JSON.stringify(experience, null, 2)
+                            }
+                        }
+                }
+            }
+            
+            if (content) {
+                handleSectionSelect(section, content)
+            }
+        }
+        
+        // Handle mode parameter
+        if (mode === 'print' && !editorState.showPrintView) {
+            setEditorState(prev => ({
+                ...prev,
+                showPrintView: true
+            }))
+        } else if (mode === 'edit' && editorState.showPrintView) {
+            setEditorState(prev => ({
+                ...prev,
+                showPrintView: false
+            }))
+        }
+        
+        // Handle job description parameter
+        if (jd && jd !== editorState.jdText) {
+            setEditorState(prev => ({
+                ...prev,
+                jdText: jd
+            }))
+        }
+    }, [editorState.urlState, resumeListItem])
 
     const handleSectionSelect = async (sectionId: SectionId, content: string) => {
         setEditorState(prev => {
@@ -182,7 +274,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 location: exp.location || '',
                 startDate: exp.start_date,
                 endDate: exp.end_date || '',
-                bullets: exp.achievements?.map(ach => ach.achievement_text) || []
+                bullets: exp.achievements?.map((ach: any) => ach.achievement_text) || []
             }))
 
             // Update the resume data with API data
@@ -564,6 +656,72 @@ export default function EditorPage({ params }: EditorPageProps) {
                     </div>
                 </div>
             </div>
+
+            {/* URL State Manager */}
+            <URLStateManager
+                resumeId={resumeId}
+                currentState={editorState.urlState}
+                onStateChange={(newState) => {
+                    setEditorState(prev => ({
+                        ...prev,
+                        urlState: newState
+                    }))
+                }}
+                onError={(error) => {
+                    setEditorState(prev => ({
+                        ...prev,
+                        urlError: error
+                    }))
+                }}
+            />
+
+            {/* Section Navigation */}
+            {resumeListItem && (
+                <SectionNavigation
+                    resume={resumeListItem.resume_data}
+                    currentSection={editorState.selectedSection}
+                    onSectionChange={(sectionId) => {
+                        // Find content for the section
+                        let content = ''
+                        const resume = resumeListItem.resume_data
+                        switch (sectionId) {
+                            case 'title':
+                                content = resume.title || ''
+                                break
+                            case 'summary':
+                                content = resume.summary || ''
+                                break
+                            case 'skills':
+                                content = resume.skills ? resume.skills.map(skill => `<li>${skill}</li>`).join('') : ''
+                                break
+                            default:
+                                if (sectionId.startsWith('experience-')) {
+                                    const index = parseInt(sectionId.split('-')[1])
+                                    const experience = resume.experience?.[index]
+                                    if (experience) {
+                                        content = JSON.stringify(experience, null, 2)
+                                    }
+                                }
+                        }
+                        if (content) {
+                            handleSectionSelect(sectionId, content)
+                        }
+                    }}
+                />
+            )}
+
+            {/* URL Error Display */}
+            {editorState.urlError && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <p className="text-sm text-red-700">
+                                {editorState.urlError}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main Editor Layout */}
             <div className="flex h-[calc(100vh-80px)]">
