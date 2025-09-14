@@ -3,6 +3,7 @@
 import { Resume } from '@/types/resume'
 import { useEffect, useCallback, useState } from 'react'
 import { pdfExportApi, ApiError } from '@/lib/api'
+import { LatexStyleResume } from './LatexStyleResume'
 
 interface PrintViewProps {
     resume: Resume
@@ -19,6 +20,316 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
             window.print()
         }, 100)
     }, [])
+
+    const handleBrowserPDFExport = useCallback(async () => {
+        setIsExporting(true)
+        setExportError(null)
+
+        try {
+            // Create a temporary container to render the LaTeX-style resume
+            const tempContainer = document.createElement('div')
+            tempContainer.style.position = 'absolute'
+            tempContainer.style.left = '-9999px'
+            tempContainer.style.top = '-9999px'
+            document.body.appendChild(tempContainer)
+
+            // Render the LaTeX-style resume in the temporary container
+            const { createRoot } = await import('react-dom/client')
+            const root = createRoot(tempContainer)
+            root.render(<LatexStyleResume resume={resume} />)
+
+            // Wait for rendering to complete
+            await new Promise(resolve => setTimeout(resolve, 100))
+
+            // Get the rendered HTML
+            const latexResumeElement = tempContainer.querySelector('.latex-resume')
+            if (!latexResumeElement) {
+                throw new Error('Failed to render resume content')
+            }
+
+            // Create a new window with the LaTeX-style resume
+            const printWindow = window.open('', '_blank')
+            if (!printWindow) {
+                throw new Error('Could not open print window. Please check your popup blocker settings.')
+            }
+
+            // Generate HTML content with LaTeX styling
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${resume.title} - Resume</title>
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Times New Roman', serif;
+                            font-size: 11pt;
+                            line-height: 1.2;
+                            color: #000;
+                            background: white;
+                            max-width: 8.5in;
+                            margin: 0 auto;
+                            padding: 0.5in;
+                        }
+                        
+                        .latex-resume {
+                            font-family: 'Times New Roman', serif;
+                            font-size: 11pt;
+                            line-height: 1.2;
+                            color: #000;
+                            max-width: 8.5in;
+                            margin: 0 auto;
+                            padding: 0.5in;
+                            background: white;
+                        }
+                        
+                        .resume-header {
+                            text-align: center;
+                            margin-bottom: 20pt;
+                        }
+                        
+                        .resume-name {
+                            font-size: 24pt;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            letter-spacing: 1pt;
+                            margin-bottom: 5pt;
+                        }
+                        
+                        .resume-title {
+                            font-size: 14pt;
+                            font-weight: bold;
+                            margin-bottom: 5pt;
+                        }
+                        
+                        .contact-info {
+                            font-size: 10pt;
+                            margin-bottom: 10pt;
+                        }
+                        
+                        .contact-info a {
+                            color: #000;
+                            text-decoration: underline;
+                        }
+                        
+                        .section {
+                            margin-bottom: 16pt;
+                        }
+                        
+                        .section-title {
+                            font-size: 12pt;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5pt;
+                            margin-bottom: 8pt;
+                            padding-bottom: 2pt;
+                            border-bottom: 1pt solid #000;
+                        }
+                        
+                        .summary-text {
+                            font-size: 11pt;
+                            line-height: 1.4;
+                            text-align: justify;
+                        }
+                        
+                        .experience-item {
+                            margin-bottom: 12pt;
+                        }
+                        
+                        .experience-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 4pt;
+                        }
+                        
+                        .experience-role {
+                            font-weight: bold;
+                            font-size: 11pt;
+                        }
+                        
+                        .experience-org {
+                            font-style: italic;
+                            font-size: 10pt;
+                        }
+                        
+                        .experience-location {
+                            font-style: italic;
+                            font-size: 10pt;
+                        }
+                        
+                        .experience-dates {
+                            font-style: italic;
+                            font-size: 10pt;
+                            text-align: right;
+                            white-space: nowrap;
+                        }
+                        
+                        .experience-bullets {
+                            margin: 4pt 0 0 0;
+                            padding-left: 0;
+                            list-style: none;
+                        }
+                        
+                        .experience-bullets li {
+                            position: relative;
+                            padding-left: 12pt;
+                            margin-bottom: 2pt;
+                            font-size: 10pt;
+                            line-height: 1.3;
+                        }
+                        
+                        .experience-bullets li::before {
+                            content: "•";
+                            position: absolute;
+                            left: 0;
+                            font-weight: bold;
+                        }
+                        
+                        .education-item {
+                            margin-bottom: 8pt;
+                        }
+                        
+                        .education-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 2pt;
+                        }
+                        
+                        .education-degree {
+                            font-weight: bold;
+                            font-size: 11pt;
+                        }
+                        
+                        .education-school {
+                            font-style: italic;
+                            font-size: 10pt;
+                        }
+                        
+                        .education-location {
+                            font-style: italic;
+                            font-size: 10pt;
+                        }
+                        
+                        .education-dates {
+                            font-style: italic;
+                            font-size: 10pt;
+                            text-align: right;
+                        }
+                        
+                        .certifications-item {
+                            margin-bottom: 6pt;
+                        }
+                        
+                        .certifications-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 2pt;
+                        }
+                        
+                        .certification-name {
+                            font-weight: bold;
+                            font-size: 11pt;
+                        }
+                        
+                        .certification-issuer {
+                            font-style: italic;
+                            font-size: 10pt;
+                        }
+                        
+                        .certification-date {
+                            font-style: italic;
+                            font-size: 10pt;
+                            text-align: right;
+                        }
+                        
+                        .skills-container {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 8pt;
+                        }
+                        
+                        .skill-category {
+                            margin-bottom: 8pt;
+                        }
+                        
+                        .skill-category-title {
+                            font-weight: bold;
+                            font-size: 10pt;
+                            margin-bottom: 2pt;
+                        }
+                        
+                        .skill-list {
+                            font-size: 10pt;
+                            line-height: 1.3;
+                        }
+                        
+                        @page {
+                            size: letter;
+                            margin: 0.5in;
+                        }
+                        
+                        @media print {
+                            body {
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+                            
+                            .page-break-before {
+                                page-break-before: always;
+                            }
+                            
+                            .page-break-after {
+                                page-break-after: always;
+                            }
+                            
+                            .page-break-inside-avoid {
+                                page-break-inside: avoid;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${latexResumeElement.outerHTML}
+                </body>
+                </html>
+            `
+
+            printWindow.document.write(htmlContent)
+            printWindow.document.close()
+
+            // Clean up temporary container
+            root.unmount()
+            document.body.removeChild(tempContainer)
+
+            // Wait for content to load, then trigger print
+            printWindow.onload = () => {
+                setTimeout(() => {
+                    printWindow.print()
+                    // Close the window after printing
+                    setTimeout(() => {
+                        printWindow.close()
+                    }, 1000)
+                }, 500)
+            }
+
+        } catch (error) {
+            console.error('Browser PDF export failed:', error)
+            setExportError(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        } finally {
+            setIsExporting(false)
+        }
+    }, [resume])
 
     const handleServerSideExport = useCallback(async () => {
         setIsExporting(true)
@@ -134,10 +445,17 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
                             {isExporting ? 'Generating...' : 'Server PDF'}
                         </button>
                         <button
+                            onClick={handleBrowserPDFExport}
+                            disabled={isExporting}
+                            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isExporting ? 'Generating...' : 'Browser PDF'}
+                        </button>
+                        <button
                             onClick={handlePrint}
                             className="btn-secondary"
                         >
-                            Browser PDF
+                            Print Preview
                         </button>
                         <button
                             onClick={onClose}
@@ -151,83 +469,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
                 {/* Print Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
                     <div className="print-resume max-w-4xl mx-auto">
-                        {/* Title */}
-                        <div className="text-center mb-6">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                {resume.title}
-                            </h1>
-                        </div>
-
-                        {/* Summary */}
-                        {resume.summary && (
-                            <div className="mb-6 page-break-inside-avoid">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
-                                    Professional Summary
-                                </h2>
-                                <p className="text-gray-700 leading-relaxed">
-                                    {resume.summary}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Experience */}
-                        {resume.experience && resume.experience.length > 0 && (
-                            <div className="mb-6 page-break-inside-avoid">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-300 pb-1">
-                                    Professional Experience
-                                </h2>
-                                <div className="space-y-6">
-                                    {resume.experience.map((exp, index) => (
-                                        <div key={index} className="break-inside-avoid page-break-inside-avoid">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-gray-900">
-                                                        {exp.role}
-                                                    </h3>
-                                                    <p className="text-gray-700 font-medium">
-                                                        {exp.organization}
-                                                        {exp.location && ` • ${exp.location}`}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right text-sm text-gray-600">
-                                                    <p>
-                                                        {formatDate(exp.startDate)} - {formatDate(exp.endDate)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            {exp.bullets && exp.bullets.length > 0 && (
-                                                <ul className="list-disc list-inside space-y-1 text-gray-700">
-                                                    {exp.bullets.map((bullet, bulletIndex) => (
-                                                        <li key={bulletIndex} className="break-words">
-                                                            {bullet}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Skills */}
-                        {resume.skills && resume.skills.length > 0 && (
-                            <div className="mb-6 page-break-inside-avoid">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
-                                    Technical Skills
-                                </h2>
-                                <div className="flex flex-wrap gap-2">
-                                    {resume.skills.map((skill, index) => (
-                                        <span
-                                            key={index}
-                                            className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
-                                        >
-                                            {skill}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <LatexStyleResume resume={resume} />
                     </div>
                 </div>
             </div>
