@@ -18,11 +18,43 @@ export interface FactsInventory {
     certifications: string[];
 }
 
+export interface PersonalInfo {
+    name?: string;
+    title?: string;
+    email?: string;
+    phone?: string;
+    linkedin?: string;
+    github?: string;
+}
+
+export interface EducationEntry {
+    degree: string;
+    school: string;
+    location?: string;
+    startDate: string;
+    endDate: string | null;
+}
+
+export interface CertificationEntry {
+    name: string;
+    issuer: string;
+    date: string;
+}
+
+export interface SkillCategory {
+    category: string;
+    skills: string[];
+}
+
 export interface Resume {
+    id?: string;
     title: string;
     summary: string;
+    personalInfo?: PersonalInfo;
     experience: ExperienceEntry[];
-    skills: string[];
+    education?: EducationEntry[];
+    certifications?: CertificationEntry[];
+    skills: (SkillCategory | string)[];
     factsInventory?: FactsInventory;
 }
 
