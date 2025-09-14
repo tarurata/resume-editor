@@ -1,38 +1,128 @@
-from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import Response
-from app.models import Resume
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, status, Request
+from fastapi.responses import Response, StreamingResponse
+from app.models.resume import Resume
+from app.services.pdf_service import pdf_service, PDFGenerationError
+from typing import Dict, Any, Optional
 import json
+import io
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.post("/export/pdf", response_class=Response)
-async def export_resume_pdf(resume: Resume) -> Response:
+async def export_resume_pdf(resume: Resume, request: Request) -> Response:
     """
-    Export resume to PDF format.
+    Export resume to PDF format using server-side rendering.
     
     Takes a complete resume object and returns a PDF file.
-    The PDF is generated using print CSS styles optimized for resume formatting.
+    The PDF is generated using Playwright for consistent, pixel-stable output.
     """
     try:
-        # For now, return a placeholder response
-        # In a real implementation, this would generate a PDF using a library like weasyprint
-        # or by rendering HTML with print CSS and converting to PDF
+        # Convert resume to dictionary for template rendering
+        resume_data = resume.model_dump()
         
-        # Convert resume to JSON for now (placeholder)
-        resume_json = resume.model_dump_json(indent=2)
+        # Generate PDF using the PDF service
+        pdf_bytes = await pdf_service.generate_pdf_from_resume(resume_data)
         
+        # Create filename from resume title
+        filename = f"{resume.title.replace(' ', '_').lower()}_resume.pdf"
+        
+        # Return PDF as streaming response
         return Response(
-            content=resume_json,
-            media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=resume.json"}
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(pdf_bytes)),
+                "Cache-Control": "no-cache"
+            }
         )
         
-    except Exception as e:
+    except PDFGenerationError as e:
+        logger.error(f"PDF generation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to export PDF: {str(e)}"
+            detail={
+                "error": "PDF_GENERATION_FAILED",
+                "message": str(e),
+                "suggestion": "Please check your resume data and try again"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during PDF export: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected error occurred during PDF generation",
+                "suggestion": "Please try again or contact support if the issue persists"
+            }
+        )
+
+
+@router.post("/export/pdf-from-html", response_class=Response)
+async def export_pdf_from_html(request: Request) -> Response:
+    """
+    Export PDF from HTML content with optional theme customization.
+    
+    Accepts HTML content and minimal theme options, returns a PDF file.
+    Useful for custom HTML templates or advanced formatting.
+    """
+    try:
+        # Parse request body
+        body = await request.json()
+        html_content = body.get("html_content")
+        theme_options = body.get("theme_options", {})
+        filename = body.get("filename", "document.pdf")
+        
+        if not html_content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": "MISSING_HTML_CONTENT",
+                    "message": "HTML content is required",
+                    "suggestion": "Please provide valid HTML content in the request body"
+                }
+            )
+        
+        # Generate PDF from HTML
+        pdf_bytes = await pdf_service.generate_pdf_from_html(html_content, theme_options)
+        
+        # Return PDF as streaming response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(pdf_bytes)),
+                "Cache-Control": "no-cache"
+            }
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except PDFGenerationError as e:
+        logger.error(f"PDF generation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "PDF_GENERATION_FAILED",
+                "message": str(e),
+                "suggestion": "Please check your HTML content and try again"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during HTML to PDF export: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected error occurred during PDF generation",
+                "suggestion": "Please try again or contact support if the issue persists"
+            }
         )
 
 

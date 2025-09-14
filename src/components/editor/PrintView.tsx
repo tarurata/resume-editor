@@ -1,7 +1,8 @@
 'use client'
 
 import { Resume } from '@/types/resume'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
+import { pdfExportApi, ApiError } from '@/lib/api'
 
 interface PrintViewProps {
     resume: Resume
@@ -9,12 +10,42 @@ interface PrintViewProps {
 }
 
 export function PrintView({ resume, onClose }: PrintViewProps) {
+    const [isExporting, setIsExporting] = useState(false)
+    const [exportError, setExportError] = useState<string | null>(null)
+
     const handlePrint = useCallback(() => {
         // Ensure the print dialog opens with proper settings
         setTimeout(() => {
             window.print()
         }, 100)
     }, [])
+
+    const handleServerSideExport = useCallback(async () => {
+        setIsExporting(true)
+        setExportError(null)
+
+        try {
+            // Export using server-side PDF generation
+            const pdfBlob = await pdfExportApi.exportResumeToPDF(resume)
+
+            // Generate filename from resume title
+            const filename = `${resume.title.replace(/\s+/g, '_').toLowerCase()}_resume.pdf`
+
+            // Download the PDF
+            pdfExportApi.downloadPDF(pdfBlob, filename)
+
+        } catch (error) {
+            console.error('PDF export failed:', error)
+
+            if (error instanceof ApiError) {
+                setExportError(`Export failed: ${error.message}`)
+            } else {
+                setExportError('Export failed. Please try again or use the browser print function.')
+            }
+        } finally {
+            setIsExporting(false)
+        }
+    }, [resume])
 
     useEffect(() => {
         // Add print-specific styles when component mounts
@@ -86,15 +117,27 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900">Resume Preview</h2>
                         <p className="text-sm text-gray-600 mt-1">
-                            Use "Export PDF" to save as PDF or press Ctrl/Cmd + P
+                            Use "Server PDF" for consistent output or "Browser PDF" for quick export
                         </p>
+                        {exportError && (
+                            <p className="text-sm text-red-600 mt-1">
+                                {exportError}
+                            </p>
+                        )}
                     </div>
                     <div className="flex space-x-3">
                         <button
-                            onClick={handlePrint}
-                            className="btn-primary"
+                            onClick={handleServerSideExport}
+                            disabled={isExporting}
+                            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Export PDF
+                            {isExporting ? 'Generating...' : 'Server PDF'}
+                        </button>
+                        <button
+                            onClick={handlePrint}
+                            className="btn-secondary"
+                        >
+                            Browser PDF
                         </button>
                         <button
                             onClick={onClose}
