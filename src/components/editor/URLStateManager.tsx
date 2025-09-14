@@ -25,6 +25,8 @@ export function URLStateManager({
 
     // Parse initial URL parameters on mount
     useEffect(() => {
+        if (!searchParams) return
+
         const urlParams = parseURLParams(searchParams)
         const validation = validateURLParams(urlParams)
 
@@ -34,9 +36,13 @@ export function URLStateManager({
         }
 
         const initialState = paramsToState(urlParams)
-        onStateChange(initialState)
-        lastStateRef.current = initialState
-    }, [searchParams, onStateChange, onError])
+
+        // Only call onStateChange if the state actually changed
+        if (JSON.stringify(initialState) !== JSON.stringify(lastStateRef.current)) {
+            onStateChange(initialState)
+            lastStateRef.current = initialState
+        }
+    }, [searchParams]) // Remove onStateChange and onError from dependencies
 
     // Update URL when state changes (but not when we're updating from URL)
     const updateURL = useCallback((newState: URLState) => {
@@ -56,13 +62,21 @@ export function URLStateManager({
     // Expose method to update state and URL
     const updateState = useCallback((newState: Partial<URLState>) => {
         const updatedState = { ...currentState, ...newState }
-        onStateChange(updatedState)
+
+        // Only call onStateChange if the state actually changed
+        if (JSON.stringify(updatedState) !== JSON.stringify(lastStateRef.current)) {
+            onStateChange(updatedState)
+            lastStateRef.current = updatedState
+        }
+
         updateURL(updatedState)
-    }, [currentState, onStateChange, updateURL])
+    }, []) // Remove dependencies to avoid circular updates
 
     // Handle browser back/forward navigation
     useEffect(() => {
         const handlePopState = () => {
+            if (!searchParams) return
+
             isUpdatingURL.current = true
             const urlParams = parseURLParams(searchParams)
             const newState = paramsToState(urlParams)
@@ -77,14 +91,14 @@ export function URLStateManager({
 
         window.addEventListener('popstate', handlePopState)
         return () => window.removeEventListener('popstate', handlePopState)
-    }, [searchParams, onStateChange])
+    }, [searchParams]) // Remove onStateChange from dependencies
 
     // Update URL when currentState changes externally
     useEffect(() => {
         if (JSON.stringify(currentState) !== JSON.stringify(lastStateRef.current)) {
             updateURL(currentState)
         }
-    }, [currentState, updateURL])
+    }, [currentState]) // Remove updateURL from dependencies to avoid circular dependency
 
     // Expose methods for parent component
     useEffect(() => {
@@ -96,7 +110,7 @@ export function URLStateManager({
                 updateURL
             }
         }
-    }, [updateState, currentState, updateURL])
+    }, []) // Remove all dependencies to avoid infinite loops
 
     return null // This component doesn't render anything
 }
