@@ -254,6 +254,87 @@ export const personalInfoApi = {
     }
 }
 
+// PDF Export API functions
+export const pdfExportApi = {
+    // Export resume to PDF using server-side rendering
+    async exportResumeToPDF(resume: Resume): Promise<Blob> {
+        const url = `${API_BASE_URL}/export/pdf`
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resume),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                const errorMessage = errorData.detail?.message || `HTTP ${response.status}: ${response.statusText}`
+                throw new ApiError(errorMessage, response.status, errorData)
+            }
+
+            return await response.blob()
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error
+            }
+            throw new ApiError(
+                error instanceof Error ? error.message : 'PDF export failed',
+                0
+            )
+        }
+    },
+
+    // Export HTML content to PDF
+    async exportHTMLToPDF(htmlContent: string, filename?: string, themeOptions?: any): Promise<Blob> {
+        const url = `${API_BASE_URL}/export/pdf-from-html`
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    html_content: htmlContent,
+                    filename: filename || 'document.pdf',
+                    theme_options: themeOptions || {}
+                }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                const errorMessage = errorData.detail?.message || `HTTP ${response.status}: ${response.statusText}`
+                throw new ApiError(errorMessage, response.status, errorData)
+            }
+
+            return await response.blob()
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error
+            }
+            throw new ApiError(
+                error instanceof Error ? error.message : 'HTML to PDF export failed',
+                0
+            )
+        }
+    },
+
+    // Download PDF blob as file
+    downloadPDF(blob: Blob, filename: string): void {
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+    }
+}
+
 // Health check
 export const healthApi = {
     async check(): Promise<{ status: string; timestamp: string }> {
