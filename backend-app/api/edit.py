@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from app.models import EditRequest, EditResponse, StrategyEditRequest, StrategyEditResponse, Resume
+from app.models.resume import EditRequest, EditResponse, StrategyEditRequest, StrategyEditResponse, Resume
 from app.services.fact_checker import FactChecker
 import uuid
 from datetime import datetime
