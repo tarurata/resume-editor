@@ -1,46 +1,24 @@
 'use client'
 
-import { ExperienceEntry } from '@/types/resume'
+import { EducationEntry } from '@/types/resume'
 import { useState, useEffect } from 'react'
 
-interface ExperienceEditorProps {
-    experience: ExperienceEntry
+interface EducationEditorProps {
+    education: EducationEntry
     index: number
-    onUpdate: (index: number, updatedExperience: ExperienceEntry) => void
+    onUpdate: (index: number, updatedEducation: EducationEntry) => void
 }
 
-export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEditorProps) {
-    const [editedExperience, setEditedExperience] = useState<ExperienceEntry>(experience)
+export function EducationEditor({ education, index, onUpdate }: EducationEditorProps) {
+    const [editedEducation, setEditedEducation] = useState<EducationEntry>(education)
 
     useEffect(() => {
-        setEditedExperience(experience)
-    }, [experience])
+        setEditedEducation(education)
+    }, [education])
 
-    const handleFieldChange = (field: keyof ExperienceEntry, value: string) => {
-        const updated = { ...editedExperience, [field]: value }
-        setEditedExperience(updated)
-        onUpdate(index, updated)
-    }
-
-    const handleBulletChange = (bulletIndex: number, value: string) => {
-        const updatedBullets = [...editedExperience.bullets]
-        updatedBullets[bulletIndex] = value
-        const updated = { ...editedExperience, bullets: updatedBullets }
-        setEditedExperience(updated)
-        onUpdate(index, updated)
-    }
-
-    const addBullet = () => {
-        const updatedBullets = [...editedExperience.bullets, '']
-        const updated = { ...editedExperience, bullets: updatedBullets }
-        setEditedExperience(updated)
-        onUpdate(index, updated)
-    }
-
-    const removeBullet = (bulletIndex: number) => {
-        const updatedBullets = editedExperience.bullets.filter((_, i) => i !== bulletIndex)
-        const updated = { ...editedExperience, bullets: updatedBullets }
-        setEditedExperience(updated)
+    const handleFieldChange = (field: keyof EducationEntry, value: string) => {
+        const updated = { ...editedEducation, [field]: value }
+        setEditedEducation(updated)
         onUpdate(index, updated)
     }
 
@@ -50,9 +28,9 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
 
-    // Generate year options (last 20 years)
+    // Generate year options (last 30 years)
     const currentYear = new Date().getFullYear()
-    const years = Array.from({ length: 20 }, (_, i) => currentYear - i)
+    const years = Array.from({ length: 30 }, (_, i) => currentYear - i)
 
     const parseDate = (dateString: string) => {
         if (!dateString) return { month: '', year: '' }
@@ -112,40 +90,40 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
         }
     }
 
-    const startDate = parseDate(editedExperience.startDate || '')
-    const endDate = parseDate(editedExperience.endDate || '')
+    const startDate = parseDate(editedEducation.startDate || '')
+    const endDate = parseDate(editedEducation.endDate || '')
 
     return (
         <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-white">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Experience {index + 1}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Education {index + 1}</h3>
             </div>
 
-            {/* Job Title */}
+            {/* Degree */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Title
+                    Degree
                 </label>
                 <input
                     type="text"
-                    value={editedExperience.role}
-                    onChange={(e) => handleFieldChange('role', e.target.value)}
+                    value={editedEducation.degree}
+                    onChange={(e) => handleFieldChange('degree', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="e.g., Senior Software Engineer"
+                    placeholder="e.g., Bachelor of Science in Computer Science"
                 />
             </div>
 
-            {/* Company Name */}
+            {/* School Name */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name
+                    School Name
                 </label>
                 <input
                     type="text"
-                    value={editedExperience.organization}
-                    onChange={(e) => handleFieldChange('organization', e.target.value)}
+                    value={editedEducation.school}
+                    onChange={(e) => handleFieldChange('school', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="e.g., TechCorp Inc."
+                    placeholder="e.g., University of California, Berkeley"
                 />
             </div>
 
@@ -156,10 +134,10 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                 </label>
                 <input
                     type="text"
-                    value={editedExperience.location || ''}
+                    value={editedEducation.location || ''}
                     onChange={(e) => handleFieldChange('location', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="e.g., San Francisco, CA"
+                    placeholder="e.g., Berkeley, CA"
                 />
             </div>
 
@@ -219,38 +197,6 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                             ))}
                         </select>
                     </div>
-                </div>
-            </div>
-
-            {/* Bullets */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Key Achievements
-                </label>
-                <div className="space-y-2">
-                    {editedExperience.bullets.map((bullet, bulletIndex) => (
-                        <div key={bulletIndex} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={bullet}
-                                onChange={(e) => handleBulletChange(bulletIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                placeholder="Enter key achievement..."
-                            />
-                            <button
-                                onClick={() => removeBullet(bulletIndex)}
-                                className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    ))}
-                    <button
-                        onClick={addBullet}
-                        className="w-full px-3 py-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-md transition-colors border border-dashed border-primary-300"
-                    >
-                        + Add Achievement
-                    </button>
                 </div>
             </div>
         </div>

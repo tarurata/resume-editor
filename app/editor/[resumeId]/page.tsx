@@ -15,6 +15,7 @@ import { DiffPreview } from '@/components/editor/DiffPreview'
 import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
 import { ExperienceEditor } from '@/components/editor/ExperienceEditor'
+import { EducationEditor } from '@/components/editor/EducationEditor'
 import { ClientOnly } from '@/components/ClientOnly'
 import ApiStatus from '@/components/ApiStatus'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
@@ -64,6 +65,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         urlState: { section: null, mode: 'edit', jd: null },
         urlError: null
     })
+    const [newlyAddedSections, setNewlyAddedSections] = useState<Set<string>>(new Set())
 
     useEffect(() => {
         const loadResume = async () => {
@@ -188,6 +190,13 @@ export default function EditorPage({ params }: EditorPageProps) {
                                 content = JSON.stringify(experience, null, 2)
                             }
                         }
+                        if (section.startsWith('education-')) {
+                            const index = parseInt(section.split('-')[1])
+                            const education = resume.education?.[index]
+                            if (education) {
+                                content = `<div><strong>${education.degree}</strong> - ${education.school}</div>`
+                            }
+                        }
                 }
             }
 
@@ -237,7 +246,8 @@ export default function EditorPage({ params }: EditorPageProps) {
         })
 
         // If selecting an experience section, fetch latest data from API
-        if (sectionId.startsWith('experience-')) {
+        // But skip API call for newly added sections (they're not in the database yet)
+        if (sectionId.startsWith('experience-') && !newlyAddedSections.has(sectionId)) {
             await fetchExperiencesFromAPI()
         }
     }
@@ -331,9 +341,57 @@ export default function EditorPage({ params }: EditorPageProps) {
                     updatedResume.experience
                 )
                 console.log('Experiences auto-synced successfully')
+
+                // Remove this section from newly added set since it's now saved
+                const sectionId = `experience-${index}` as SectionId
+                setNewlyAddedSections(prev => {
+                    const newSet = new Set(prev)
+                    newSet.delete(sectionId)
+                    return newSet
+                })
             }
         } catch (error) {
             console.error('Failed to auto-save experience changes:', error)
+            // Don't show error to user for auto-save failures
+        }
+    }
+
+    const handleEducationUpdate = async (index: number, updatedEducation: any) => {
+        if (!resumeListItem) return
+
+        const updatedResume = { ...resumeListItem.resume_data }
+        if (updatedResume.education) {
+            updatedResume.education[index] = updatedEducation
+        }
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        setResumeListItem(updatedResumeListItem)
+
+        // Auto-save the changes
+        try {
+            const { saveResumeToDatabase } = await import('@/lib/storage')
+            await saveResumeToDatabase(
+                updatedResume,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                editorState.jdText
+            )
+            console.log('Education changes auto-saved successfully')
+
+            // Remove this section from newly added set since it's now saved
+            const sectionId = `education-${index}` as SectionId
+            setNewlyAddedSections(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(sectionId)
+                return newSet
+            })
+        } catch (error) {
+            console.error('Failed to auto-save education changes:', error)
             // Don't show error to user for auto-save failures
         }
     }
@@ -505,6 +563,84 @@ export default function EditorPage({ params }: EditorPageProps) {
             ...prev,
             showPrintView: false
         }))
+    }
+
+    const handleAddExperience = () => {
+        if (!resumeListItem) return
+
+        const newExperience = {
+            role: '',
+            organization: '',
+            location: '',
+            startDate: '',
+            endDate: '',
+            bullets: ['']
+        }
+
+        const updatedResume = {
+            ...resumeListItem.resume_data,
+            experience: [...(resumeListItem.resume_data.experience || []), newExperience]
+        }
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        // Update state only (don't save to database yet)
+        setResumeListItem(updatedResumeListItem)
+
+        // Select the new experience immediately
+        const newIndex = updatedResume.experience.length - 1
+        const sectionId = `experience-${newIndex}` as SectionId
+        const content = JSON.stringify(newExperience, null, 2)
+
+        // Mark this section as newly added
+        setNewlyAddedSections(prev => new Set(prev).add(sectionId))
+
+        // Use a small delay to ensure state has updated
+        setTimeout(() => {
+            console.log('Selecting new experience:', { sectionId, newIndex, experienceCount: updatedResume.experience.length })
+            handleSectionSelect(sectionId, content)
+        }, 10)
+    }
+
+    const handleAddEducation = () => {
+        if (!resumeListItem) return
+
+        const newEducation = {
+            degree: '',
+            school: '',
+            location: '',
+            startDate: '',
+            endDate: ''
+        }
+
+        const updatedResume = {
+            ...resumeListItem.resume_data,
+            education: [...(resumeListItem.resume_data.education || []), newEducation]
+        }
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        // Update state only (don't save to database yet)
+        setResumeListItem(updatedResumeListItem)
+
+        // Select the new education immediately
+        const newIndex = updatedResume.education.length - 1
+        const sectionId = `education-${newIndex}` as SectionId
+        const content = `<div><strong>${newEducation.degree}</strong> - ${newEducation.school}</div>`
+
+        // Mark this section as newly added
+        setNewlyAddedSections(prev => new Set(prev).add(sectionId))
+
+        // Use a small delay to ensure state has updated
+        setTimeout(() => {
+            handleSectionSelect(sectionId, content)
+        }, 10)
     }
 
     const handleSaveResume = async () => {
@@ -702,6 +838,13 @@ export default function EditorPage({ params }: EditorPageProps) {
                                         content = JSON.stringify(experience, null, 2)
                                     }
                                 }
+                                if (sectionId.startsWith('education-')) {
+                                    const index = parseInt(sectionId.split('-')[1])
+                                    const education = resume.education?.[index]
+                                    if (education) {
+                                        content = `<div><strong>${education.degree}</strong> - ${education.school}</div>`
+                                    }
+                                }
                         }
                         if (content) {
                             handleSectionSelect(sectionId, content)
@@ -731,6 +874,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                         resume={resume}
                         selectedSection={editorState.selectedSection}
                         onSectionSelect={handleSectionSelect}
+                        onAddExperience={handleAddExperience}
+                        onAddEducation={handleAddEducation}
                     />
                 </div>
 
@@ -747,6 +892,13 @@ export default function EditorPage({ params }: EditorPageProps) {
                                     {(() => {
                                         const index = parseInt(editorState.selectedSection.split('-')[1])
                                         const experience = resume.experience?.[index]
+                                        console.log('Center panel - looking for experience:', {
+                                            selectedSection: editorState.selectedSection,
+                                            index,
+                                            experienceCount: resume.experience?.length,
+                                            experience,
+                                            allExperiences: resume.experience
+                                        })
                                         if (experience) {
                                             return (
                                                 <ExperienceEditor
@@ -757,6 +909,23 @@ export default function EditorPage({ params }: EditorPageProps) {
                                             )
                                         }
                                         return <div>Experience not found</div>
+                                    })()}
+                                </div>
+                            ) : editorState.selectedSection && editorState.selectedSection.startsWith('education-') ? (
+                                <div className="h-full overflow-y-auto">
+                                    {(() => {
+                                        const index = parseInt(editorState.selectedSection.split('-')[1])
+                                        const education = resume.education?.[index]
+                                        if (education) {
+                                            return (
+                                                <EducationEditor
+                                                    education={education}
+                                                    index={index}
+                                                    onUpdate={handleEducationUpdate}
+                                                />
+                                            )
+                                        }
+                                        return <div>Education not found</div>
                                     })()}
                                 </div>
                             ) : (
