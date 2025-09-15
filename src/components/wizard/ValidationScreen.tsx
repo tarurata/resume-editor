@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { WizardState, Resume } from '@/types/resume'
+import { WizardState, Resume, PersonalInfo } from '@/types/resume'
 import { saveResumeToDatabase } from '@/lib/storage'
 
 interface ValidationScreenProps {
     resume: Resume
     validationErrors: string[]
+    extractedPersonalInfo?: PersonalInfo | null
     onNext: (updates: Partial<WizardState>) => void
 }
 
-export default function ValidationScreen({ resume, validationErrors, onNext }: ValidationScreenProps) {
+export default function ValidationScreen({ resume, validationErrors, extractedPersonalInfo, onNext }: ValidationScreenProps) {
     const [isValid, setIsValid] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
 
@@ -28,8 +29,15 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
 
         setIsSaving(true)
         try {
-            // Save to database
-            await saveResumeToDatabase(resume, 'Default Company', resume.title || 'Software Engineer')
+            // Save to database with extracted personal information
+            await saveResumeToDatabase(
+                resume,
+                'Default Company',
+                resume.title || 'Software Engineer',
+                undefined, // companyEmail
+                undefined, // jobDescription
+                extractedPersonalInfo
+            )
 
             // Navigate to editor
             window.location.href = '/editor'
@@ -88,6 +96,50 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
                             <li key={index}>• {error}</li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+            {/* Extracted Personal Information */}
+            {extractedPersonalInfo && (
+                <div className="card">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {extractedPersonalInfo.name && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Name:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.name}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.email && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Email:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.email}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.phone && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Phone:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.phone}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.linkedin && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">LinkedIn:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.linkedin}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.github && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">GitHub:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.github}</p>
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-sm text-blue-700 mt-3">
+                            This information will be saved separately and can be used across all your resumes.
+                        </p>
+                    </div>
                 </div>
             )}
 
@@ -150,7 +202,7 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
                                         key={index}
                                         className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
                                     >
-                                        {skill}
+                                        {typeof skill === 'string' ? skill : skill.category}
                                     </span>
                                 ))}
                             </div>

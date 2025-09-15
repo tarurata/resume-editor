@@ -1,8 +1,8 @@
 'use client'
 
-import { Resume } from '@/types/resume'
+import { Resume, PersonalInfo } from '@/types/resume'
 import { useEffect, useCallback, useState } from 'react'
-import { pdfExportApi, ApiError } from '@/lib/api'
+import { pdfExportApi, personalInfoApi, ApiError } from '@/lib/api'
 import { LatexStyleResume } from './LatexStyleResume'
 
 interface PrintViewProps {
@@ -13,6 +13,32 @@ interface PrintViewProps {
 export function PrintView({ resume, onClose }: PrintViewProps) {
     const [isExporting, setIsExporting] = useState(false)
     const [exportError, setExportError] = useState<string | null>(null)
+    const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null)
+    const [isLoadingPersonalInfo, setIsLoadingPersonalInfo] = useState(true)
+
+    // Load personal information
+    useEffect(() => {
+        const loadPersonalInfo = async () => {
+            try {
+                const existingInfo = await personalInfoApi.get()
+                if (existingInfo) {
+                    setPersonalInfo({
+                        name: existingInfo.full_name || '',
+                        email: existingInfo.email || '',
+                        phone: existingInfo.phone || '',
+                        linkedin: existingInfo.linkedin_url || '',
+                        github: existingInfo.portfolio_url || ''
+                    })
+                }
+            } catch (error) {
+                console.warn('Failed to load personal information:', error)
+            } finally {
+                setIsLoadingPersonalInfo(false)
+            }
+        }
+
+        loadPersonalInfo()
+    }, [])
 
     const handlePrint = useCallback(() => {
         // Ensure the print dialog opens with proper settings
@@ -36,7 +62,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
             // Render the LaTeX-style resume in the temporary container
             const { createRoot } = await import('react-dom/client')
             const root = createRoot(tempContainer)
-            root.render(<LatexStyleResume resume={resume} />)
+            root.render(<LatexStyleResume resume={resume} personalInfo={personalInfo} />)
 
             // Wait for rendering to complete
             await new Promise(resolve => setTimeout(resolve, 100))
@@ -469,7 +495,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
                 {/* Print Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
                     <div className="print-resume max-w-4xl mx-auto">
-                        <LatexStyleResume resume={resume} />
+                        <LatexStyleResume resume={resume} personalInfo={personalInfo} />
                     </div>
                 </div>
             </div>

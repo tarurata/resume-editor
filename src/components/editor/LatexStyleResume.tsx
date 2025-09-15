@@ -1,12 +1,13 @@
 'use client'
 
-import { Resume } from '@/types/resume'
+import { Resume, PersonalInfo } from '@/types/resume'
 
 interface LatexStyleResumeProps {
     resume: Resume
+    personalInfo?: PersonalInfo | null
 }
 
-export function LatexStyleResume({ resume }: LatexStyleResumeProps) {
+export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps) {
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return 'Present'
         const date = new Date(dateStr + '-01')
@@ -244,28 +245,28 @@ export function LatexStyleResume({ resume }: LatexStyleResumeProps) {
 
             {/* Header */}
             <div className="resume-header">
-                <div className="resume-name">{resume.personalInfo?.name || 'Your Name'}</div>
-                <div className="resume-title">{resume.personalInfo?.title || 'Professional Title'}</div>
+                <div className="resume-name">{personalInfo?.name || resume.personalInfo?.name || 'Your Name'}</div>
+                <div className="resume-title">{resume.title || 'Professional Title'}</div>
                 <div className="contact-info">
-                    {resume.personalInfo?.phone && (
-                        <span>{resume.personalInfo.phone}</span>
+                    {(personalInfo?.phone || resume.personalInfo?.phone) && (
+                        <span>{personalInfo?.phone || resume.personalInfo?.phone}</span>
                     )}
-                    {resume.personalInfo?.phone && resume.personalInfo?.email && <span> $|$ </span>}
-                    {resume.personalInfo?.email && (
-                        <a href={`mailto:${resume.personalInfo.email}`}>
-                            <u>{resume.personalInfo.email}</u>
+                    {(personalInfo?.phone || resume.personalInfo?.phone) && (personalInfo?.email || resume.personalInfo?.email) && <span> $|$ </span>}
+                    {(personalInfo?.email || resume.personalInfo?.email) && (
+                        <a href={`mailto:${personalInfo?.email || resume.personalInfo?.email}`}>
+                            <u>{personalInfo?.email || resume.personalInfo?.email}</u>
                         </a>
                     )}
-                    {resume.personalInfo?.email && resume.personalInfo?.linkedin && <span> $|$ </span>}
-                    {resume.personalInfo?.linkedin && (
-                        <a href={resume.personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
-                            <u>{resume.personalInfo.linkedin}</u>
+                    {(personalInfo?.email || resume.personalInfo?.email) && (personalInfo?.linkedin || resume.personalInfo?.linkedin) && <span> $|$ </span>}
+                    {(personalInfo?.linkedin || resume.personalInfo?.linkedin) && (
+                        <a href={personalInfo?.linkedin || resume.personalInfo?.linkedin} target="_blank" rel="noopener noreferrer">
+                            <u>{personalInfo?.linkedin || resume.personalInfo?.linkedin}</u>
                         </a>
                     )}
-                    {resume.personalInfo?.linkedin && resume.personalInfo?.github && <span> $|$ </span>}
-                    {resume.personalInfo?.github && (
-                        <a href={resume.personalInfo.github} target="_blank" rel="noopener noreferrer">
-                            <u>{resume.personalInfo.github}</u>
+                    {(personalInfo?.linkedin || resume.personalInfo?.linkedin) && (personalInfo?.github || resume.personalInfo?.github) && <span> $|$ </span>}
+                    {(personalInfo?.github || resume.personalInfo?.github) && (
+                        <a href={personalInfo?.github || resume.personalInfo?.github} target="_blank" rel="noopener noreferrer">
+                            <u>{personalInfo?.github || resume.personalInfo?.github}</u>
                         </a>
                     )}
                 </div>

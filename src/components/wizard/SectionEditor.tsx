@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { WizardState, Resume, ExperienceEntry, ParsedSection } from '@/types/resume'
+import { WizardState, Resume, ExperienceEntry, ParsedSection, PersonalInfo } from '@/types/resume'
 
 interface SectionEditorProps {
     parsedSections: ParsedSection[]
     resume: Partial<Resume>
+    extractedPersonalInfo?: PersonalInfo | null
     onNext: (updates: Partial<WizardState>) => void
 }
 
-export default function SectionEditor({ parsedSections, resume, onNext }: SectionEditorProps) {
+export default function SectionEditor({ parsedSections, resume, extractedPersonalInfo, onNext }: SectionEditorProps) {
     const [editedResume, setEditedResume] = useState<Partial<Resume>>({
         title: '',
         summary: '',
@@ -165,7 +166,8 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
             onNext({
                 step: 'validate',
                 resume: editedResume,
-                validationErrors: []
+                validationErrors: [],
+                extractedPersonalInfo: extractedPersonalInfo
             })
         }
     }
@@ -356,7 +358,7 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
                             <div key={index} className="flex space-x-2">
                                 <input
                                     type="text"
-                                    value={skill}
+                                    value={typeof skill === 'string' ? skill : skill.category}
                                     onChange={(e) => updateSkill(index, e.target.value)}
                                     className="input-field flex-1"
                                 />

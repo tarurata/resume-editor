@@ -32,12 +32,14 @@ export default function Home() {
                 return <SectionEditor
                     parsedSections={wizardState.parsedSections}
                     resume={wizardState.resume}
+                    extractedPersonalInfo={wizardState.extractedPersonalInfo}
                     onNext={handleWizardUpdate}
                 />
             case 'validate':
                 return <ValidationScreen
                     resume={wizardState.resume as any}
                     validationErrors={wizardState.validationErrors}
+                    extractedPersonalInfo={wizardState.extractedPersonalInfo}
                     onNext={handleWizardUpdate}
                 />
             default:

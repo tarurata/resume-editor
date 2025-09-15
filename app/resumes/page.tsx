@@ -22,7 +22,7 @@ export default function ResumesPage() {
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Navigation */}
-                <div className="mb-6">
+                <div className="mb-6 flex items-center justify-between">
                     <Link
                         href="/"
                         className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
@@ -31,6 +31,15 @@ export default function ResumesPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                         Back to Home
+                    </Link>
+                    <Link
+                        href="/personal-info"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-700 transition-colors duration-200"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Personal Information
                     </Link>
                 </div>
 

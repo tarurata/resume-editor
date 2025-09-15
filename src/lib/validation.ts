@@ -95,12 +95,13 @@ export function validateResumeData(resume: Resume): ValidationError[] {
     // Validate skills
     if (resume.skills && resume.skills.length > 0) {
         resume.skills.forEach((skill, index) => {
-            if (!skill || skill.trim().length === 0) {
+            const skillText = typeof skill === 'string' ? skill : skill.category
+            if (!skillText || skillText.trim().length === 0) {
                 errors.push({
                     field: `skills[${index}]`,
                     message: 'Skill cannot be empty'
                 })
-            } else if (skill.length > 100) {
+            } else if (skillText.length > 100) {
                 errors.push({
                     field: `skills[${index}]`,
                     message: 'Skill must be less than 100 characters'
@@ -168,7 +169,10 @@ export function sanitizeResumeForApi(resume: Resume): Resume {
             endDate: exp.endDate,
             bullets: exp.bullets?.map(bullet => bullet?.trim()).filter(bullet => bullet.length > 0) || []
         })) || [],
-        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill.length > 0) || [],
+        skills: resume.skills?.map(skill => {
+            const skillText = typeof skill === 'string' ? skill : skill.category
+            return skillText?.trim()
+        }).filter(skill => skill && skill.length > 0) || [],
         factsInventory: resume.factsInventory
     }
 }
