@@ -39,6 +39,10 @@ export function validateResumeData(resume: Resume): ValidationError[] {
     // Validate experience
     if (resume.experience && resume.experience.length > 0) {
         resume.experience.forEach((exp, index) => {
+            // Check if this is a complete experience (has role and organization)
+            const isCompleteExperience = exp.role && exp.role.trim().length > 0 &&
+                exp.organization && exp.organization.trim().length > 0
+
             if (!exp.role || exp.role.trim().length === 0) {
                 errors.push({
                     field: `experience[${index}].role`,
@@ -53,34 +57,37 @@ export function validateResumeData(resume: Resume): ValidationError[] {
                 })
             }
 
-            if (!exp.startDate || !isValidDateFormat(exp.startDate)) {
-                errors.push({
-                    field: `experience[${index}].startDate`,
-                    message: 'Start date must be in YYYY-MM format'
-                })
-            }
+            // Only validate dates for complete experiences
+            if (isCompleteExperience) {
+                if (!exp.startDate || !isValidDateFormat(exp.startDate)) {
+                    errors.push({
+                        field: `experience[${index}].startDate`,
+                        message: 'Start date must be in YYYY-MM format'
+                    })
+                }
 
-            if (exp.endDate && !isValidDateFormat(exp.endDate)) {
-                errors.push({
-                    field: `experience[${index}].endDate`,
-                    message: 'End date must be in YYYY-MM format or null'
-                })
-            }
+                if (exp.endDate && !isValidDateFormat(exp.endDate)) {
+                    errors.push({
+                        field: `experience[${index}].endDate`,
+                        message: 'End date must be in YYYY-MM format or null'
+                    })
+                }
 
-            if (exp.bullets && exp.bullets.length > 0) {
-                exp.bullets.forEach((bullet, bulletIndex) => {
-                    if (!bullet || bullet.trim().length === 0) {
-                        errors.push({
-                            field: `experience[${index}].bullets[${bulletIndex}]`,
-                            message: 'Bullet point cannot be empty'
-                        })
-                    } else if (bullet.length > 500) {
-                        errors.push({
-                            field: `experience[${index}].bullets[${bulletIndex}]`,
-                            message: 'Bullet point must be less than 500 characters'
-                        })
-                    }
-                })
+                if (exp.bullets && exp.bullets.length > 0) {
+                    exp.bullets.forEach((bullet, bulletIndex) => {
+                        if (!bullet || bullet.trim().length === 0) {
+                            errors.push({
+                                field: `experience[${index}].bullets[${bulletIndex}]`,
+                                message: 'Bullet point cannot be empty'
+                            })
+                        } else if (bullet.length > 500) {
+                            errors.push({
+                                field: `experience[${index}].bullets[${bulletIndex}]`,
+                                message: 'Bullet point must be less than 500 characters'
+                            })
+                        }
+                    })
+                }
             }
         })
     }
