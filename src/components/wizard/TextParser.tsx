@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { WizardState, ParsedSection } from '@/types/resume'
+import { WizardState, ParsedSection, PersonalInfo } from '@/types/resume'
+import { PersonalInfoExtractor } from '@/lib/personalInfoExtractor'
 
 interface TextParserProps {
     pastedText: string
@@ -11,11 +12,16 @@ interface TextParserProps {
 export default function TextParser({ pastedText, onNext }: TextParserProps) {
     const [parsedSections, setParsedSections] = useState<ParsedSection[]>([])
     const [selectedSections, setSelectedSections] = useState<Set<number>>(new Set())
+    const [extractedPersonalInfo, setExtractedPersonalInfo] = useState<PersonalInfo | null>(null)
 
     useEffect(() => {
         // Simple text parsing logic - in a real app, this would be more sophisticated
         const sections = parseTextIntoSections(pastedText)
         setParsedSections(sections)
+
+        // Extract personal information from the text
+        const personalInfo = PersonalInfoExtractor.extractFromText(pastedText)
+        setExtractedPersonalInfo(personalInfo)
     }, [pastedText])
 
     const parseTextIntoSections = (text: string): ParsedSection[] => {
@@ -106,7 +112,8 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
         const selectedSectionsData = parsedSections.filter((_, index) => selectedSections.has(index))
         onNext({
             step: 'edit',
-            parsedSections: selectedSectionsData
+            parsedSections: selectedSectionsData,
+            extractedPersonalInfo: extractedPersonalInfo
         })
     }
 
@@ -130,6 +137,50 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
                     We've detected potential sections in your text. Select the ones you want to include in your resume.
                 </p>
             </div>
+
+            {/* Extracted Personal Information */}
+            {extractedPersonalInfo && (
+                <div className="card">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Extracted Personal Information</h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {extractedPersonalInfo.name && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Name:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.name}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.email && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Email:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.email}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.phone && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">Phone:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.phone}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.linkedin && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">LinkedIn:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.linkedin}</p>
+                                </div>
+                            )}
+                            {extractedPersonalInfo.github && (
+                                <div>
+                                    <span className="text-sm font-medium text-gray-700">GitHub:</span>
+                                    <p className="text-gray-900">{extractedPersonalInfo.github}</p>
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-sm text-blue-700 mt-3">
+                            This information will be saved separately and can be used across all your resumes.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="card">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Detected Sections</h3>

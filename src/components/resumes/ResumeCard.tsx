@@ -120,8 +120,8 @@ export default function ResumeCard({
                     <button
                         onClick={handleSetActive}
                         className={`p-2 rounded-full transition-colors duration-200 ${resume.is_active
-                                ? 'text-yellow-500 hover:text-yellow-600'
-                                : 'text-gray-400 hover:text-yellow-500'
+                            ? 'text-yellow-500 hover:text-yellow-600'
+                            : 'text-gray-400 hover:text-yellow-500'
                             }`}
                         title={resume.is_active ? 'Active resume' : 'Set as active'}
                     >
@@ -146,7 +146,7 @@ export default function ResumeCard({
                                     key={index}
                                     className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                 >
-                                    {skill}
+                                    {typeof skill === 'string' ? skill : skill.category}
                                 </span>
                             ))}
                             {resume.resume_data.skills.length > 3 && (

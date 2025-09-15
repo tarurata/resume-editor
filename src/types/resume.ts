@@ -72,6 +72,7 @@ export interface WizardState {
     parsedSections: ParsedSection[];
     resume: Partial<Resume>;
     validationErrors: string[];
+    extractedPersonalInfo?: PersonalInfo | null;
 }
 
 export interface Template {

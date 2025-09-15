@@ -1,6 +1,7 @@
-import { Resume } from '@/types/resume'
-import { resumeVersionApi, ApiError } from './api'
+import { Resume, PersonalInfo } from '@/types/resume'
+import { resumeVersionApi, personalInfoApi, ApiError } from './api'
 import { validateResumeForApi, sanitizeResumeForApi } from './validation'
+import { PersonalInfoExtractor } from './personalInfoExtractor'
 
 // Fallback to localStorage for offline mode or when API is unavailable
 const STORAGE_KEY = 'resume-editor-data'
@@ -11,11 +12,55 @@ export const saveResumeToDatabase = async (
     companyName: string = 'Default Company',
     jobTitle: string = 'Software Engineer',
     companyEmail?: string,
-    jobDescription?: string
+    jobDescription?: string,
+    extractedPersonalInfo?: PersonalInfo | null
 ): Promise<void> => {
     console.log('saveResumeToDatabase called with:', { resume, companyName, jobTitle })
 
     try {
+        // Handle personal information extraction and creation
+        let personalInfoToSave = extractedPersonalInfo
+
+        // If no personal info provided, try to extract from resume data
+        if (!personalInfoToSave) {
+            personalInfoToSave = PersonalInfoExtractor.extractFromResumeData(resume)
+        }
+
+        // Create or update personal information if we have it
+        if (personalInfoToSave) {
+            try {
+                console.log('Creating/updating personal information...')
+                const existingPersonalInfo = await personalInfoApi.get()
+
+                if (existingPersonalInfo) {
+                    // Update existing personal info
+                    await personalInfoApi.update({
+                        full_name: personalInfoToSave.name || existingPersonalInfo.full_name,
+                        email: personalInfoToSave.email || existingPersonalInfo.email,
+                        phone: personalInfoToSave.phone || existingPersonalInfo.phone,
+                        location: existingPersonalInfo.location, // Keep existing location
+                        linkedin_url: personalInfoToSave.linkedin || existingPersonalInfo.linkedin_url,
+                        portfolio_url: personalInfoToSave.github || existingPersonalInfo.portfolio_url
+                    })
+                    console.log('Updated personal information successfully')
+                } else {
+                    // Create new personal info
+                    await personalInfoApi.create({
+                        full_name: personalInfoToSave.name || 'Unknown',
+                        email: personalInfoToSave.email || 'unknown@example.com',
+                        phone: personalInfoToSave.phone,
+                        location: undefined, // Not in PersonalInfo interface
+                        linkedin_url: personalInfoToSave.linkedin,
+                        portfolio_url: personalInfoToSave.github
+                    })
+                    console.log('Created personal information successfully')
+                }
+            } catch (error) {
+                console.warn('Failed to save personal information:', error)
+                // Continue with resume creation even if personal info fails
+            }
+        }
+
         // Validate resume data before saving
         console.log('Validating resume data...')
         const validation = validateResumeForApi(resume)
@@ -27,9 +72,9 @@ export const saveResumeToDatabase = async (
             throw new ApiError(errorMessage, 400)
         }
 
-        // Sanitize resume data for API
+        // Sanitize resume data for API (remove personal info from resume data)
         console.log('Sanitizing resume data...')
-        const sanitizedResume = sanitizeResumeForApi(resume)
+        const sanitizedResume = sanitizeResumeForApi(PersonalInfoExtractor.removeFromResumeData(resume))
         console.log('Sanitized resume:', sanitizedResume)
 
         // Try to save to database first
