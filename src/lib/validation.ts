@@ -169,6 +169,18 @@ export function sanitizeResumeForApi(resume: Resume): Resume {
             endDate: exp.endDate,
             bullets: exp.bullets?.map(bullet => bullet?.trim()).filter(bullet => bullet.length > 0) || []
         })) || [],
+        education: resume.education?.map(edu => ({
+            degree: edu.degree?.trim() || '',
+            school: edu.school?.trim() || '',
+            location: edu.location?.trim(),
+            startDate: edu.startDate || '',
+            endDate: edu.endDate
+        })) || [],
+        certifications: resume.certifications?.map(cert => ({
+            name: cert.name?.trim() || '',
+            issuer: cert.issuer?.trim() || '',
+            date: cert.date || ''
+        })) || [],
         skills: resume.skills?.map(skill => {
             const skillText = typeof skill === 'string' ? skill : skill.category
             return skillText?.trim()
