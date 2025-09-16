@@ -38,7 +38,10 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
             case 'summary':
                 return `<p>${resume.summary || ''}</p>`
             case 'skills':
-                const skillsList = resume.skills?.map(skill => `<li>${skill}</li>`).join('') || ''
+                const skillsList = resume.skills?.map(skill => {
+                    const skillText = typeof skill === 'string' ? skill : skill.category
+                    return `<li>${skillText}</li>`
+                }).join('') || ''
                 return `<ul>${skillsList}</ul>`
             default:
                 if (sectionId.startsWith('experience-')) {
