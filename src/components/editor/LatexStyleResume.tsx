@@ -251,19 +251,19 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
                     {(personalInfo?.phone || resume.personalInfo?.phone) && (
                         <span>{personalInfo?.phone || resume.personalInfo?.phone}</span>
                     )}
-                    {(personalInfo?.phone || resume.personalInfo?.phone) && (personalInfo?.email || resume.personalInfo?.email) && <span> $|$ </span>}
+                    {(personalInfo?.phone || resume.personalInfo?.phone) && (personalInfo?.email || resume.personalInfo?.email) && <span> | </span>}
                     {(personalInfo?.email || resume.personalInfo?.email) && (
                         <a href={`mailto:${personalInfo?.email || resume.personalInfo?.email}`}>
                             <u>{personalInfo?.email || resume.personalInfo?.email}</u>
                         </a>
                     )}
-                    {(personalInfo?.email || resume.personalInfo?.email) && (personalInfo?.linkedin || resume.personalInfo?.linkedin) && <span> $|$ </span>}
+                    {(personalInfo?.email || resume.personalInfo?.email) && (personalInfo?.linkedin || resume.personalInfo?.linkedin) && <span> | </span>}
                     {(personalInfo?.linkedin || resume.personalInfo?.linkedin) && (
                         <a href={personalInfo?.linkedin || resume.personalInfo?.linkedin} target="_blank" rel="noopener noreferrer">
                             <u>{personalInfo?.linkedin || resume.personalInfo?.linkedin}</u>
                         </a>
                     )}
-                    {(personalInfo?.linkedin || resume.personalInfo?.linkedin) && (personalInfo?.github || resume.personalInfo?.github) && <span> $|$ </span>}
+                    {(personalInfo?.linkedin || resume.personalInfo?.linkedin) && (personalInfo?.github || resume.personalInfo?.github) && <span> | </span>}
                     {(personalInfo?.github || resume.personalInfo?.github) && (
                         <a href={personalInfo?.github || resume.personalInfo?.github} target="_blank" rel="noopener noreferrer">
                             <u>{personalInfo?.github || resume.personalInfo?.github}</u>
