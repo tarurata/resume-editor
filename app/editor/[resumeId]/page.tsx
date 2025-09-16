@@ -80,6 +80,9 @@ export default function EditorPage({ params }: EditorPageProps) {
                     return
                 }
 
+                console.log('Loaded resume data:', resumeData)
+                console.log('Education data in loaded resume:', resumeData.resume_data?.education)
+
                 setResumeListItem(resumeData)
 
                 // Set job description if available
@@ -359,10 +362,18 @@ export default function EditorPage({ params }: EditorPageProps) {
     const handleEducationUpdate = async (index: number, updatedEducation: any) => {
         if (!resumeListItem) return
 
+        console.log('handleEducationUpdate called with:', { index, updatedEducation })
+        console.log('Current resume data before update:', resumeListItem.resume_data)
+
         const updatedResume = { ...resumeListItem.resume_data }
-        if (updatedResume.education) {
-            updatedResume.education[index] = updatedEducation
+        // Initialize education array if it doesn't exist
+        if (!updatedResume.education) {
+            console.log('Initializing education array')
+            updatedResume.education = []
         }
+        updatedResume.education[index] = updatedEducation
+
+        console.log('Updated resume data:', updatedResume)
 
         const updatedResumeListItem = {
             ...resumeListItem,
@@ -373,6 +384,7 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         // Auto-save the changes
         try {
+            console.log('Saving education changes to database...')
             const { saveResumeToDatabase } = await import('@/lib/storage')
             await saveResumeToDatabase(
                 updatedResume,

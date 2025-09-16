@@ -74,8 +74,10 @@ export const saveResumeToDatabase = async (
 
         // Sanitize resume data for API (remove personal info from resume data)
         console.log('Sanitizing resume data...')
+        console.log('Education data before sanitization:', resume.education)
         const sanitizedResume = sanitizeResumeForApi(PersonalInfoExtractor.removeFromResumeData(resume))
         console.log('Sanitized resume:', sanitizedResume)
+        console.log('Education data after sanitization:', sanitizedResume.education)
 
         // Try to save to database first
         console.log('Getting active version...')
