@@ -181,7 +181,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                         content = resume.summary || ''
                         break
                     case 'skills':
-                        content = resume.skills ? resume.skills.map(skill => `<li>${skill}</li>`).join('') : ''
+                        content = resume.skills ? resume.skills.map(skill => {
+                            const skillText = typeof skill === 'string' ? skill : skill.category
+                            return `<li>${skillText}</li>`
+                        }).join('') : ''
                         break
                     default:
                         if (section.startsWith('experience-')) {
@@ -831,7 +834,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                                 content = resume.summary || ''
                                 break
                             case 'skills':
-                                content = resume.skills ? resume.skills.map(skill => `<li>${skill}</li>`).join('') : ''
+                                content = resume.skills ? resume.skills.map(skill => {
+                                    const skillText = typeof skill === 'string' ? skill : skill.category
+                                    return `<li>${skillText}</li>`
+                                }).join('') : ''
                                 break
                             default:
                                 if (sectionId.startsWith('experience-')) {
