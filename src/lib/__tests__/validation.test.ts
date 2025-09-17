@@ -9,7 +9,7 @@ describe('sanitizeResumeForApi', () => {
             experience: [],
             skills: [
                 "JavaScript",
-                "TypeScript", 
+                "TypeScript",
                 { category: "Frontend", skills: ["React", "Vue"] },
                 "Node.js",
                 { category: "Backend", skills: ["Express", "FastAPI"] }
@@ -17,17 +17,17 @@ describe('sanitizeResumeForApi', () => {
         }
 
         const sanitized = sanitizeResumeForApi(resume)
-        
+
         // All skills should be strings
         expect(sanitized.skills.every(skill => typeof skill === 'string')).toBe(true)
-        
+
         // Should extract category names from SkillCategory objects
         expect(sanitized.skills).toContain("JavaScript")
         expect(sanitized.skills).toContain("TypeScript")
         expect(sanitized.skills).toContain("Frontend")
         expect(sanitized.skills).toContain("Node.js")
         expect(sanitized.skills).toContain("Backend")
-        
+
         // Should not contain the nested skills arrays
         expect(sanitized.skills).not.toContain("React")
         expect(sanitized.skills).not.toContain("Vue")
