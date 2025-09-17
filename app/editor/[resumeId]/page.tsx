@@ -16,6 +16,7 @@ import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
 import { ExperienceEditor } from '@/components/editor/ExperienceEditor'
 import { EducationEditor } from '@/components/editor/EducationEditor'
+import { SkillsEditor } from '@/components/editor/SkillsEditor'
 import { ClientOnly } from '@/components/ClientOnly'
 import ApiStatus from '@/components/ApiStatus'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
@@ -181,9 +182,9 @@ export default function EditorPage({ params }: EditorPageProps) {
                         content = resume.summary || ''
                         break
                     case 'skills':
-                        content = resume.skills ? resume.skills.map(skill => {
-                            const skillText = typeof skill === 'string' ? skill : skill.category
-                            return `<li>${skillText}</li>`
+                        content = resume.skills ? resume.skills.map(subsection => {
+                            const skillsList = (subsection.skills || []).map(skill => `<li>${skill}</li>`).join('')
+                            return `<h4>${subsection.name || 'Untitled'}</h4><ul>${skillsList}</ul>`
                         }).join('') : ''
                         break
                     default:
@@ -446,13 +447,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResume.summary = content.replace(/<[^>]*>/g, '')
                 break
             case 'skills':
-                // Extract list items from HTML
-                const skillMatches = content.match(/<li>(.*?)<\/li>/g)
-                if (skillMatches) {
-                    updatedResume.skills = skillMatches.map(match =>
-                        match.replace(/<\/?li>/g, '').trim()
-                    )
-                }
+                // For now, keep the existing skills structure
+                // This will be handled by the SkillsEditor component
                 break
         }
 
@@ -664,10 +660,12 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         try {
             console.log('Calling ResumeService to update resume...')
-            // Update the resume list item with current job description
+            console.log('Current resumeListItem.resume_data.skills:', resumeListItem.resume_data.skills)
+            // Update the resume list item with current job description and latest resume data
             const updatedResumeListItem = {
                 ...resumeListItem,
-                job_description: editorState.jdText
+                job_description: editorState.jdText,
+                resume_data: resumeListItem.resume_data // Use the current resume data which includes skills updates
             }
 
             // Save the main resume data (existing functionality)
@@ -834,9 +832,9 @@ export default function EditorPage({ params }: EditorPageProps) {
                                 content = resume.summary || ''
                                 break
                             case 'skills':
-                                content = resume.skills ? resume.skills.map(skill => {
-                                    const skillText = typeof skill === 'string' ? skill : skill.category
-                                    return `<li>${skillText}</li>`
+                                content = resume.skills ? resume.skills.map(subsection => {
+                                    const skillsList = (subsection.skills || []).map(skill => `<li>${skill}</li>`).join('')
+                                    return `<h4>${subsection.name || 'Untitled'}</h4><ul>${skillsList}</ul>`
                                 }).join('') : ''
                                 break
                             default:
@@ -936,6 +934,23 @@ export default function EditorPage({ params }: EditorPageProps) {
                                         }
                                         return <div>Education not found</div>
                                     })()}
+                                </div>
+                            ) : editorState.selectedSection === 'skills' ? (
+                                <div className="h-full overflow-y-auto p-6">
+                                    <SkillsEditor
+                                        skills={resume.skills || []}
+                                        onUpdate={(updatedSkills) => {
+                                            console.log('SkillsEditor onUpdate called with:', updatedSkills)
+                                            const updatedResume = { ...resume, skills: updatedSkills }
+                                            const updatedResumeListItem = {
+                                                ...resumeListItem,
+                                                resume_data: updatedResume
+                                            }
+                                            console.log('Updating resumeListItem with skills:', updatedResume.skills)
+                                            setResumeListItem(updatedResumeListItem)
+                                            // Don't auto-save to prevent validation interruptions during typing
+                                        }}
+                                    />
                                 </div>
                             ) : (
                                 <RichEditor

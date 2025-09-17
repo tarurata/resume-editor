@@ -38,11 +38,11 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
             case 'summary':
                 return `<p>${resume.summary || ''}</p>`
             case 'skills':
-                const skillsList = resume.skills?.map(skill => {
-                    const skillText = typeof skill === 'string' ? skill : skill.category
-                    return `<li>${skillText}</li>`
+                const skillsList = resume.skills?.map(subsection => {
+                    const skillsItems = (subsection.skills || []).map(skill => `<li>${skill}</li>`).join('')
+                    return `<h4>${subsection.name || 'Untitled'}</h4><ul>${skillsItems}</ul>`
                 }).join('') || ''
-                return `<ul>${skillsList}</ul>`
+                return skillsList
             default:
                 if (sectionId.startsWith('experience-')) {
                     const index = parseInt(sectionId.split('-')[1])
