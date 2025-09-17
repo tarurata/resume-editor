@@ -196,14 +196,21 @@ export default function ValidationScreen({ resume, validationErrors, extractedPe
                     {resume.skills && resume.skills.length > 0 && (
                         <div>
                             <h4 className="font-medium text-gray-700 text-sm mb-2">Skills</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {resume.skills.map((skill, index) => (
-                                    <span
-                                        key={index}
-                                        className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
-                                    >
-                                        {typeof skill === 'string' ? skill : skill.category}
-                                    </span>
+                            <div className="space-y-3">
+                                {resume.skills.map((subsection, index) => (
+                                    <div key={index}>
+                                        <h5 className="font-medium text-gray-600 text-xs mb-1">{subsection.name || 'Untitled'}</h5>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(subsection.skills || []).map((skill, skillIndex) => (
+                                                <span
+                                                    key={skillIndex}
+                                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
+                                                >
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         </div>

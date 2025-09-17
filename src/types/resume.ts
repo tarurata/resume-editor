@@ -46,6 +46,11 @@ export interface SkillCategory {
     skills: string[];
 }
 
+export interface SkillSubsection {
+    name: string;
+    skills: string[];
+}
+
 export interface Resume {
     id?: string;
     title: string;
@@ -54,7 +59,7 @@ export interface Resume {
     experience: ExperienceEntry[];
     education?: EducationEntry[];
     certifications?: CertificationEntry[];
-    skills: (SkillCategory | string)[];
+    skills: SkillSubsection[];
     factsInventory?: FactsInventory;
 }
 

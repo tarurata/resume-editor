@@ -82,14 +82,37 @@
         },
         "skills": {
             "type": "array",
-            "description": "Array of skills or competencies",
+            "description": "Array of skill subsections with flexible category names",
             "minItems": 1,
             "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 50
-            },
-            "uniqueItems": true
+                "type": "object",
+                "required": [
+                    "name",
+                    "skills"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the skill subsection/category",
+                        "minLength": 1,
+                        "maxLength": 50,
+                        "example": "Programming Languages"
+                    },
+                    "skills": {
+                        "type": "array",
+                        "description": "Array of skills in this subsection",
+                        "minItems": 1,
+                        "maxItems": 20,
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 50
+                        },
+                        "uniqueItems": true
+                    }
+                },
+                "additionalProperties": false
+            }
         },
         "factsInventory": {
             "type": "object",

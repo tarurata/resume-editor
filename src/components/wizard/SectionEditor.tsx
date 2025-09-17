@@ -52,9 +52,14 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
                     })
                     break
                 case 'skills':
-                    // Parse skills from text (comma-separated)
+                    // Parse skills from text and create a default subsection
                     const skills = section.content.split(',').map(s => s.trim()).filter(s => s.length > 0)
-                    newResume.skills = skills
+                    if (skills.length > 0) {
+                        newResume.skills = [{
+                            name: 'Technical Skills',
+                            skills: skills
+                        }]
+                    }
                     break
             }
         })
@@ -126,21 +131,47 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
     const addSkill = () => {
         setEditedResume(prev => ({
             ...prev,
-            skills: [...(prev.skills || []), 'New skill']
+            skills: [...(prev.skills || []), { name: 'New Subsection', skills: [] }]
         }))
     }
 
-    const updateSkill = (index: number, value: string) => {
+    const updateSkillSubsectionName = (subsectionIndex: number, name: string) => {
         setEditedResume(prev => ({
             ...prev,
-            skills: prev.skills?.map((skill, i) => i === index ? value : skill) || []
+            skills: prev.skills?.map((subsection, i) =>
+                i === subsectionIndex ? { ...subsection, name } : subsection
+            ) || []
         }))
     }
 
-    const removeSkill = (index: number) => {
+    const removeSkillSubsection = (subsectionIndex: number) => {
         setEditedResume(prev => ({
             ...prev,
-            skills: prev.skills?.filter((_, i) => i !== index) || []
+            skills: prev.skills?.filter((_, i) => i !== subsectionIndex) || []
+        }))
+    }
+
+    const addSkillToSubsection = (subsectionIndex: number, skill: string) => {
+        if (skill.trim()) {
+            setEditedResume(prev => ({
+                ...prev,
+                skills: prev.skills?.map((subsection, i) =>
+                    i === subsectionIndex
+                        ? { ...subsection, skills: [...subsection.skills, skill.trim()] }
+                        : subsection
+                ) || []
+            }))
+        }
+    }
+
+    const removeSkillFromSubsection = (subsectionIndex: number, skillIndex: number) => {
+        setEditedResume(prev => ({
+            ...prev,
+            skills: prev.skills?.map((subsection, i) =>
+                i === subsectionIndex
+                    ? { ...subsection, skills: subsection.skills.filter((_, j) => j !== skillIndex) }
+                    : subsection
+            ) || []
         }))
     }
 
@@ -349,25 +380,68 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
                             onClick={addSkill}
                             className="btn-primary text-sm"
                         >
-                            Add Skill
+                            Add Subsection
                         </button>
                     </div>
 
-                    <div className="space-y-2">
-                        {editedResume.skills?.map((skill, index) => (
-                            <div key={index} className="flex space-x-2">
-                                <input
-                                    type="text"
-                                    value={typeof skill === 'string' ? skill : skill.category}
-                                    onChange={(e) => updateSkill(index, e.target.value)}
-                                    className="input-field flex-1"
-                                />
-                                <button
-                                    onClick={() => removeSkill(index)}
-                                    className="text-red-500 hover:text-red-700 px-2"
-                                >
-                                    ×
-                                </button>
+                    <div className="space-y-4">
+                        {editedResume.skills?.map((subsection, subsectionIndex) => (
+                            <div key={subsectionIndex} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <input
+                                        type="text"
+                                        value={subsection.name}
+                                        onChange={(e) => updateSkillSubsectionName(subsectionIndex, e.target.value)}
+                                        className="text-lg font-medium bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                                        placeholder="Subsection name"
+                                    />
+                                    <button
+                                        onClick={() => removeSkillSubsection(subsectionIndex)}
+                                        className="text-red-500 hover:text-red-700 px-2"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex space-x-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Add skill to this subsection"
+                                            className="input-field flex-1"
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    addSkillToSubsection(subsectionIndex, e.currentTarget.value)
+                                                    e.currentTarget.value = ''
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={(e) => {
+                                                const input = e.currentTarget.previousElementSibling as HTMLInputElement
+                                                addSkillToSubsection(subsectionIndex, input.value)
+                                                input.value = ''
+                                            }}
+                                            className="btn-secondary text-sm"
+                                        >
+                                            Add Skill
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {subsection.skills.map((skill, skillIndex) => (
+                                            <div key={skillIndex} className="flex items-center space-x-1 bg-gray-100 rounded-full px-3 py-1">
+                                                <span className="text-sm">{skill}</span>
+                                                <button
+                                                    onClick={() => removeSkillFromSubsection(subsectionIndex, skillIndex)}
+                                                    className="text-red-500 hover:text-red-700 text-sm"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>

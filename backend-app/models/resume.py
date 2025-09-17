@@ -91,6 +91,36 @@ class ExperienceEntry(BaseModel):
         return v
 
 
+class SkillSubsection(BaseModel):
+    """Individual skill subsection with flexible category name"""
+    name: str = Field(
+        ...,
+        description="Name of the skill subsection/category",
+        min_length=1,
+        max_length=50,
+        example="Programming Languages"
+    )
+    skills: List[str] = Field(
+        ...,
+        description="Array of skills in this subsection",
+        min_items=1,
+        max_items=20,
+        example=["JavaScript", "TypeScript", "Python"]
+    )
+
+    @field_validator('skills')
+    @classmethod
+    def validate_skills(cls, v):
+        if len(set(v)) != len(v):
+            raise ValueError("Skills within a subsection must be unique")
+        for skill in v:
+            if len(skill.strip()) == 0:
+                raise ValueError("Skills cannot be empty")
+            if len(skill) > 50:
+                raise ValueError("Skills must be 50 characters or less")
+        return v
+
+
 class FactsInventory(BaseModel):
     """Facts inventory for guardrails and validation"""
     skills: List[str] = Field(
@@ -157,11 +187,15 @@ class Resume(BaseModel):
             }
         ]
     )
-    skills: List[str] = Field(
+    skills: List['SkillSubsection'] = Field(
         ...,
-        description="Array of skills or competencies",
+        description="Array of skill subsections with flexible category names",
         min_items=1,
-        example=["JavaScript", "TypeScript", "React", "Node.js", "Python", "AWS"]
+        example=[
+            {"name": "Programming Languages", "skills": ["JavaScript", "TypeScript", "Python"]},
+            {"name": "Frameworks", "skills": ["React", "Node.js", "Express"]},
+            {"name": "Cloud & DevOps", "skills": ["AWS", "Docker", "Kubernetes"]}
+        ]
     )
     factsInventory: Optional[FactsInventory] = Field(
         None,
@@ -171,13 +205,19 @@ class Resume(BaseModel):
     @field_validator('skills')
     @classmethod
     def validate_skills(cls, v):
-        if len(set(v)) != len(v):
-            raise ValueError("Skills must be unique")
-        for skill in v:
-            if len(skill.strip()) == 0:
-                raise ValueError("Skills cannot be empty")
-            if len(skill) > 50:
-                raise ValueError("Skills must be 50 characters or less")
+        if len(v) == 0:
+            raise ValueError("At least one skill subsection is required")
+        
+        # Check for unique subsection names
+        subsection_names = [subsection.name for subsection in v]
+        if len(set(subsection_names)) != len(subsection_names):
+            raise ValueError("Skill subsection names must be unique")
+        
+        # Validate each subsection
+        for subsection in v:
+            if len(subsection.name.strip()) == 0:
+                raise ValueError("Skill subsection names cannot be empty")
+        
         return v
 
 

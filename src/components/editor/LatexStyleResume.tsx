@@ -219,6 +219,15 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
                     font-size: 10pt;
                     line-height: 1.3;
                 }
+                .skill-subsection {
+                    margin-bottom: 8pt;
+                }
+                .skill-subsection-title {
+                    font-weight: 600;
+                    font-size: 9pt;
+                    color: #374151;
+                    margin-bottom: 3pt;
+                }
 
                 /* Print styles */
                 @media print {
@@ -360,24 +369,19 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
                 <div className="section">
                     <div className="section-title">Technical Skills</div>
                     <div className="skills-container">
-                        {resume.skills.map((skill, index) => {
-                            // Handle both old format (string[]) and new format (SkillCategory[])
-                            if (typeof skill === 'string') {
-                                return (
-                                    <span key={index} className="skill-list">
-                                        {skill}
-                                        {index < resume.skills.length - 1 && ' \\ '}
-                                    </span>
-                                )
-                            } else {
-                                return (
-                                    <span key={index} className="skill-list">
-                                        <strong>{skill.category}:</strong> {skill.skills.join(', ')}
-                                        {index < resume.skills.length - 1 && ' \\ '}
-                                    </span>
-                                )
-                            }
-                        })}
+                        {resume.skills.map((subsection, index) => (
+                            <div key={index} className="skill-subsection">
+                                <div className="skill-subsection-title">{subsection.name || 'Untitled'}</div>
+                                <div className="skill-list">
+                                    {(subsection.skills || []).map((skill, skillIndex) => (
+                                        <span key={skillIndex}>
+                                            {skill}
+                                            {skillIndex < (subsection.skills || []).length - 1 && ', '}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

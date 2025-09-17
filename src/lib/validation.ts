@@ -94,18 +94,33 @@ export function validateResumeData(resume: Resume): ValidationError[] {
 
     // Validate skills
     if (resume.skills && resume.skills.length > 0) {
-        resume.skills.forEach((skill, index) => {
-            const skillText = typeof skill === 'string' ? skill : skill.category
-            if (!skillText || skillText.trim().length === 0) {
+        resume.skills.forEach((subsection, subsectionIndex) => {
+            // Only validate subsection name length if it has content
+            if (subsection.name && subsection.name.length > 50) {
                 errors.push({
-                    field: `skills[${index}]`,
-                    message: 'Skill cannot be empty'
+                    field: `skills[${subsectionIndex}].name`,
+                    message: 'Skill subsection name must be less than 50 characters'
                 })
-            } else if (skillText.length > 100) {
-                errors.push({
-                    field: `skills[${index}]`,
-                    message: 'Skill must be less than 100 characters'
-                })
+            }
+
+            // Only validate skills if subsection has a meaningful name and skills
+            const hasValidName = subsection.name && subsection.name.trim().length > 0 && subsection.name !== 'New Subsection'
+            if (hasValidName) {
+                if (!subsection.skills || subsection.skills.length === 0) {
+                    errors.push({
+                        field: `skills[${subsectionIndex}].skills`,
+                        message: 'Skill subsection must have at least one skill'
+                    })
+                } else {
+                    subsection.skills.forEach((skill, skillIndex) => {
+                        if (skill && skill.trim().length > 0 && skill.length > 50) {
+                            errors.push({
+                                field: `skills[${subsectionIndex}].skills[${skillIndex}]`,
+                                message: 'Skill must be less than 50 characters'
+                            })
+                        }
+                    })
+                }
             }
         })
     }
@@ -181,10 +196,10 @@ export function sanitizeResumeForApi(resume: Resume): Resume {
             issuer: cert.issuer?.trim() || '',
             date: cert.date || ''
         })) || [],
-        skills: resume.skills?.map(skill => {
-            const skillText = typeof skill === 'string' ? skill : skill.category
-            return skillText?.trim()
-        }).filter(skill => skill && skill.length > 0) || [],
+        skills: resume.skills?.map(subsection => ({
+            name: subsection.name?.trim() || '',
+            skills: subsection.skills?.map(skill => skill?.trim()).filter(skill => skill && skill.length > 0) || []
+        })).filter(subsection => subsection.name && subsection.skills.length > 0) || [],
         factsInventory: resume.factsInventory
     }
 }

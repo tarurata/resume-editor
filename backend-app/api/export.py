@@ -252,6 +252,15 @@ def generate_resume_html(resume: Resume) -> str:
                 border-radius: 15px;
                 font-size: 14px;
             }}
+            .skill-subsection {{
+                margin-bottom: 15px;
+            }}
+            .skill-subsection h4 {{
+                margin: 0 0 8px 0;
+                font-size: 16px;
+                font-weight: bold;
+                color: #555;
+            }}
             @media print {{
                 body {{
                     margin: 0;
@@ -316,5 +325,16 @@ def generate_experience_html(experience) -> str:
 
 
 def generate_skills_html(skills) -> str:
-    """Generate HTML for skills section"""
-    return "".join([f'<span class="skill">{skill}</span>' for skill in skills])
+    """Generate HTML for skills section with subsections"""
+    html = ""
+    for subsection in skills:
+        if hasattr(subsection, 'name') and hasattr(subsection, 'skills'):
+            # New structure with subsections
+            html += f'<div class="skill-subsection"><h4>{subsection.name}</h4><div class="skills">'
+            for skill in subsection.skills:
+                html += f'<span class="skill">{skill}</span>'
+            html += '</div></div>'
+        else:
+            # Fallback for old structure (string skills)
+            html += f'<span class="skill">{subsection}</span>'
+    return html

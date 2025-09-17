@@ -143,11 +143,11 @@ def generate_mock_suggestion(section_type: str, strategy_id: str, current_conten
     
     elif section_type == "skills":
         if strategy_id == "map-jd":
-            return "JavaScript\nTypeScript\nReact\nNode.js\nAWS\nPostgreSQL"
+            return "Programming Languages: JavaScript, TypeScript, Python\nFrameworks: React, Node.js\nCloud & DevOps: AWS, Docker\nDatabase: PostgreSQL, MongoDB"
         elif strategy_id == "categorize":
-            return "Programming: JavaScript, TypeScript, Python\nFrameworks: React, Node.js\nCloud: AWS, Docker\nDatabase: PostgreSQL, MongoDB"
+            return "Programming Languages: JavaScript, TypeScript, Python\nFrameworks: React, Node.js, Express\nCloud & DevOps: AWS, Docker, Kubernetes\nDatabase: PostgreSQL, MongoDB\nAnalytics: Tableau, Power BI"
         elif strategy_id == "prioritize":
-            return "JavaScript\nReact\nNode.js\nTypeScript\nAWS\nPostgreSQL"
+            return "Core Technologies: JavaScript, React, Node.js\nProgramming Languages: TypeScript, Python\nCloud & DevOps: AWS, Docker\nDatabase: PostgreSQL, MongoDB"
     
     # Default fallback
     return f"Improved {section_type} using {strategy_id} strategy"
