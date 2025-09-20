@@ -41,7 +41,10 @@ export default function NewResumePage() {
             await saveResumeToDatabase(
                 template,
                 formData.companyName,
-                formData.jobTitle
+                formData.jobTitle,
+                undefined, // companyEmail
+                undefined, // jobDescription
+                null // Don't extract personal info from template data
             )
 
             // Get the newly created resume to get its ID
@@ -87,7 +90,10 @@ export default function NewResumePage() {
             await saveResumeToDatabase(
                 blankResume,
                 formData.companyName,
-                formData.jobTitle
+                formData.jobTitle,
+                undefined, // companyEmail
+                undefined, // jobDescription
+                null // Don't extract personal info from blank resume
             )
 
             // Get the newly created resume to get its ID
@@ -135,16 +141,22 @@ export default function NewResumePage() {
                     }
                 ],
                 skills: [
-                    'JavaScript',
-                    'TypeScript',
-                    'React',
-                    'Node.js',
-                    'Python',
-                    'AWS',
-                    'Docker',
-                    'PostgreSQL',
-                    'Git',
-                    'Agile/Scrum'
+                    {
+                        name: 'Programming Languages',
+                        skills: ['JavaScript', 'TypeScript', 'Python', 'Java']
+                    },
+                    {
+                        name: 'Frameworks & Libraries',
+                        skills: ['React', 'Node.js', 'Express', 'Next.js']
+                    },
+                    {
+                        name: 'Cloud & DevOps',
+                        skills: ['AWS', 'Docker', 'Git', 'CI/CD']
+                    },
+                    {
+                        name: 'Soft Skills',
+                        skills: ['Agile/Scrum', 'Problem Solving', 'Team Leadership', 'Mentoring']
+                    }
                 ]
             } as Resume
         },
@@ -171,16 +183,22 @@ export default function NewResumePage() {
                     }
                 ],
                 skills: [
-                    'Python',
-                    'R',
-                    'SQL',
-                    'Machine Learning',
-                    'TensorFlow',
-                    'Pandas',
-                    'NumPy',
-                    'Scikit-learn',
-                    'Tableau',
-                    'Jupyter'
+                    {
+                        name: 'Programming Languages',
+                        skills: ['Python', 'R', 'SQL']
+                    },
+                    {
+                        name: 'Machine Learning',
+                        skills: ['TensorFlow', 'Scikit-learn', 'Pandas', 'NumPy']
+                    },
+                    {
+                        name: 'Data Visualization',
+                        skills: ['Tableau', 'Jupyter', 'Matplotlib', 'Seaborn']
+                    },
+                    {
+                        name: 'Tools & Platforms',
+                        skills: ['AWS', 'Docker', 'Git', 'Jupyter Notebooks']
+                    }
                 ]
             } as Resume
         },
@@ -207,16 +225,22 @@ export default function NewResumePage() {
                     }
                 ],
                 skills: [
-                    'Product Strategy',
-                    'Agile/Scrum',
-                    'User Research',
-                    'Data Analysis',
-                    'Project Management',
-                    'Figma',
-                    'Jira',
-                    'SQL',
-                    'A/B Testing',
-                    'Stakeholder Management'
+                    {
+                        name: 'Product Management',
+                        skills: ['Product Strategy', 'Roadmap Planning', 'Feature Prioritization']
+                    },
+                    {
+                        name: 'Methodologies',
+                        skills: ['Agile/Scrum', 'User Research', 'A/B Testing']
+                    },
+                    {
+                        name: 'Technical Skills',
+                        skills: ['Data Analysis', 'SQL', 'Figma', 'Jira']
+                    },
+                    {
+                        name: 'Leadership',
+                        skills: ['Project Management', 'Stakeholder Management', 'Team Leadership']
+                    }
                 ]
             } as Resume
         }

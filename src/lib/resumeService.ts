@@ -102,7 +102,20 @@ export class ResumeService {
                                 ]
                             }
                         ],
-                        skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'AWS', 'Docker']
+                        skills: [
+                            {
+                                name: 'Programming Languages',
+                                skills: ['JavaScript', 'TypeScript']
+                            },
+                            {
+                                name: 'Frameworks & Libraries',
+                                skills: ['React', 'Node.js']
+                            },
+                            {
+                                name: 'Cloud & DevOps',
+                                skills: ['AWS', 'Docker']
+                            }
+                        ]
                     },
                     company_email: 'hr@techcorp.com',
                     job_description: 'Looking for a senior software engineer to lead our frontend team...'
@@ -130,7 +143,20 @@ export class ResumeService {
                                 ]
                             }
                         ],
-                        skills: ['React', 'Node.js', 'Python', 'PostgreSQL', 'Git', 'Agile']
+                        skills: [
+                            {
+                                name: 'Frontend',
+                                skills: ['React', 'Node.js']
+                            },
+                            {
+                                name: 'Backend',
+                                skills: ['Python', 'PostgreSQL']
+                            },
+                            {
+                                name: 'Tools & Methods',
+                                skills: ['Git', 'Agile']
+                            }
+                        ]
                     },
                     company_email: 'jobs@startupxyz.com',
                     job_description: 'Join our fast-growing startup as a full-stack developer...'
@@ -158,7 +184,20 @@ export class ResumeService {
                                 ]
                             }
                         ],
-                        skills: ['React', 'Vue.js', 'TypeScript', 'Webpack', 'Jest', 'CSS3']
+                        skills: [
+                            {
+                                name: 'Frontend Frameworks',
+                                skills: ['React', 'Vue.js', 'TypeScript']
+                            },
+                            {
+                                name: 'Build Tools & Testing',
+                                skills: ['Webpack', 'Jest']
+                            },
+                            {
+                                name: 'Styling',
+                                skills: ['CSS3', 'SASS', 'Tailwind']
+                            }
+                        ]
                     },
                     company_email: 'careers@bigtech.com',
                     job_description: 'We are looking for a talented frontend engineer...'
