@@ -59,7 +59,7 @@ export interface Resume {
     experience: ExperienceEntry[];
     education?: EducationEntry[];
     certifications?: CertificationEntry[];
-    skills: string[];
+    skills: SkillSubsection[];
     factsInventory?: FactsInventory;
 }
 
