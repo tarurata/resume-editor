@@ -15,7 +15,7 @@ export class OpenAIProvider implements LLMProvider {
     this.validateConfig(config);
 
     const requestBody = {
-      model: params.model || 'gpt-3.5-turbo',
+      model: params.model || 'gpt-4o-mini',
       messages: [
         {
           role: 'user',

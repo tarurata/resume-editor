@@ -1,122 +1,162 @@
-import { createLLMAdapter } from './adapter';
-import { LLMTelemetry } from './types';
+import { getAIService, createAIService, AIServiceConfig } from './aiService';
 
-// Example usage of the LLM adapter
-export async function exampleUsage() {
-  // Create adapter with default configuration (uses environment variables)
-  const adapter = createLLMAdapter();
-
-  // Add telemetry hook to track usage
-  adapter.addTelemetryHook((telemetry: LLMTelemetry) => {
-    console.log('LLM Telemetry:', {
-      provider: telemetry.provider,
-      status: telemetry.status,
-      duration: `${telemetry.duration}ms`,
-      tokens: telemetry.tokens,
-      retryCount: telemetry.retryCount,
-    });
-  });
-
-  try {
-    // Basic usage
-    const response = await adapter.generate('Write a professional summary for a software engineer');
-    console.log('Response:', response.text);
-
-    // With custom parameters
-    const customResponse = await adapter.generate(
-      'Help me improve this resume section',
-      {
-        temperature: 0.3,
-        maxTokens: 500,
-        model: 'gpt-4',
-      }
-    );
-    console.log('Custom response:', customResponse.text);
-
-    // Batch processing example
-    const prompts = [
-      'Write a cover letter for a software engineer position',
-      'Suggest improvements for this job description',
-      'Help me format this resume section',
-    ];
-
-    const responses = await Promise.all(
-      prompts.map(prompt => adapter.generate(prompt))
-    );
-
-    responses.forEach((response, index) => {
-      console.log(`Response ${index + 1}:`, response.text.substring(0, 100) + '...');
-    });
-
-  } catch (error) {
-    console.error('LLM Error:', error);
-  }
-}
-
-// Example with custom configuration
-export async function exampleWithCustomConfig() {
-  const adapter = createLLMAdapter({
-    provider: 'openai',
-    apiKey: 'your-api-key-here',
-    timeout: 60000,
-    maxRetries: 5,
-    retryDelay: 2000,
-    maxTokens: 8000,
-  });
-
-  try {
-    const response = await adapter.generate(
-      'Analyze this resume and suggest improvements',
-      {
-        temperature: 0.7,
-        maxTokens: 2000,
-      }
-    );
-
-    console.log('Analysis:', response.text);
-    console.log('Token usage:', response.usage);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-// Example with different providers
-export async function exampleWithProviders() {
-  // Mock provider for testing
-  const mockAdapter = createLLMAdapter({ provider: 'mock' });
+// Example 1: Basic usage with singleton
+export async function basicExample() {
+  const aiService = getAIService();
   
-  // OpenAI provider
-  const openaiAdapter = createLLMAdapter({
+  try {
+    const response = await aiService.generate(
+      "Write a professional summary for a software engineer with 5 years of experience"
+    );
+    
+    console.log('Generated text:', response.text);
+    console.log('Tokens used:', response.usage?.totalTokens);
+    
+  } catch (error) {
+    console.error('Error generating text:', error);
+  }
+}
+
+// Example 2: Advanced usage with custom configuration
+export async function advancedExample() {
+  const config: AIServiceConfig = {
     provider: 'openai',
     apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  // Anthropic provider
-  const anthropicAdapter = createLLMAdapter({
-    provider: 'anthropic',
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
-
-  const prompt = 'Write a professional summary for a data scientist';
-
+    maxTokens: 2000,
+    temperature: 0.7,
+    enableLogging: true,
+    logLevel: 'debug',
+  };
+  
+  const aiService = createAIService(config);
+  
   try {
-    // Test with mock provider
-    const mockResponse = await mockAdapter.generate(prompt);
-    console.log('Mock response:', mockResponse.text);
-
-    // Test with OpenAI (if API key is available)
-    if (process.env.OPENAI_API_KEY) {
-      const openaiResponse = await openaiAdapter.generate(prompt);
-      console.log('OpenAI response:', openaiResponse.text);
-    }
-
-    // Test with Anthropic (if API key is available)
-    if (process.env.ANTHROPIC_API_KEY) {
-      const anthropicResponse = await anthropicAdapter.generate(prompt);
-      console.log('Anthropic response:', anthropicResponse.text);
-    }
-
+    const response = await aiService.generate(
+      "Improve this resume section: 'Worked on various projects'",
+      { 
+        model: 'gpt-4o-mini',
+        temperature: 0.8,
+        maxTokens: 500 
+      },
+      { 
+        userId: 'user123', 
+        feature: 'resume-improvement',
+        metadata: { section: 'experience' }
+      }
+    );
+    
+    console.log('Improved text:', response.text);
+    
   } catch (error) {
-    console.error('Provider error:', error);
+    console.error('Error improving text:', error);
   }
 }
+
+// Example 3: Rate limiting and error handling
+export async function rateLimitExample() {
+  const aiService = getAIService();
+  
+  // Check rate limit status
+  const status = aiService.getRateLimitStatus({ userId: 'user123' });
+  console.log('Rate limit status:', status);
+  
+  try {
+    const response = await aiService.generateWithRetry(
+      "Generate a cover letter for a marketing position",
+      { maxTokens: 1000 },
+      { userId: 'user123', feature: 'cover-letter' },
+      3 // max retries
+    );
+    
+    console.log('Generated cover letter:', response.text);
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error after retries:', error.message);
+    }
+  }
+}
+
+// Example 4: Resume-specific features
+export async function resumeFeaturesExample() {
+  const aiService = getAIService();
+  
+  // Generate professional summary
+  const summaryResponse = await aiService.generate(
+    "Write a professional summary for a data scientist with experience in machine learning and Python",
+    { maxTokens: 150 }
+  );
+  
+  // Improve existing content
+  const improvementResponse = await aiService.generate(
+    `Improve this job description: "Responsible for data analysis and reporting"`,
+    { maxTokens: 200 }
+  );
+  
+  // Generate skills section
+  const skillsResponse = await aiService.generate(
+    "List 10 technical skills for a frontend developer",
+    { maxTokens: 100 }
+  );
+  
+  console.log('Professional Summary:', summaryResponse.text);
+  console.log('Improved Description:', improvementResponse.text);
+  console.log('Skills List:', skillsResponse.text);
+}
+
+// Example 5: Batch processing with rate limiting
+export async function batchProcessingExample() {
+  const aiService = getAIService();
+  const prompts = [
+    "Write a professional summary for a software engineer",
+    "Write a professional summary for a marketing manager",
+    "Write a professional summary for a data analyst",
+  ];
+  
+  const results = [];
+  
+  for (const prompt of prompts) {
+    try {
+      // Check rate limit before each request
+      const status = aiService.getRateLimitStatus();
+      if (status.remainingRequests === 0) {
+        console.log('Rate limit reached, waiting...');
+        await new Promise(resolve => setTimeout(resolve, status.timeUntilReset));
+      }
+      
+      const response = await aiService.generate(prompt, { maxTokens: 200 });
+      results.push({ prompt, response: response.text });
+      
+    } catch (error) {
+      console.error(`Error processing prompt: ${prompt}`, error);
+      results.push({ prompt, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+  
+  return results;
+}
+
+// Example 6: Configuration management
+export function configurationExample() {
+  const aiService = getAIService();
+  
+  // Get current configuration
+  const config = aiService.getConfig();
+  console.log('Current config:', config);
+  
+  // Update configuration
+  aiService.updateConfig({
+    maxTokens: 3000,
+    enableLogging: false,
+  });
+  
+  console.log('Updated config:', aiService.getConfig());
+}
+
+// Run examples (uncomment to test)
+// basicExample();
+// advancedExample();
+// rateLimitExample();
+// resumeFeaturesExample();
+// batchProcessingExample();
+// configurationExample();

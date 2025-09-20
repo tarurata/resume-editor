@@ -21,7 +21,7 @@ export class LLMAdapterImpl implements LLMAdapter {
 
     // Merge params with defaults
     const mergedParams: LLMParams = {
-      model: this.config.provider === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-sonnet',
+      model: this.config.provider === 'openai' ? 'gpt-4o-mini' : 'claude-3-sonnet',
       temperature: 0.7,
       maxTokens: this.config.maxTokens,
       ...params,

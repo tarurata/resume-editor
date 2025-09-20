@@ -1,214 +1,193 @@
-# LLM Adapter
+# AI Service Configuration
 
-A provider-agnostic adapter for LLM calls with timeouts, retries, and telemetry hooks.
+This document explains how to configure the AI service for the resume editor.
 
-## Features
+## Project Phases
 
-- **Provider Agnostic**: Support for OpenAI, Anthropic, and Mock providers
-- **Environment Configuration**: Easy configuration via environment variables
-- **Timeout & Retry**: Configurable timeouts and exponential backoff retry logic
-- **Token Guards**: Built-in token limit validation
-- **Telemetry Hooks**: Track duration, status, and token usage
-- **Error Handling**: Meaningful error messages with retry guidance
-- **TypeScript Support**: Full type safety and IntelliSense
+The AI service supports two phases:
 
-## Quick Start
+- **M1**: Frontend-only with mock AI responses (no API keys required)
+- **M2**: Full AI integration with real providers (API keys required)
 
-```typescript
-import { createLLMAdapter } from '@/lib/llm';
+### Current Phase: M2
 
-// Create adapter with default configuration
-const adapter = createLLMAdapter();
+The project is currently in **M2 phase** with real AI integration. You can switch phases by:
 
-// Generate text
-const response = await adapter.generate('Write a professional summary for a software engineer');
-console.log(response.text);
-```
+1. **Update phase configuration**: Edit `src/lib/llm/phase-config.ts`
+2. **Environment variable**: Set `PROJECT_PHASE=M1` or `PROJECT_PHASE=M2` in `.env.local`
+3. **Automatic detection**: Provide API key to automatically use M2
 
-## Configuration
+## M1 Setup (Mock AI - No API Keys Required)
 
-### Environment Variables
+For M1 phase, the AI service works out of the box with the mock provider:
 
 ```bash
-# Provider selection
-LLM_PROVIDER=openai  # or 'anthropic' or 'mock'
-
-# API Configuration
-LLM_API_KEY=your-api-key-here
-LLM_BASE_URL=https://api.openai.com/v1  # Optional, for custom endpoints
-
-# Timeout and Retry
-LLM_TIMEOUT=30000        # Request timeout in milliseconds
-LLM_MAX_RETRIES=3        # Maximum number of retries
-LLM_RETRY_DELAY=1000     # Base delay for retries in milliseconds
-
-# Token Limits
-LLM_MAX_TOKENS=4000      # Maximum tokens per request
+# Set phase to M1
+PROJECT_PHASE=M1
 ```
 
-### Programmatic Configuration
+## M2 Setup (Real AI - API Keys Required)
+
+For M2 phase, configure your preferred AI provider:
+
+```bash
+# Set phase to M2 (or let it auto-detect with API key)
+PROJECT_PHASE=M2
+
+# AI Service Configuration
+LLM_PROVIDER=openai
+LLM_API_KEY=your_openai_api_key_here
+
+# Optional: Custom base URL for API calls
+# LLM_BASE_URL=https://api.openai.com/v1
+
+# Request Configuration
+LLM_TIMEOUT=30000
+LLM_MAX_RETRIES=3
+LLM_RETRY_DELAY=1000
+LLM_MAX_TOKENS=4000
+
+# Rate Limiting (optional, uses defaults if not set)
+# LLM_RATE_LIMIT_MAX_REQUESTS=100
+# LLM_RATE_LIMIT_WINDOW_MS=60000
+# LLM_RATE_LIMIT_MAX_TOKENS_PER_WINDOW=150000
+# LLM_RATE_LIMIT_MAX_TOKENS_PER_REQUEST=4000
+
+# Logging Configuration
+LLM_ENABLE_LOGGING=true
+LLM_LOG_LEVEL=info
+```
+
+## Usage
+
+### Phase Detection
 
 ```typescript
-import { createLLMAdapter } from '@/lib/llm';
+import { getCurrentPhase, canUseRealAI, getAIService } from '@/lib/llm';
 
-const adapter = createLLMAdapter({
+// Check current phase
+const phase = getCurrentPhase(); // 'M1' or 'M2'
+console.log(`Current phase: ${phase}`);
+
+// Check if real AI is available
+if (canUseRealAI()) {
+  console.log('Real AI providers available');
+} else {
+  console.log('Using mock AI responses');
+}
+
+// Get AI service (automatically chooses right provider)
+const aiService = getAIService();
+const phaseInfo = aiService.getPhaseInfo();
+console.log('Provider:', phaseInfo.provider);
+```
+
+### Basic Usage (Works in Both Phases)
+
+```typescript
+import { getAIService } from '@/lib/llm';
+
+// Automatically uses mock for M1, real AI for M2
+const aiService = getAIService();
+
+// Generate text (adapts to current phase)
+const response = await aiService.generate(
+  "Write a professional summary for a software engineer",
+  { temperature: 0.7, maxTokens: 200 }
+);
+
+console.log(response.text); // Real AI response in M2, mock in M1
+```
+
+### Advanced Usage with Options
+
+```typescript
+import { createAIService } from '@/lib/llm';
+
+const aiService = createAIService({
   provider: 'openai',
-  apiKey: 'your-api-key',
-  timeout: 60000,
-  maxRetries: 5,
-  retryDelay: 2000,
-  maxTokens: 8000,
+  apiKey: process.env.OPENAI_API_KEY,
+  maxTokens: 4000,
+  rateLimit: {
+    maxRequests: 50,
+    windowMs: 60000,
+    maxTokensPerWindow: 100000,
+  }
 });
+
+const response = await aiService.generate(
+  "Improve this resume section",
+  { model: 'gpt-4o-mini' },
+  { userId: 'user123', feature: 'resume-improvement' }
+);
 ```
 
-## Usage Examples
+### Rate Limiting
 
-### Basic Usage
-
-```typescript
-const adapter = createLLMAdapter();
-
-// Simple text generation
-const response = await adapter.generate('Help me write a resume');
-
-// With custom parameters
-const response = await adapter.generate('Improve this text', {
-  temperature: 0.3,
-  maxTokens: 500,
-  model: 'gpt-4',
-});
-```
-
-### Telemetry Tracking
+The AI service includes built-in rate limiting to prevent API quota exhaustion:
 
 ```typescript
-const adapter = createLLMAdapter();
-
-// Add telemetry hook
-adapter.addTelemetryHook((telemetry) => {
-  console.log('LLM Call:', {
-    provider: telemetry.provider,
-    status: telemetry.status,
-    duration: `${telemetry.duration}ms`,
-    tokens: telemetry.tokens,
-    retryCount: telemetry.retryCount,
-  });
-});
-
-const response = await adapter.generate('Test prompt');
+// Check rate limit status
+const status = aiService.getRateLimitStatus({ userId: 'user123' });
+console.log(`Remaining requests: ${status.remainingRequests}`);
+console.log(`Remaining tokens: ${status.remainingTokens}`);
+console.log(`Time until reset: ${status.timeUntilReset}ms`);
 ```
 
 ### Error Handling
 
 ```typescript
-import { LLMError, isRetryableError } from '@/lib/llm';
+import { LLMRateLimitError, LLMQuotaExceededError } from '@/lib/llm';
 
 try {
-  const response = await adapter.generate('Test prompt');
+  const response = await aiService.generate(prompt);
 } catch (error) {
-  if (error instanceof LLMError) {
-    console.error(`LLM Error (${error.provider}):`, error.message);
-    
-    if (isRetryableError(error)) {
-      console.log('This error can be retried');
-    }
+  if (error instanceof LLMRateLimitError) {
+    console.log('Rate limit exceeded, please wait');
+  } else if (error instanceof LLMQuotaExceededError) {
+    console.log('API quota exceeded');
+  } else {
+    console.error('Unexpected error:', error);
   }
 }
 ```
 
-### Provider Switching
+## Features
 
-```typescript
-// OpenAI
-const openaiAdapter = createLLMAdapter({
-  provider: 'openai',
-  apiKey: process.env.OPENAI_API_KEY,
-});
+- **Provider Abstraction**: Support for OpenAI, Anthropic, and Mock providers
+- **Rate Limiting**: Configurable rate limits per user/session
+- **Token Management**: Automatic token counting and limits
+- **Retry Logic**: Exponential backoff for retryable errors
+- **Logging**: Comprehensive logging and monitoring
+- **Type Safety**: Full TypeScript support
+- **Error Handling**: Detailed error types and handling
 
-// Anthropic
-const anthropicAdapter = createLLMAdapter({
-  provider: 'anthropic',
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+## Default Models
 
-// Mock (for testing)
-const mockAdapter = createLLMAdapter({
-  provider: 'mock',
-});
-```
+- **OpenAI**: `gpt-4o-mini` (default)
+- **Anthropic**: `claude-3-sonnet`
+- **Mock**: `mock-model`
 
-## API Reference
+## Rate Limits (Default)
 
-### LLMAdapter
+- **OpenAI**: 100 requests/minute, 150k tokens/minute
+- **Anthropic**: 50 requests/minute, 100k tokens/minute
+- **Mock**: 1000 requests/minute, 1M tokens/minute
 
-```typescript
-interface LLMAdapter {
-  generate(prompt: string, params?: LLMParams): Promise<LLMResponse>;
-  getConfig(): LLMConfig;
-  addTelemetryHook(hook: (telemetry: LLMTelemetry) => void): void;
-  removeTelemetryHook(hook: (telemetry: LLMTelemetry) => void): void;
-}
-```
+## Getting API Keys
 
-### LLMParams
+### OpenAI
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create an account or sign in
+3. Generate a new API key
+4. Add it to your `.env.local` file
 
-```typescript
-interface LLMParams {
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  frequencyPenalty?: number;
-  presencePenalty?: number;
-  stop?: string[];
-}
-```
-
-### LLMResponse
-
-```typescript
-interface LLMResponse {
-  text: string;
-  usage?: {
-    promptTokens?: number;
-    completionTokens?: number;
-    totalTokens?: number;
-  };
-  model?: string;
-  finishReason?: string;
-}
-```
-
-## Error Types
-
-- `LLMError`: Base error class
-- `LLMTimeoutError`: Request timeout
-- `LLMRateLimitError`: Rate limit exceeded
-- `LLMQuotaExceededError`: API quota exceeded
-- `LLMInvalidRequestError`: Invalid request parameters
-- `LLMAuthenticationError`: Authentication failed
+### Anthropic
+1. Visit [Anthropic Console](https://console.anthropic.com/)
+2. Create an account or sign in
+3. Generate an API key
+4. Add it to your `.env.local` file
 
 ## Testing
 
-```bash
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## Development
-
-The adapter is designed to be easily extensible. To add a new provider:
-
-1. Create a new provider class implementing `LLMProvider`
-2. Add it to the `createProvider` function in `providers/index.ts`
-3. Add tests for the new provider
-
-## License
-
-MIT
+The mock provider is perfect for development and testing. It simulates API responses without making real API calls.
