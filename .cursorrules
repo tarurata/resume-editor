@@ -5,7 +5,7 @@ This is a **frontend-only core editor** for a resume editor. Focus on core editi
 
 ### Technology Stack
 - **Frontend:** Next.js (React), TypeScript, Tailwind CSS 
-- **No Backend:** Python FastAPI with SQLite
+- **Backend:** Python FastAPI with SQLite
 - **Storage:** Database with localStorage fallback
 - **Export:** Print-css to PDF (browser-based)
 - **AI:** Real AI integration (OpenAI)
