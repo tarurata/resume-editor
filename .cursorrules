@@ -1,54 +1,98 @@
-# Resume Editor M1 - Cursor Rules
+# Resume Editor M2 - Cursor Rules
 
-## Project Scope (M1 Only)
+## Project Scope (M2 Full Stack)
 This is a **frontend-only core editor** for a resume editor. Focus on core editing functionality only.
 
 ### Technology Stack
-- **Frontend:** Next.js (React), TypeScript, Tailwind CSS
-- **No Backend:** Python backend will be added in M2
-- **Storage:** Browser localStorage only (no database in M1)
+- **Frontend:** Next.js (React), TypeScript, Tailwind CSS 
+- **No Backend:** Python FastAPI with SQLite
+- **Storage:** Database with localStorage fallback
 - **Export:** Print-css to PDF (browser-based)
+- **AI:** Real AI integration (OpenAI)
 
-### Core Features (M1)
+### Core Features (M2)
 - Create from template or paste → build resume.json
 - Select & edit sections with presets and constraints
 - View inline diff; accept/reject; per-section history
 - Export to PDF (print-css)
 - Real-time HTML preview
 - JSON data persistence (localStorage)
+- AI-powered resume import and extraction
+- AI-powered content suggestions and improvements
 
-### M1 Constraints - DO NOT IMPLEMENT
-- ❌ PDF import functionality (planned for M1.5)
-- ❌ Backend API endpoints
-- ❌ User authentication or login
-- ❌ Cloud storage or database
+### M2 Constraints - DO NOT IMPLEMENT
+- ❌ Dockerise everything (M4)
+- ❌ Deploy to the real world server on Iaas (M4)
+- ❌ Job Search & Scraping feature (M3)
+- ❌ Scheduling feature depending on a dead line (M3)
+- ❌ Email sending Feature for something like Craigslist (M3)
+- ❌ Cover Letter feature (M3)
+- ❌ User authentication or login (M3)
 - ❌ Server-side PDF rendering
-- ❌ Advanced AI suggestions
-- ❌ Collaboration or sharing features
-- ❌ User accounts or profiles
+- ❌ Mobile app
 
 ### Code Guidelines
-- Use TypeScript for all components
+- Use TypeScript for all components in Frontend
 - Follow Next.js 13+ app directory structure
 - Use Tailwind CSS for styling
-- Keep components simple and focused
-- Use localStorage for data persistence
+- Use database for data persistence
 - Implement proper error handling
 - Write clean, readable code with comments
 
 ### File Structure
 ```
 src/
-├── app/                 # Next.js app directory
-├── components/          # Reusable components
-├── lib/                # Utilities and helpers
-├── types/              # TypeScript type definitions
-└── styles/             # Global styles
+├── app/ # Next.js app directory
+├── components/ # Reusable components
+├── lib/ # Utilities and helpers
+├── types/ # TypeScript type definitions
+└── styles/ # Global styles
+backend-app/
+├── api/ # FastAPI endpoints
+├── models/ # Database models
+├── services/ # Business logic
+├── core/ # Configuration
+└── templates/ # PDF templates
+database/
+├── models.py # Database models
+├── migrations/ # Database migrations
+└── seeds/ # Sample data
 ```
 
+### API Endpoints (M2)
+- `POST /api/resumes` - Create new resume
+- `GET /api/resumes` - List user resumes
+- `GET /api/resumes/{id}` - Get specific resume
+- `PUT /api/resumes/{id}` - Update resume
+- `DELETE /api/resumes/{id}` - Delete resume
+- `POST /api/resumes/import` - Import resume from text/PDF
+- `POST /api/resumes/{id}/export` - Export resume to PDF
+- `POST /api/ai/extract` - AI-powered extraction
+- `POST /api/ai/improve` - AI-powered improvements
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update user profile
+
 ### Development Focus
-- Prioritize core editing functionality
-- Ensure mobile responsiveness
-- Focus on user experience for resume creation
-- Keep dependencies minimal
-- Test PDF export thoroughly
+- Prioritize full-stack functionality
+- Ensure robust API design
+- Focus on AI-powered features
+- Ensure data persistence and reliability
+- Test both frontend and backend thoroughly
+- Optimize for performance and scalability
+- Implement proper error handling and logging
+
+### AI Integration
+- Use real AI providers (OpenAI) in production
+- Maintain mock providers for development and testing
+- Implement proper rate limiting and error handling
+- Provide fallback mechanisms for AI failures
+- Use AI for resume import, content improvement, and suggestions
+- Implement confidence scoring for AI results
+
+### Database Schema
+- Users table with authentication
+- Resumes table with versioning
+- Personal info table
+- Experience, education, skills tables
+- Resume versions and history
+- AI extraction logs and results
