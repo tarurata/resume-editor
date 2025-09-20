@@ -21,8 +21,9 @@ export const saveResumeToDatabase = async (
         // Handle personal information extraction and creation
         let personalInfoToSave = extractedPersonalInfo
 
-        // If no personal info provided, try to extract from resume data
-        if (!personalInfoToSave) {
+        // If no personal info provided (undefined), try to extract from resume data
+        // If explicitly set to null, skip personal info extraction entirely
+        if (extractedPersonalInfo === undefined) {
             personalInfoToSave = PersonalInfoExtractor.extractFromResumeData(resume)
         }
 
@@ -33,27 +34,57 @@ export const saveResumeToDatabase = async (
                 const existingPersonalInfo = await personalInfoApi.get()
 
                 if (existingPersonalInfo) {
-                    // Update existing personal info
-                    await personalInfoApi.update({
-                        full_name: personalInfoToSave.name || existingPersonalInfo.full_name,
-                        email: personalInfoToSave.email || existingPersonalInfo.email,
-                        phone: personalInfoToSave.phone || existingPersonalInfo.phone,
-                        location: existingPersonalInfo.location, // Keep existing location
-                        linkedin_url: personalInfoToSave.linkedin || existingPersonalInfo.linkedin_url,
-                        portfolio_url: personalInfoToSave.github || existingPersonalInfo.portfolio_url
-                    })
-                    console.log('Updated personal information successfully')
+                    // Update existing personal info - but don't overwrite name unless explicitly provided
+                    // Only update fields that are explicitly provided and not extracted from resume data
+                    const updates: any = {}
+
+                    // Only update email if it's provided and not extracted from resume data
+                    if (personalInfoToSave.email && extractedPersonalInfo !== undefined) {
+                        updates.email = personalInfoToSave.email
+                    }
+
+                    // Only update phone if it's provided and not extracted from resume data
+                    if (personalInfoToSave.phone && extractedPersonalInfo !== undefined) {
+                        updates.phone = personalInfoToSave.phone
+                    }
+
+                    // Only update LinkedIn if it's provided and not extracted from resume data
+                    if (personalInfoToSave.linkedin && extractedPersonalInfo !== undefined) {
+                        updates.linkedin_url = personalInfoToSave.linkedin
+                    }
+
+                    // Only update GitHub if it's provided and not extracted from resume data
+                    if (personalInfoToSave.github && extractedPersonalInfo !== undefined) {
+                        updates.portfolio_url = personalInfoToSave.github
+                    }
+
+                    // Only update name if it's explicitly provided (not extracted from resume data)
+                    if (personalInfoToSave.name && extractedPersonalInfo !== undefined) {
+                        updates.full_name = personalInfoToSave.name
+                    }
+
+                    // Only perform update if there are actual changes
+                    if (Object.keys(updates).length > 0) {
+                        await personalInfoApi.update(updates)
+                        console.log('Updated personal information successfully')
+                    } else {
+                        console.log('No personal information updates needed')
+                    }
                 } else {
-                    // Create new personal info
-                    await personalInfoApi.create({
-                        full_name: personalInfoToSave.name || 'Unknown',
-                        email: personalInfoToSave.email || 'unknown@example.com',
-                        phone: personalInfoToSave.phone,
-                        location: undefined, // Not in PersonalInfo interface
-                        linkedin_url: personalInfoToSave.linkedin,
-                        portfolio_url: personalInfoToSave.github
-                    })
-                    console.log('Created personal information successfully')
+                    // Create new personal info - only if we have explicit personal info, not extracted
+                    if (extractedPersonalInfo !== undefined) {
+                        await personalInfoApi.create({
+                            full_name: personalInfoToSave.name || 'Unknown',
+                            email: personalInfoToSave.email || 'unknown@example.com',
+                            phone: personalInfoToSave.phone,
+                            location: undefined, // Not in PersonalInfo interface
+                            linkedin_url: personalInfoToSave.linkedin,
+                            portfolio_url: personalInfoToSave.github
+                        })
+                        console.log('Created personal information successfully')
+                    } else {
+                        console.log('Skipping personal info creation - extracted data should not create new records')
+                    }
                 }
             } catch (error) {
                 console.warn('Failed to save personal information:', error)

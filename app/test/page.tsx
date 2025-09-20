@@ -67,15 +67,15 @@ const sampleResume: Resume = {
     ],
     skills: [
         {
-            category: 'Languages',
+            name: 'Languages',
             skills: ['JavaScript', 'TypeScript', 'Python', 'Java']
         },
         {
-            category: 'Frameworks',
+            name: 'Frameworks',
             skills: ['React', 'Node.js', 'Express', 'Django']
         },
         {
-            category: 'Cloud & Tools',
+            name: 'Cloud & Tools',
             skills: ['AWS', 'Docker', 'Git', 'PostgreSQL']
         }
     ]

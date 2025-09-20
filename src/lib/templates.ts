@@ -24,16 +24,22 @@ export const templates: Template[] = [
                 }
             ],
             skills: [
-                'JavaScript',
-                'Python',
-                'React',
-                'Node.js',
-                'SQL',
-                'Git',
-                'Agile',
-                'Problem Solving',
-                'Team Collaboration',
-                'Communication'
+                {
+                    name: 'Programming Languages',
+                    skills: ['JavaScript', 'Python', 'SQL']
+                },
+                {
+                    name: 'Frameworks & Libraries',
+                    skills: ['React', 'Node.js']
+                },
+                {
+                    name: 'Tools & Methods',
+                    skills: ['Git', 'Agile']
+                },
+                {
+                    name: 'Soft Skills',
+                    skills: ['Problem Solving', 'Team Collaboration', 'Communication']
+                }
             ]
         }
     },
@@ -60,18 +66,26 @@ export const templates: Template[] = [
                 }
             ],
             skills: [
-                'JavaScript',
-                'TypeScript',
-                'React',
-                'Node.js',
-                'Python',
-                'AWS',
-                'Docker',
-                'PostgreSQL',
-                'MongoDB',
-                'Git',
-                'Agile/Scrum',
-                'RESTful APIs'
+                {
+                    name: 'Programming Languages',
+                    skills: ['JavaScript', 'TypeScript', 'Python']
+                },
+                {
+                    name: 'Frameworks & Libraries',
+                    skills: ['React', 'Node.js', 'RESTful APIs']
+                },
+                {
+                    name: 'Cloud & DevOps',
+                    skills: ['AWS', 'Docker', 'Git']
+                },
+                {
+                    name: 'Databases',
+                    skills: ['PostgreSQL', 'MongoDB']
+                },
+                {
+                    name: 'Methodologies',
+                    skills: ['Agile/Scrum']
+                }
             ]
         }
     }

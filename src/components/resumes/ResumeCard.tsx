@@ -146,7 +146,7 @@ export default function ResumeCard({
                                     key={index}
                                     className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                 >
-                                    {typeof skill === 'string' ? skill : skill.category}
+                                    {typeof skill === 'string' ? skill : skill.name}
                                 </span>
                             ))}
                             {resume.resume_data.skills.length > 3 && (
