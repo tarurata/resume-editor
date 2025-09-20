@@ -1,10 +1,42 @@
-import { Resume, PersonalInfo } from '@/types/resume'
+import { Resume, PersonalInfo, SkillSubsection } from '@/types/resume'
 import { resumeVersionApi, personalInfoApi, ApiError } from './api'
 import { validateResumeForApi, sanitizeResumeForApi } from './validation'
 import { PersonalInfoExtractor } from './personalInfoExtractor'
 
 // Fallback to localStorage for offline mode or when API is unavailable
 const STORAGE_KEY = 'resume-editor-data'
+
+// Migration function to convert old string[] skills to SkillSubsection[] format
+function migrateSkillsFormat(skills: any): SkillSubsection[] {
+    if (!skills || !Array.isArray(skills)) {
+        return []
+    }
+    
+    // If it's already in SkillSubsection format, return as is
+    if (skills.length > 0 && typeof skills[0] === 'object' && 'name' in skills[0] && 'skills' in skills[0]) {
+        return skills as SkillSubsection[]
+    }
+    
+    // If it's in old string[] format, convert to SkillSubsection format
+    if (skills.length > 0 && typeof skills[0] === 'string') {
+        return [{
+            name: 'Technical Skills',
+            skills: skills.filter(skill => typeof skill === 'string' && skill.trim().length > 0)
+        }]
+    }
+    
+    return []
+}
+
+// Migrate resume data to ensure compatibility
+function migrateResumeData(resume: any): Resume {
+    if (!resume) return resume
+    
+    return {
+        ...resume,
+        skills: migrateSkillsFormat(resume.skills)
+    }
+}
 
 // Save resume to database (primary) with localStorage fallback
 export const saveResumeToDatabase = async (
@@ -167,9 +199,11 @@ export const loadResumeFromDatabase = async (): Promise<Resume | null> => {
         const activeVersion = await resumeVersionApi.getActive()
 
         if (activeVersion) {
+            // Migrate the resume data to ensure compatibility
+            const migratedResume = migrateResumeData(activeVersion.resume_data)
             // Also save to localStorage as backup
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(activeVersion.resume_data))
-            return activeVersion.resume_data
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedResume))
+            return migratedResume
         }
 
         return null
@@ -184,8 +218,10 @@ export const loadResumeFromDatabase = async (): Promise<Resume | null> => {
             const resumeData = JSON.parse(data)
             // Extract job_description if it exists in the stored data
             const { job_description, ...resume } = resumeData
+            // Migrate the resume data to ensure compatibility
+            const migratedResume = migrateResumeData(resume)
             console.warn('Loaded from localStorage as fallback (API unavailable)')
-            return resume as Resume
+            return migratedResume
         } catch (localError) {
             console.error('Failed to load resume from localStorage:', localError)
             return null

@@ -1,4 +1,4 @@
-import { Resume } from '@/types/resume'
+import { Resume, SkillSubsection } from '@/types/resume'
 
 // Validation error interface
 export interface ValidationError {
@@ -6,17 +6,43 @@ export interface ValidationError {
     message: string
 }
 
+// Migration function to convert old string[] skills to SkillSubsection[] format
+function migrateSkillsFormat(skills: any): SkillSubsection[] {
+    if (!skills || !Array.isArray(skills)) {
+        return []
+    }
+    
+    // If it's already in SkillSubsection format, return as is
+    if (skills.length > 0 && typeof skills[0] === 'object' && 'name' in skills[0] && 'skills' in skills[0]) {
+        return skills as SkillSubsection[]
+    }
+    
+    // If it's in old string[] format, convert to SkillSubsection format
+    if (skills.length > 0 && typeof skills[0] === 'string') {
+        return [{
+            name: 'Technical Skills',
+            skills: skills.filter(skill => typeof skill === 'string' && skill.trim().length > 0)
+        }]
+    }
+    
+    return []
+}
+
 // Resume validation function
 export function validateResumeData(resume: Resume): ValidationError[] {
     const errors: ValidationError[] = []
 
+    // Migrate skills format if needed
+    const migratedSkills = migrateSkillsFormat(resume.skills)
+    const resumeWithMigratedSkills = { ...resume, skills: migratedSkills }
+
     // Validate title
-    if (!resume.title || resume.title.trim().length === 0) {
+    if (!resumeWithMigratedSkills.title || resumeWithMigratedSkills.title.trim().length === 0) {
         errors.push({
             field: 'title',
             message: 'Title is required'
         })
-    } else if (resume.title.length > 200) {
+    } else if (resumeWithMigratedSkills.title.length > 200) {
         errors.push({
             field: 'title',
             message: 'Title must be less than 200 characters'
@@ -24,12 +50,12 @@ export function validateResumeData(resume: Resume): ValidationError[] {
     }
 
     // Validate summary
-    if (!resume.summary || resume.summary.trim().length === 0) {
+    if (!resumeWithMigratedSkills.summary || resumeWithMigratedSkills.summary.trim().length === 0) {
         errors.push({
             field: 'summary',
             message: 'Summary is required'
         })
-    } else if (resume.summary.length > 1000) {
+    } else if (resumeWithMigratedSkills.summary.length > 1000) {
         errors.push({
             field: 'summary',
             message: 'Summary must be less than 1000 characters'
@@ -37,8 +63,8 @@ export function validateResumeData(resume: Resume): ValidationError[] {
     }
 
     // Validate experience
-    if (resume.experience && resume.experience.length > 0) {
-        resume.experience.forEach((exp, index) => {
+    if (resumeWithMigratedSkills.experience && resumeWithMigratedSkills.experience.length > 0) {
+        resumeWithMigratedSkills.experience.forEach((exp, index) => {
             // Check if this is a complete experience (has role and organization)
             const isCompleteExperience = exp.role && exp.role.trim().length > 0 &&
                 exp.organization && exp.organization.trim().length > 0
@@ -93,13 +119,34 @@ export function validateResumeData(resume: Resume): ValidationError[] {
     }
 
     // Validate skills
-    if (resume.skills && resume.skills.length > 0) {
-        resume.skills.forEach((skill, skillIndex) => {
-            if (skill && skill.trim().length > 0 && skill.length > 50) {
+    if (resumeWithMigratedSkills.skills && resumeWithMigratedSkills.skills.length > 0) {
+        resumeWithMigratedSkills.skills.forEach((subsection, subsectionIndex) => {
+            // Only validate subsection name length if it has content
+            if (subsection.name && subsection.name.length > 50) {
                 errors.push({
-                    field: `skills[${skillIndex}]`,
-                    message: 'Skill must be less than 50 characters'
+                    field: `skills[${subsectionIndex}].name`,
+                    message: 'Skill subsection name must be less than 50 characters'
                 })
+            }
+
+            // Only validate skills if subsection has a meaningful name and skills
+            const hasValidName = subsection.name && subsection.name.trim().length > 0 && subsection.name !== 'New Subsection'
+            if (hasValidName) {
+                if (!subsection.skills || subsection.skills.length === 0) {
+                    errors.push({
+                        field: `skills[${subsectionIndex}].skills`,
+                        message: 'Skill subsection must have at least one skill'
+                    })
+                } else {
+                    subsection.skills.forEach((skill, skillIndex) => {
+                        if (skill && typeof skill === 'string' && skill.trim().length > 0 && skill.length > 50) {
+                            errors.push({
+                                field: `skills[${subsectionIndex}].skills[${skillIndex}]`,
+                                message: 'Skill must be less than 50 characters'
+                            })
+                        }
+                    })
+                }
             }
         })
     }
@@ -124,10 +171,13 @@ export function validateResumeForApi(resume: Resume): { isValid: boolean; errors
 
     // Additional API-specific validations
     if (errors.length === 0) {
+        // Migrate skills format if needed
+        const migratedSkills = migrateSkillsFormat(resume.skills)
+        
         // Check minimum requirements for API
         const hasTitleOrSummary = resume.title && resume.summary
         const hasExperienceOrSkills = (resume.experience && resume.experience.length > 0) ||
-            (resume.skills && resume.skills.length > 0)
+            (migratedSkills && migratedSkills.length > 0)
 
         if (!hasTitleOrSummary) {
             errors.push({
@@ -152,6 +202,9 @@ export function validateResumeForApi(resume: Resume): { isValid: boolean; errors
 
 // Sanitize resume data for API
 export function sanitizeResumeForApi(resume: Resume): Resume {
+    // Migrate skills format if needed
+    const migratedSkills = migrateSkillsFormat(resume.skills)
+    
     return {
         title: resume.title?.trim() || '',
         summary: resume.summary?.trim() || '',
@@ -175,7 +228,10 @@ export function sanitizeResumeForApi(resume: Resume): Resume {
             issuer: cert.issuer?.trim() || '',
             date: cert.date || ''
         })) || [],
-        skills: resume.skills?.map(skill => skill?.trim()).filter(skill => skill && skill.length > 0) || [],
+        skills: migratedSkills.map(subsection => ({
+            name: subsection.name?.trim() || '',
+            skills: subsection.skills?.map(skill => skill?.trim()).filter(skill => skill && skill.length > 0) || []
+        })).filter(subsection => subsection.name && subsection.skills.length > 0),
         factsInventory: resume.factsInventory
     }
 }
