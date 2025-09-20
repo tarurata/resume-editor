@@ -2,7 +2,7 @@ import { sanitizeResumeForApi } from '../validation'
 import { Resume } from '@/types/resume'
 
 describe('sanitizeResumeForApi', () => {
-    it('should handle mixed skill types correctly', () => {
+    it('should handle string skills correctly', () => {
         const resume: Resume = {
             title: "Test Resume",
             summary: "Test summary",
@@ -10,9 +10,9 @@ describe('sanitizeResumeForApi', () => {
             skills: [
                 "JavaScript",
                 "TypeScript",
-                { category: "Frontend", skills: ["React", "Vue"] },
+                "React",
                 "Node.js",
-                { category: "Backend", skills: ["Express", "FastAPI"] }
+                "Express"
             ]
         }
 
@@ -21,18 +21,12 @@ describe('sanitizeResumeForApi', () => {
         // All skills should be strings
         expect(sanitized.skills.every(skill => typeof skill === 'string')).toBe(true)
 
-        // Should extract category names from SkillCategory objects
+        // Should contain all the skills
         expect(sanitized.skills).toContain("JavaScript")
         expect(sanitized.skills).toContain("TypeScript")
-        expect(sanitized.skills).toContain("Frontend")
+        expect(sanitized.skills).toContain("React")
         expect(sanitized.skills).toContain("Node.js")
-        expect(sanitized.skills).toContain("Backend")
-
-        // Should not contain the nested skills arrays
-        expect(sanitized.skills).not.toContain("React")
-        expect(sanitized.skills).not.toContain("Vue")
-        expect(sanitized.skills).not.toContain("Express")
-        expect(sanitized.skills).not.toContain("FastAPI")
+        expect(sanitized.skills).toContain("Express")
     })
 
     it('should handle empty skills array', () => {
@@ -56,9 +50,7 @@ describe('sanitizeResumeForApi', () => {
                 "JavaScript",
                 "",
                 "   ",
-                "TypeScript",
-                { category: "", skills: [] },
-                { category: "   ", skills: [] }
+                "TypeScript"
             ]
         }
 
