@@ -11,12 +11,12 @@ function migrateSkillsFormat(skills: any): SkillSubsection[] {
     if (!skills || !Array.isArray(skills)) {
         return []
     }
-    
+
     // If it's already in SkillSubsection format, return as is
     if (skills.length > 0 && typeof skills[0] === 'object' && 'name' in skills[0] && 'skills' in skills[0]) {
         return skills as SkillSubsection[]
     }
-    
+
     // If it's in old string[] format, convert to SkillSubsection format
     if (skills.length > 0 && typeof skills[0] === 'string') {
         return [{
@@ -24,7 +24,7 @@ function migrateSkillsFormat(skills: any): SkillSubsection[] {
             skills: skills.filter(skill => typeof skill === 'string' && skill.trim().length > 0)
         }]
     }
-    
+
     return []
 }
 
@@ -173,7 +173,7 @@ export function validateResumeForApi(resume: Resume): { isValid: boolean; errors
     if (errors.length === 0) {
         // Migrate skills format if needed
         const migratedSkills = migrateSkillsFormat(resume.skills)
-        
+
         // Check minimum requirements for API
         const hasTitleOrSummary = resume.title && resume.summary
         const hasExperienceOrSkills = (resume.experience && resume.experience.length > 0) ||
@@ -204,7 +204,7 @@ export function validateResumeForApi(resume: Resume): { isValid: boolean; errors
 export function sanitizeResumeForApi(resume: Resume): Resume {
     // Migrate skills format if needed
     const migratedSkills = migrateSkillsFormat(resume.skills)
-    
+
     return {
         title: resume.title?.trim() || '',
         summary: resume.summary?.trim() || '',

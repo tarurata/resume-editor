@@ -11,12 +11,12 @@ function migrateSkillsFormat(skills: any): SkillSubsection[] {
     if (!skills || !Array.isArray(skills)) {
         return []
     }
-    
+
     // If it's already in SkillSubsection format, return as is
     if (skills.length > 0 && typeof skills[0] === 'object' && 'name' in skills[0] && 'skills' in skills[0]) {
         return skills as SkillSubsection[]
     }
-    
+
     // If it's in old string[] format, convert to SkillSubsection format
     if (skills.length > 0 && typeof skills[0] === 'string') {
         return [{
@@ -24,14 +24,14 @@ function migrateSkillsFormat(skills: any): SkillSubsection[] {
             skills: skills.filter(skill => typeof skill === 'string' && skill.trim().length > 0)
         }]
     }
-    
+
     return []
 }
 
 // Migrate resume data to ensure compatibility
 function migrateResumeData(resume: any): Resume {
     if (!resume) return resume
-    
+
     return {
         ...resume,
         skills: migrateSkillsFormat(resume.skills)
