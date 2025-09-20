@@ -1,16 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { WizardState, Resume, ExperienceEntry, ParsedSection, PersonalInfo } from '@/types/resume'
+import { WizardState, Resume, ExperienceEntry, EducationEntry, CertificationEntry, ParsedSection } from '@/types/resume'
 
 interface SectionEditorProps {
     parsedSections: ParsedSection[]
     resume: Partial<Resume>
-    extractedPersonalInfo?: PersonalInfo | null
     onNext: (updates: Partial<WizardState>) => void
 }
 
-export default function SectionEditor({ parsedSections, resume, extractedPersonalInfo, onNext }: SectionEditorProps) {
+export default function SectionEditor({ parsedSections, resume, onNext }: SectionEditorProps) {
     const [editedResume, setEditedResume] = useState<Partial<Resume>>({
         title: '',
         summary: '',
@@ -60,6 +59,25 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
                             skills: skills
                         }]
                     }
+                    break
+                case 'education':
+                    // Create a basic education entry
+                    if (!newResume.education) newResume.education = []
+                    newResume.education.push({
+                        degree: section.content,
+                        school: 'University Name',
+                        startDate: '2018-09',
+                        endDate: '2022-05'
+                    })
+                    break
+                case 'certifications':
+                    // Create a basic certification entry
+                    if (!newResume.certifications) newResume.certifications = []
+                    newResume.certifications.push({
+                        name: section.content,
+                        issuer: 'Issuing Organization',
+                        date: '2023-01'
+                    })
                     break
             }
         })
@@ -175,6 +193,91 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
         }))
     }
 
+    // Education handlers
+    const addEducation = () => {
+        const newEducation: EducationEntry = {
+            degree: 'Degree Name',
+            school: 'University Name',
+            startDate: '2018-09',
+            endDate: '2022-05'
+        }
+        setEditedResume(prev => ({
+            ...prev,
+            education: [...(prev.education || []), newEducation]
+        }))
+    }
+
+    const updateEducation = (index: number, field: keyof EducationEntry, value: any) => {
+        setEditedResume(prev => ({
+            ...prev,
+            education: prev.education?.map((edu, i) =>
+                i === index ? { ...edu, [field]: value } : edu
+            ) || []
+        }))
+    }
+
+    const removeEducation = (index: number) => {
+        setEditedResume(prev => ({
+            ...prev,
+            education: prev.education?.filter((_, i) => i !== index) || []
+        }))
+    }
+
+    const moveEducation = (index: number, direction: 'up' | 'down') => {
+        const newEducation = [...(editedResume.education || [])]
+        const newIndex = direction === 'up' ? index - 1 : index + 1
+
+        if (newIndex >= 0 && newIndex < newEducation.length) {
+            [newEducation[index], newEducation[newIndex]] = [newEducation[newIndex], newEducation[index]]
+            setEditedResume(prev => ({
+                ...prev,
+                education: newEducation
+            }))
+        }
+    }
+
+    // Certification handlers
+    const addCertification = () => {
+        const newCertification: CertificationEntry = {
+            name: 'Certification Name',
+            issuer: 'Issuing Organization',
+            date: '2023-01'
+        }
+        setEditedResume(prev => ({
+            ...prev,
+            certifications: [...(prev.certifications || []), newCertification]
+        }))
+    }
+
+    const updateCertification = (index: number, field: keyof CertificationEntry, value: any) => {
+        setEditedResume(prev => ({
+            ...prev,
+            certifications: prev.certifications?.map((cert, i) =>
+                i === index ? { ...cert, [field]: value } : cert
+            ) || []
+        }))
+    }
+
+    const removeCertification = (index: number) => {
+        setEditedResume(prev => ({
+            ...prev,
+            certifications: prev.certifications?.filter((_, i) => i !== index) || []
+        }))
+    }
+
+    const moveCertification = (index: number, direction: 'up' | 'down') => {
+        const newCertifications = [...(editedResume.certifications || [])]
+        const newIndex = direction === 'up' ? index - 1 : index + 1
+
+        if (newIndex >= 0 && newIndex < newCertifications.length) {
+            [newCertifications[index], newCertifications[newIndex]] = [newCertifications[newIndex], newCertifications[index]]
+            setEditedResume(prev => ({
+                ...prev,
+                certifications: newCertifications
+            }))
+        }
+    }
+
     const validateResume = (): string[] => {
         const errors: string[] = []
 
@@ -197,8 +300,7 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
             onNext({
                 step: 'validate',
                 resume: editedResume,
-                validationErrors: [],
-                extractedPersonalInfo: extractedPersonalInfo
+                validationErrors: []
             })
         }
     }
@@ -365,6 +467,174 @@ export default function SectionEditor({ parsedSections, resume, extractedPersona
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Education */}
+                <div className="card">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium text-gray-900">Education</h3>
+                        <button
+                            onClick={addEducation}
+                            className="btn-primary text-sm"
+                        >
+                            Add Education
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {editedResume.education?.map((edu, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h4 className="font-medium text-gray-900">Education #{index + 1}</h4>
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => moveEducation(index, 'up')}
+                                            disabled={index === 0}
+                                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                        >
+                                            ↑
+                                        </button>
+                                        <button
+                                            onClick={() => moveEducation(index, 'down')}
+                                            disabled={index === (editedResume.education?.length || 0) - 1}
+                                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                        >
+                                            ↓
+                                        </button>
+                                        <button
+                                            onClick={() => removeEducation(index)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Degree</label>
+                                        <input
+                                            type="text"
+                                            value={edu.degree}
+                                            onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">School</label>
+                                        <input
+                                            type="text"
+                                            value={edu.school}
+                                            onChange={(e) => updateEducation(index, 'school', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                        <input
+                                            type="text"
+                                            value={edu.location || ''}
+                                            onChange={(e) => updateEducation(index, 'location', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date (YYYY-MM)</label>
+                                        <input
+                                            type="text"
+                                            value={edu.startDate}
+                                            onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">End Date (YYYY-MM or leave empty for current)</label>
+                                        <input
+                                            type="text"
+                                            value={edu.endDate || ''}
+                                            onChange={(e) => updateEducation(index, 'endDate', e.target.value || null)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Certifications */}
+                <div className="card">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-medium text-gray-900">Certifications</h3>
+                        <button
+                            onClick={addCertification}
+                            className="btn-primary text-sm"
+                        >
+                            Add Certification
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {editedResume.certifications?.map((cert, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h4 className="font-medium text-gray-900">Certification #{index + 1}</h4>
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => moveCertification(index, 'up')}
+                                            disabled={index === 0}
+                                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                        >
+                                            ↑
+                                        </button>
+                                        <button
+                                            onClick={() => moveCertification(index, 'down')}
+                                            disabled={index === (editedResume.certifications?.length || 0) - 1}
+                                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                        >
+                                            ↓
+                                        </button>
+                                        <button
+                                            onClick={() => removeCertification(index)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Certification Name</label>
+                                        <input
+                                            type="text"
+                                            value={cert.name}
+                                            onChange={(e) => updateCertification(index, 'name', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Issuer</label>
+                                        <input
+                                            type="text"
+                                            value={cert.issuer}
+                                            onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date (YYYY-MM)</label>
+                                        <input
+                                            type="text"
+                                            value={cert.date}
+                                            onChange={(e) => updateCertification(index, 'date', e.target.value)}
+                                            className="input-field"
+                                        />
                                     </div>
                                 </div>
                             </div>

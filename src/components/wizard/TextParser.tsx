@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { WizardState, ParsedSection, PersonalInfo } from '@/types/resume'
-import { PersonalInfoExtractor } from '@/lib/personalInfoExtractor'
+import { WizardState, ParsedSection } from '@/types/resume'
 
 interface TextParserProps {
     pastedText: string
@@ -12,16 +11,11 @@ interface TextParserProps {
 export default function TextParser({ pastedText, onNext }: TextParserProps) {
     const [parsedSections, setParsedSections] = useState<ParsedSection[]>([])
     const [selectedSections, setSelectedSections] = useState<Set<number>>(new Set())
-    const [extractedPersonalInfo, setExtractedPersonalInfo] = useState<PersonalInfo | null>(null)
 
     useEffect(() => {
         // Simple text parsing logic - in a real app, this would be more sophisticated
         const sections = parseTextIntoSections(pastedText)
         setParsedSections(sections)
-
-        // Extract personal information from the text
-        const personalInfo = PersonalInfoExtractor.extractFromText(pastedText)
-        setExtractedPersonalInfo(personalInfo)
     }, [pastedText])
 
     const parseTextIntoSections = (text: string): ParsedSection[] => {
@@ -76,6 +70,31 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
                     endIndex
                 })
             }
+            // Detect education (contains keywords like "education", "academic", "degree")
+            else if (line.toLowerCase().includes('education') ||
+                line.toLowerCase().includes('academic') ||
+                line.toLowerCase().includes('degree') ||
+                line.toLowerCase().includes('university') ||
+                line.toLowerCase().includes('college')) {
+                sections.push({
+                    type: 'education',
+                    content: line,
+                    startIndex,
+                    endIndex
+                })
+            }
+            // Detect certifications (contains keywords like "certifications", "certificates", "licenses")
+            else if (line.toLowerCase().includes('certifications') ||
+                line.toLowerCase().includes('certificates') ||
+                line.toLowerCase().includes('licenses') ||
+                line.toLowerCase().includes('certified')) {
+                sections.push({
+                    type: 'certifications',
+                    content: line,
+                    startIndex,
+                    endIndex
+                })
+            }
             // Detect job entries (lines that look like job titles with company names)
             else if (isJobEntry(line)) {
                 sections.push({
@@ -108,12 +127,16 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
         setSelectedSections(newSelected)
     }
 
+    const handleImportAll = () => {
+        const allIndices = new Set(parsedSections.map((_, index) => index))
+        setSelectedSections(allIndices)
+    }
+
     const handleContinue = () => {
         const selectedSectionsData = parsedSections.filter((_, index) => selectedSections.has(index))
         onNext({
             step: 'edit',
-            parsedSections: selectedSectionsData,
-            extractedPersonalInfo: extractedPersonalInfo
+            parsedSections: selectedSectionsData
         })
     }
 
@@ -123,6 +146,8 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
             case 'summary': return 'bg-green-100 text-green-800'
             case 'experience': return 'bg-purple-100 text-purple-800'
             case 'skills': return 'bg-orange-100 text-orange-800'
+            case 'education': return 'bg-indigo-100 text-indigo-800'
+            case 'certifications': return 'bg-pink-100 text-pink-800'
             default: return 'bg-gray-100 text-gray-800'
         }
     }
@@ -138,52 +163,19 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
                 </p>
             </div>
 
-            {/* Extracted Personal Information */}
-            {extractedPersonalInfo && (
-                <div className="card">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Extracted Personal Information</h3>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {extractedPersonalInfo.name && (
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">Name:</span>
-                                    <p className="text-gray-900">{extractedPersonalInfo.name}</p>
-                                </div>
-                            )}
-                            {extractedPersonalInfo.email && (
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">Email:</span>
-                                    <p className="text-gray-900">{extractedPersonalInfo.email}</p>
-                                </div>
-                            )}
-                            {extractedPersonalInfo.phone && (
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">Phone:</span>
-                                    <p className="text-gray-900">{extractedPersonalInfo.phone}</p>
-                                </div>
-                            )}
-                            {extractedPersonalInfo.linkedin && (
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">LinkedIn:</span>
-                                    <p className="text-gray-900">{extractedPersonalInfo.linkedin}</p>
-                                </div>
-                            )}
-                            {extractedPersonalInfo.github && (
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">GitHub:</span>
-                                    <p className="text-gray-900">{extractedPersonalInfo.github}</p>
-                                </div>
-                            )}
-                        </div>
-                        <p className="text-sm text-blue-700 mt-3">
-                            This information will be saved separately and can be used across all your resumes.
-                        </p>
-                    </div>
-                </div>
-            )}
 
             <div className="card">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Detected Sections</h3>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Detected Sections</h3>
+                    {parsedSections.length > 0 && (
+                        <button
+                            onClick={handleImportAll}
+                            className="btn-primary text-sm"
+                        >
+                            Import All
+                        </button>
+                    )}
+                </div>
                 <div className="space-y-3">
                     {parsedSections.map((section, index) => (
                         <div

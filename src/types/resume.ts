@@ -64,7 +64,7 @@ export interface Resume {
 }
 
 export interface ParsedSection {
-    type: 'title' | 'summary' | 'experience' | 'skills';
+    type: 'title' | 'summary' | 'experience' | 'skills' | 'education' | 'certifications';
     content: string;
     startIndex: number;
     endIndex: number;
@@ -77,7 +77,6 @@ export interface WizardState {
     parsedSections: ParsedSection[];
     resume: Partial<Resume>;
     validationErrors: string[];
-    extractedPersonalInfo?: PersonalInfo | null;
 }
 
 export interface Template {
@@ -109,5 +108,5 @@ export interface DiffState {
     showHistory: boolean;
 }
 
-export type SectionType = 'title' | 'summary' | 'experience' | 'skills'
+export type SectionType = 'title' | 'summary' | 'experience' | 'skills' | 'education' | 'certifications'
 export type SectionId = string
