@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import logging
 from ..services.ai_service import AIService
-from ..core.database import get_db
+from database.database import get_db
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])

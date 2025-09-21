@@ -260,11 +260,23 @@ export class AIService {
 
 // Singleton instance for system-wide access
 let aiServiceInstance: AIService | null = null;
+let lastConfigHash: string | null = null;
 
 export function getAIService(config?: Partial<AIServiceConfig>): AIService {
-  if (!aiServiceInstance) {
+  // Create a hash of the current environment configuration
+  const currentConfigHash = JSON.stringify({
+    provider: process.env.LLM_PROVIDER,
+    apiKey: process.env.LLM_API_KEY ? '***' : undefined,
+    baseUrl: process.env.LLM_BASE_URL,
+    phase: process.env.PROJECT_PHASE
+  });
+
+  // Recreate the service if config changed or if it doesn't exist
+  if (!aiServiceInstance || lastConfigHash !== currentConfigHash) {
     aiServiceInstance = new AIService(config);
+    lastConfigHash = currentConfigHash;
   }
+
   return aiServiceInstance;
 }
 

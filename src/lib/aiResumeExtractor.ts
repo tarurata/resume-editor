@@ -10,52 +10,111 @@ export interface AIExtractionResult {
 }
 
 export class AIResumeExtractor {
-    private aiService = getAIService()
+    private get aiService() {
+        return getAIService()
+    }
+
+    /**
+     * Clean and extract JSON from AI response
+     */
+    private extractJSON(text: string, expectedType: 'object' | 'array'): string | null {
+        let cleaned = text.trim()
+
+        if (expectedType === 'object') {
+            // Look for JSON object
+            const firstBrace = cleaned.indexOf('{')
+            const lastBrace = cleaned.lastIndexOf('}')
+
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                cleaned = cleaned.substring(firstBrace, lastBrace + 1)
+            } else {
+                return null
+            }
+        } else if (expectedType === 'array') {
+            // Look for JSON array
+            const firstBracket = cleaned.indexOf('[')
+            const lastBracket = cleaned.lastIndexOf(']')
+
+            if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+                cleaned = cleaned.substring(firstBracket, lastBracket + 1)
+            } else {
+                return null
+            }
+        }
+
+        // Additional cleaning for common issues
+        cleaned = cleaned
+            .replace(/^[^{[]*/, '') // Remove text before JSON
+            .replace(/[^}\]]*$/, '') // Remove text after JSON
+            .trim()
+
+        return cleaned
+    }
+
+    /**
+     * Validate if text is valid JSON
+     */
+    private isValidJSON(text: string): boolean {
+        try {
+            JSON.parse(text)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /**
+     * Check if we're using mock provider
+     */
+    private isUsingMockProvider(): boolean {
+        try {
+            const config = this.aiService.getConfig()
+            return config.provider === 'mock'
+        } catch {
+            return true
+        }
+    }
 
     /**
      * Extract personal information using AI
      */
     async extractPersonalInfo(text: string): Promise<PersonalInfo | null> {
-        const prompt = `You are a resume parser. Extract personal information from the following resume text and return ONLY a valid JSON object.
+        // If using mock provider, skip AI and use regex fallback
+        if (this.isUsingMockProvider()) {
+            console.log('Using mock provider, skipping AI extraction for personal info')
+            return null
+        }
 
-Required JSON format:
-{
-  "name": "Full Name",
-  "email": "email@example.com", 
-  "phone": "+1234567890",
-  "linkedin": "https://linkedin.com/in/username",
-  "github": "https://github.com/username"
-}
+        const prompt = `Extract personal information from resume text. Return ONLY valid JSON.
+
+Format:
+{"name": "Full Name", "email": "email@example.com", "phone": "+1234567890", "linkedin": "https://linkedin.com/in/username", "github": "https://github.com/username"}
 
 Rules:
-- Return ONLY the JSON object, no other text
+- Return ONLY JSON, no explanations
 - Use null for missing fields
-- Only include fields that are clearly present in the text
-- Ensure the JSON is valid and parseable
+- Only include clearly present information
 
-Resume text:
+Text:
 ${text}
 
 JSON:`
 
+        let response: any = null
         try {
-            const response = await this.aiService.generate(prompt, {
+            response = await this.aiService.generate(prompt, {
                 temperature: 0.1,
-                maxTokens: 500
+                maxTokens: 300
             })
 
             // Clean the response to extract JSON
-            let jsonText = response.text.trim()
-            
-            // Remove any text before the first { or after the last }
-            const firstBrace = jsonText.indexOf('{')
-            const lastBrace = jsonText.lastIndexOf('}')
-            
-            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                jsonText = jsonText.substring(firstBrace, lastBrace + 1)
+            const jsonText = this.extractJSON(response.text, 'object')
+
+            if (!jsonText || !this.isValidJSON(jsonText)) {
+                console.warn('AI returned invalid JSON for personal info:', response.text)
+                return null
             }
-            
-            // Try to parse the cleaned JSON
+
             const extracted = JSON.parse(jsonText)
 
             // Validate that we have at least name or email
@@ -81,48 +140,46 @@ JSON:`
      * Extract and structure resume sections using AI
      */
     async extractResumeSections(text: string): Promise<ParsedSection[]> {
-        const prompt = `You are a resume parser. Analyze the following resume text and extract structured sections. Return ONLY a valid JSON array.
+        // If using mock provider, skip AI and use regex fallback
+        if (this.isUsingMockProvider()) {
+            console.log('Using mock provider, skipping AI extraction for sections')
+            return []
+        }
 
-Required JSON format:
-[
-  {
-    "type": "title" | "summary" | "experience" | "skills" | "education" | "certifications",
-    "content": "The actual text content of this section",
-    "startIndex": 0,
-    "endIndex": 50
-  }
-]
+        const prompt = `Extract resume sections. Return ONLY valid JSON array.
+
+Format:
+[{"type": "title", "content": "text", "startIndex": 0, "endIndex": 50}]
+
+Types: title, summary, experience, skills, education, certifications
 
 Rules:
-- Return ONLY the JSON array, no other text
-- "title" should be the person's name or resume title (usually first line)
-- "summary" should be professional summary, objective, or profile
-- "experience" should be work experience entries (job titles, companies, dates, descriptions)
-- "skills" should be technical skills, technologies, or competencies
-- "education" should be degrees, schools, graduation dates
-- "certifications" should be professional certifications or licenses
-- For each section, provide the exact text content and calculate startIndex/endIndex based on position in the original text
+- Return ONLY JSON array, no explanations
+- "title" = person's name (first line)
+- "summary" = professional summary/objective
+- "experience" = work experience entries
+- "skills" = technical skills/technologies
+- "education" = degrees/schools
+- "certifications" = professional certifications
 
-Resume text:
+Text:
 ${text}
 
 JSON:`
 
+        let response: any = null
         try {
-            const response = await this.aiService.generate(prompt, {
+            response = await this.aiService.generate(prompt, {
                 temperature: 0.1,
-                maxTokens: 2000
+                maxTokens: 1000
             })
 
             // Clean the response to extract JSON
-            let jsonText = response.text.trim()
-            
-            // Remove any text before the first [ or after the last ]
-            const firstBracket = jsonText.indexOf('[')
-            const lastBracket = jsonText.lastIndexOf(']')
-            
-            if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-                jsonText = jsonText.substring(firstBracket, lastBracket + 1)
+            const jsonText = this.extractJSON(response.text, 'array')
+
+            if (!jsonText || !this.isValidJSON(jsonText)) {
+                console.warn('AI returned invalid JSON for sections:', response.text)
+                return []
             }
 
             const sections = JSON.parse(jsonText)
@@ -149,64 +206,53 @@ JSON:`
      * Extract structured resume data using AI
      */
     async extractStructuredResume(text: string): Promise<Partial<Resume>> {
-        const prompt = `You are a resume parser. Extract structured resume data from the following text and return ONLY a valid JSON object.
+        // If using mock provider, skip AI and use regex fallback
+        if (this.isUsingMockProvider()) {
+            console.log('Using mock provider, skipping AI extraction for structured resume')
+            return {
+                title: '',
+                summary: '',
+                experience: [],
+                education: [],
+                skills: []
+            }
+        }
 
-Required JSON format:
-{
-  "title": "Resume title or person's name",
-  "summary": "Professional summary or objective",
-  "experience": [
-    {
-      "role": "Job Title",
-      "organization": "Company Name",
-      "startDate": "2020-01",
-      "endDate": "2023-12" or null for current,
-      "bullets": ["Achievement 1", "Achievement 2"]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree Name",
-      "school": "School Name",
-      "graduationDate": "2020-05"
-    }
-  ],
-  "skills": [
-    {
-      "name": "Category Name",
-      "skills": ["Skill 1", "Skill 2", "Skill 3"]
-    }
-  ]
-}
+        const prompt = `Extract structured resume data. Return ONLY valid JSON.
+
+Format:
+{"title": "name", "summary": "text", "experience": [{"role": "title", "organization": "company", "startDate": "2020-01", "endDate": "2023-12", "bullets": ["achievement"]}], "education": [{"degree": "degree", "school": "school", "graduationDate": "2020-05"}], "skills": [{"name": "category", "skills": ["skill1", "skill2"]}]}
 
 Rules:
-- Return ONLY the JSON object, no other text
+- Return ONLY JSON, no explanations
 - Use YYYY-MM format for dates
-- Extract 3-5 key achievements per job
-- Group skills into logical categories (Technical Skills, Languages, etc.)
-- Only include information that's clearly present in the text
-- Use null for missing optional fields
+- Extract 3-5 achievements per job
+- Group skills into categories
 
-Resume text:
+Text:
 ${text}
 
 JSON:`
 
+        let response: any = null
         try {
-            const response = await this.aiService.generate(prompt, {
+            response = await this.aiService.generate(prompt, {
                 temperature: 0.1,
-                maxTokens: 3000
+                maxTokens: 1500
             })
 
             // Clean the response to extract JSON
-            let jsonText = response.text.trim()
-            
-            // Remove any text before the first { or after the last }
-            const firstBrace = jsonText.indexOf('{')
-            const lastBrace = jsonText.lastIndexOf('}')
-            
-            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                jsonText = jsonText.substring(firstBrace, lastBrace + 1)
+            const jsonText = this.extractJSON(response.text, 'object')
+
+            if (!jsonText || !this.isValidJSON(jsonText)) {
+                console.warn('AI returned invalid JSON for structured resume:', response.text)
+                return {
+                    title: '',
+                    summary: '',
+                    experience: [],
+                    education: [],
+                    skills: []
+                }
             }
 
             const resume = JSON.parse(jsonText)

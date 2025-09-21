@@ -726,3 +726,9 @@ class DatabaseService:
                     })
             
             return list(experiences.values())
+
+
+# FastAPI dependency for database access
+def get_db():
+    """FastAPI dependency to get database service instance"""
+    return DatabaseService()

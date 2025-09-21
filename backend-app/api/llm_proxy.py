@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
-import aiohttp
 import json
 import logging
 
@@ -27,7 +26,7 @@ async def generate_text(request: LLMRequest):
         # For now, we'll use a direct OpenAI approach
         # In the future, this could proxy to the frontend LLM service
         import openai
-        from openai import AsyncOpenAI
+        from openai import OpenAI
         from ..core.config import get_settings
         
         settings = get_settings()
@@ -40,12 +39,13 @@ async def generate_text(request: LLMRequest):
                 finish_reason="stop"
             )
         
-        client = AsyncOpenAI(
+        client = OpenAI(
             api_key=settings.llm_api_key,
-            base_url=settings.llm_base_url
+            base_url=settings.llm_base_url,
+            timeout=30.0
         )
         
-        response = await client.chat.completions.create(
+        response = client.chat.completions.create(
             model=request.model or settings.llm_model,
             messages=[{"role": "user", "content": request.prompt}],
             max_tokens=request.max_tokens,

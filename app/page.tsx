@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { WizardState } from '../src/types/resume'
 import StartScreen from '../src/components/wizard/StartScreen'
-import TextParser from '../src/components/wizard/TextParser'
+import TextParserBackend from '../src/components/wizard/TextParserBackend'
 import SectionEditor from '../src/components/wizard/SectionEditor'
 import ValidationScreen from '../src/components/wizard/ValidationScreen'
 
@@ -24,9 +24,10 @@ export default function Home() {
             case 'start':
                 return <StartScreen onNext={handleWizardUpdate} />
             case 'parse':
-                return <TextParser
+                return <TextParserBackend
                     pastedText={wizardState.pastedText!}
                     onNext={handleWizardUpdate}
+                    userId="default-user"
                 />
             case 'edit':
                 return <SectionEditor

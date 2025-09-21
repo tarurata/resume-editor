@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Database settings
     database_url: Optional[str] = None
     
-    # AI/LLM settings (matching frontend LLM config)
+    # /LLM settings (matching frontend LLM config)
     llm_api_key: Optional[str] = None
     llm_provider: str = "openai"
     llm_base_url: str = "https://api.openai.com/v1"
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ai_max_tokens_per_minute: int = 150000
     
     class Config:
-        env_file = ".env"
+        env_file = ".env.local"
         env_file_encoding = "utf-8"
         case_sensitive = False
 
