@@ -56,7 +56,21 @@ export const saveResumeToDatabase = async (
         // If no personal info provided (undefined), try to extract from resume data
         // If explicitly set to null, skip personal info extraction entirely
         if (extractedPersonalInfo === undefined) {
-            personalInfoToSave = PersonalInfoExtractor.extractFromResumeData(resume)
+            // Try AI extraction first, fallback to regex
+            try {
+                const combinedText = [
+                    resume.title || '',
+                    resume.summary || '',
+                    ...(resume.experience || []).map(exp => `${exp.role} at ${exp.organization}`),
+                    ...(resume.education || []).map(edu => `${edu.degree} from ${edu.school}`)
+                ].join(' ')
+
+                personalInfoToSave = await PersonalInfoExtractor.extractFromText(combinedText) ||
+                    PersonalInfoExtractor.extractFromResumeData(resume)
+            } catch (error) {
+                console.warn('AI personal info extraction failed, using regex fallback:', error)
+                personalInfoToSave = PersonalInfoExtractor.extractFromResumeData(resume)
+            }
         }
 
         // Create or update personal information if we have it

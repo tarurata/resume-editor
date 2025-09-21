@@ -2,18 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { WizardState, ParsedSection } from '@/types/resume'
-import { aiResumeExtractor } from '@/lib/aiResumeExtractor'
+import { createAIResumeExtractor } from '@/lib/aiResumeExtractorBackend'
 
-interface TextParserProps {
+interface TextParserBackendProps {
     pastedText: string
     onNext: (updates: Partial<WizardState>) => void
+    userId?: string
 }
 
-export default function TextParser({ pastedText, onNext }: TextParserProps) {
+export default function TextParserBackend({ pastedText, onNext, userId }: TextParserBackendProps) {
     const [parsedSections, setParsedSections] = useState<ParsedSection[]>([])
     const [selectedSections, setSelectedSections] = useState<Set<number>>(new Set())
     const [isLoading, setIsLoading] = useState(false)
     const [extractionError, setExtractionError] = useState<string | null>(null)
+    const [aiHealth, setAiHealth] = useState<{
+        status: 'healthy' | 'unhealthy'
+        provider?: string
+        canUseRealAI?: boolean
+    } | null>(null)
 
     useEffect(() => {
         const extractSections = async () => {
@@ -26,11 +32,18 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
             setExtractionError(null)
 
             try {
-                // Try AI extraction first
-                const aiResult = await aiResumeExtractor.extractResumeSections(pastedText)
+                // Create AI extractor with user ID
+                const aiExtractor = createAIResumeExtractor(userId)
 
-                if (aiResult.length > 0) {
-                    setParsedSections(aiResult)
+                // Check AI health first
+                const health = await aiExtractor.getHealthStatus()
+                setAiHealth(health)
+
+                // Try backend AI extraction with fallback
+                const result = await aiExtractor.extractWithFallback(pastedText)
+
+                if (result.sections.length > 0) {
+                    setParsedSections(result.sections)
                 } else {
                     // Fallback to regex-based parsing
                     const sections = parseTextIntoSections(pastedText)
@@ -49,7 +62,7 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
         }
 
         extractSections()
-    }, [pastedText])
+    }, [pastedText, userId])
 
     const parseTextIntoSections = (text: string): ParsedSection[] => {
         const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
@@ -197,13 +210,25 @@ export default function TextParser({ pastedText, onNext }: TextParserProps) {
                         : 'We\'ve detected potential sections in your text. Select the ones you want to include in your resume.'
                     }
                 </p>
+
+                {/* AI Health Status */}
+                {aiHealth && (
+                    <div className={`mt-2 p-2 rounded-md text-sm ${aiHealth.status === 'healthy'
+                            ? 'bg-green-50 text-green-800 border border-green-200'
+                            : 'bg-yellow-50 text-yellow-800 border border-yellow-200'
+                        }`}>
+                        AI Status: {aiHealth.status}
+                        {aiHealth.provider && ` (${aiHealth.provider})`}
+                        {aiHealth.canUseRealAI && ' - Real AI Available'}
+                    </div>
+                )}
+
                 {extractionError && (
                     <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                         <p className="text-sm text-yellow-800">{extractionError}</p>
                     </div>
                 )}
             </div>
-
 
             <div className="card">
                 <div className="flex justify-between items-center mb-4">

@@ -12,12 +12,15 @@ from app.api.resume_versions import router as resume_versions_router
 from app.api.applications import router as applications_router
 from app.api.templates import router as templates_router
 from app.api.experiences import router as experiences_router
+from app.api.ai_extract import router as ai_extract_router
+from app.api.resume_import import router as resume_import_router
+from app.api.llm_proxy import router as llm_proxy_router
 from app.core.config import settings
 
 app = FastAPI(
     title="Resume Editor API",
-    description="FastAPI service for resume editor backend with edit and export capabilities",
-    version="1.0.0",
+    description="FastAPI service for resume editor backend with edit, export, and AI capabilities",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
@@ -37,6 +40,15 @@ app.include_router(health_router, prefix="/api/v1", tags=["health"])
 app.include_router(edit_router, prefix="/api/v1", tags=["edit"])
 app.include_router(export_router, prefix="/api/v1", tags=["export"])
 
+# AI-powered features
+app.include_router(ai_extract_router, tags=["ai"])
+
+# LLM proxy for existing frontend integration
+app.include_router(llm_proxy_router, prefix="/api/v1/llm", tags=["llm"])
+
+# Resume management
+app.include_router(resume_import_router, tags=["resumes"])
+
 # Database operation routers
 app.include_router(personal_info_router, prefix="/api/v1/personal-info", tags=["personal-info"])
 app.include_router(education_router, prefix="/api/v1/education", tags=["education"])
@@ -52,20 +64,43 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="Resume Editor API",
-        version="1.0.0",
+        version="2.0.0",
         description="""
-        ## Resume Editor API
+        ## Resume Editor API v2.0
         
-        This API provides endpoints for editing and exporting resume data.
+        This API provides endpoints for editing, exporting, and AI-powered resume processing.
         
         ### Features
         - **Edit Operations**: Modify individual sections of resumes with validation and change tracking
         - **Export Options**: Generate resumes in PDF, HTML, and JSON formats
+        - **AI-Powered Features**: Intelligent resume extraction, content improvement, and suggestions
+        - **Resume Management**: Full CRUD operations for resumes
         - **Version Control**: Track changes and maintain edit history
         - **Validation**: Ensure data integrity with comprehensive validation rules
-        - **Database Operations**: Full CRUD operations for personal info, education, certifications, resume versions, applications, and templates
+        - **Database Operations**: Full CRUD operations for all resume components
         - **Multi-Company Management**: Manage multiple resume versions for different companies
         - **Application Tracking**: Track job applications and their status
+        
+        ### AI Features (New in v2.0)
+        - **Resume Extraction**: Extract structured data from raw resume text using AI
+        - **Personal Info Extraction**: Intelligent extraction of contact information
+        - **Section Detection**: Automatic categorization of resume sections
+        - **Content Improvement**: AI-powered suggestions for better resume content
+        - **Confidence Scoring**: Reliability metrics for AI extractions
+        - **Resume Import**: Complete resume import with AI processing
+        
+        ### Resume Management Endpoints
+        - `POST /api/resumes/import` - Import resume from text using AI
+        - `GET /api/resumes` - List user resumes
+        - `GET /api/resumes/{id}` - Get specific resume
+        - `PUT /api/resumes/{id}` - Update resume
+        - `DELETE /api/resumes/{id}` - Delete resume
+        - `POST /api/resumes/{id}/export` - Export resume to PDF/HTML/JSON
+        
+        ### AI Endpoints
+        - `POST /api/ai/extract` - Extract structured data from resume text
+        - `POST /api/ai/improve` - Improve resume content with AI suggestions
+        - `GET /api/ai/health` - Check AI service health and configuration
         
         ### Data Models
         - **Resume**: Complete resume structure with title, summary, experience, and skills
@@ -94,7 +129,7 @@ app.openapi = custom_openapi
 
 @app.get("/")
 async def root():
-    return {"message": "Resume Editor API"}
+    return {"message": "Resume Editor API v2.0 - Now with AI-powered features!"}
 
 # Manual CORS handler for OPTIONS requests
 @app.options("/{path:path}")

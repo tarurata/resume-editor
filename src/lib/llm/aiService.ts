@@ -1,4 +1,5 @@
-import { createLLMAdapter, LLMAdapter, LLMConfig, LLMParams, LLMResponse, LLMTelemetry } from './index';
+import { createLLMAdapter } from './adapter';
+import { LLMAdapter, LLMConfig, LLMParams, LLMResponse, LLMTelemetry } from './types';
 import { RateLimiter, RateLimitConfig, DEFAULT_RATE_LIMITS } from './rateLimiter';
 import { LLMError, LLMRateLimitError } from './errors';
 import { getPhaseConfig, shouldUseMockProvider, canUseRealAI } from './phase';
@@ -271,5 +272,4 @@ export function createAIService(config?: Partial<AIServiceConfig>): AIService {
   return new AIService(config);
 }
 
-// Export types for external use
-export type { AIServiceConfig, AIServiceOptions };
+// Types are already exported above as interfaces

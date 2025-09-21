@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { WizardState, Resume, ExperienceEntry, EducationEntry, CertificationEntry, ParsedSection } from '@/types/resume'
+import { aiResumeExtractor } from '@/lib/aiResumeExtractor'
 
 interface SectionEditorProps {
     parsedSections: ParsedSection[]
@@ -19,70 +20,106 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
     })
 
     const [validationErrors, setValidationErrors] = useState<string[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [aiExtractionResult, setAiExtractionResult] = useState<any>(null)
 
     useEffect(() => {
-        // Initialize resume from parsed sections
-        const newResume: Partial<Resume> = {
-            title: '',
-            summary: '',
-            experience: [],
-            skills: [],
-            ...resume
+        const extractStructuredData = async () => {
+            if (parsedSections.length === 0) return
+
+            setIsLoading(true)
+
+            try {
+                // Combine all section content for AI analysis
+                const combinedText = parsedSections.map(s => s.content).join('\n\n')
+
+                // Use AI to extract structured resume data
+                const structuredData = await aiResumeExtractor.extractStructuredResume(combinedText)
+
+                setAiExtractionResult(structuredData)
+
+                // Merge AI extraction with existing resume data
+                const newResume: Partial<Resume> = {
+                    title: structuredData.title || resume.title || '',
+                    summary: structuredData.summary || resume.summary || '',
+                    experience: structuredData.experience || resume.experience || [],
+                    education: structuredData.education || resume.education || [],
+                    skills: structuredData.skills || resume.skills || [],
+                    ...resume
+                }
+
+                setEditedResume(newResume)
+            } catch (error) {
+                console.error('AI structured extraction failed, using basic parsing:', error)
+
+                // Fallback to basic section parsing
+                const newResume: Partial<Resume> = {
+                    title: '',
+                    summary: '',
+                    experience: [],
+                    skills: [],
+                    ...resume
+                }
+
+                // Extract data from parsed sections (fallback method)
+                parsedSections.forEach(section => {
+                    switch (section.type) {
+                        case 'title':
+                            newResume.title = section.content
+                            break
+                        case 'summary':
+                            newResume.summary = section.content
+                            break
+                        case 'experience':
+                            // Create a basic experience entry
+                            if (!newResume.experience) newResume.experience = []
+                            newResume.experience.push({
+                                role: section.content,
+                                organization: 'Company Name',
+                                startDate: '2020-01',
+                                endDate: null,
+                                bullets: ['Add your achievements here']
+                            })
+                            break
+                        case 'skills':
+                            // Parse skills from text and create a default subsection
+                            const skills = section.content.split(',').map(s => s.trim()).filter(s => s.length > 0)
+                            if (skills.length > 0) {
+                                newResume.skills = [{
+                                    name: 'Technical Skills',
+                                    skills: skills
+                                }]
+                            }
+                            break
+                        case 'education':
+                            // Create a basic education entry
+                            if (!newResume.education) newResume.education = []
+                            newResume.education.push({
+                                degree: section.content,
+                                school: 'University Name',
+                                startDate: '2018-09',
+                                endDate: '2022-05'
+                            })
+                            break
+                        case 'certifications':
+                            // Create a basic certification entry
+                            if (!newResume.certifications) newResume.certifications = []
+                            newResume.certifications.push({
+                                name: section.content,
+                                issuer: 'Issuing Organization',
+                                date: '2023-01'
+                            })
+                            break
+                    }
+                })
+
+                setEditedResume(newResume)
+            } finally {
+                setIsLoading(false)
+            }
         }
 
-        // Extract data from parsed sections
-        parsedSections.forEach(section => {
-            switch (section.type) {
-                case 'title':
-                    newResume.title = section.content
-                    break
-                case 'summary':
-                    newResume.summary = section.content
-                    break
-                case 'experience':
-                    // Create a basic experience entry
-                    if (!newResume.experience) newResume.experience = []
-                    newResume.experience.push({
-                        role: section.content,
-                        organization: 'Company Name',
-                        startDate: '2020-01',
-                        endDate: null,
-                        bullets: ['Add your achievements here']
-                    })
-                    break
-                case 'skills':
-                    // Parse skills from text and create a default subsection
-                    const skills = section.content.split(',').map(s => s.trim()).filter(s => s.length > 0)
-                    if (skills.length > 0) {
-                        newResume.skills = [{
-                            name: 'Technical Skills',
-                            skills: skills
-                        }]
-                    }
-                    break
-                case 'education':
-                    // Create a basic education entry
-                    if (!newResume.education) newResume.education = []
-                    newResume.education.push({
-                        degree: section.content,
-                        school: 'University Name',
-                        startDate: '2018-09',
-                        endDate: '2022-05'
-                    })
-                    break
-                case 'certifications':
-                    // Create a basic certification entry
-                    if (!newResume.certifications) newResume.certifications = []
-                    newResume.certifications.push({
-                        name: section.content,
-                        issuer: 'Issuing Organization',
-                        date: '2023-01'
-                    })
-                    break
-            }
-        })
-
-        setEditedResume(newResume)
+        extractStructuredData()
     }, [parsedSections, resume])
 
     const addExperience = () => {

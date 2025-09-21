@@ -128,8 +128,7 @@ export class SkillsOptimizationService {
       // Fallback if JSON parsing fails
       return {
         optimized: currentSkills,
-        missing: [],
-        suggestions: []
+        missing: []
       };
     }
   }
@@ -213,17 +212,17 @@ export class ResumeAnalysisService {
 // Example 6: Usage in React components (conceptual)
 export const useAIService = () => {
   const aiService = getAIService();
-  
+
   return {
     // Check if AI is available and rate limits
     isAvailable: () => {
       const status = aiService.getRateLimitStatus();
       return status.remainingRequests > 0;
     },
-    
+
     // Get rate limit status for UI display
     getRateLimitStatus: () => aiService.getRateLimitStatus(),
-    
+
     // Generate content with error handling
     generateContent: async (prompt: string, options?: any) => {
       try {
@@ -262,7 +261,7 @@ export class BatchAIService {
 
     try {
       const [improvedExp, coverLetter, atsOptimized, analysis] = await Promise.all(tasks);
-      
+
       return {
         improvedSections: { experience: improvedExp },
         coverLetter,

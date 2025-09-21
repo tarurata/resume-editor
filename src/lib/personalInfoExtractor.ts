@@ -1,7 +1,9 @@
 import { PersonalInfo } from '@/types/resume'
+import { aiResumeExtractor } from './aiResumeExtractor'
 
 /**
  * Extracts personal information from resume data or text
+ * Now uses AI as primary method with regex fallback
  */
 export class PersonalInfoExtractor {
     /**
@@ -54,9 +56,29 @@ export class PersonalInfoExtractor {
     }
 
     /**
-     * Extract personal information from raw text
+     * Extract personal information from raw text using AI with regex fallback
      */
-    static extractFromText(text: string): PersonalInfo | null {
+    static async extractFromText(text: string): Promise<PersonalInfo | null> {
+        if (!text) return null
+
+        try {
+            // Try AI extraction first
+            const aiResult = await aiResumeExtractor.extractPersonalInfo(text)
+            if (aiResult) {
+                return aiResult
+            }
+        } catch (error) {
+            console.warn('AI personal info extraction failed, falling back to regex:', error)
+        }
+
+        // Fallback to regex-based extraction
+        return this.extractFromTextRegex(text)
+    }
+
+    /**
+     * Extract personal information from raw text using regex (fallback method)
+     */
+    static extractFromTextRegex(text: string): PersonalInfo | null {
         if (!text) return null
 
         // Extract name (usually first line or after "Name:", "Full Name:", etc.)
