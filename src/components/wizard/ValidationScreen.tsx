@@ -29,17 +29,24 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
         setIsSaving(true)
         try {
             // Save to database without personal information
-            await saveResumeToDatabase(
+            const savedResume = await saveResumeToDatabase(
                 resume,
                 'Default Company',
                 resume.title || 'Software Engineer',
                 undefined, // companyEmail
                 undefined, // jobDescription
-                null // No personal information from import
+                null, // No personal information from import
+                true // forceNewResume - always create new resume from wizard
             )
 
-            // Navigate to editor
-            window.location.href = '/editor'
+            // Navigate to the specific resume editor
+            if (savedResume && savedResume.id) {
+                console.log('New resume created with ID:', savedResume.id)
+                window.location.href = `/editor/${savedResume.id}`
+            } else {
+                console.error('Failed to get saved resume ID')
+                alert('Failed to save resume. Please try again.')
+            }
         } catch (error) {
             console.error('Failed to save resume:', error)
             alert('Failed to save resume. Please try again.')

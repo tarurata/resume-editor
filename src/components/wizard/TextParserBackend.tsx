@@ -214,8 +214,8 @@ export default function TextParserBackend({ pastedText, onNext, userId }: TextPa
                 {/* AI Health Status */}
                 {aiHealth && (
                     <div className={`mt-2 p-2 rounded-md text-sm ${aiHealth.status === 'healthy'
-                            ? 'bg-green-50 text-green-800 border border-green-200'
-                            : 'bg-yellow-50 text-yellow-800 border border-yellow-200'
+                        ? 'bg-green-50 text-green-800 border border-green-200'
+                        : 'bg-yellow-50 text-yellow-800 border border-yellow-200'
                         }`}>
                         AI Status: {aiHealth.status}
                         {aiHealth.provider && ` (${aiHealth.provider})`}
@@ -287,7 +287,7 @@ export default function TextParserBackend({ pastedText, onNext, userId }: TextPa
 
             <div className="flex justify-between">
                 <button
-                    onClick={() => onNext({ step: 'start' })}
+                    onClick={() => onNext({ step: 'start', pastedText })}
                     className="btn-secondary"
                 >
                     Back

@@ -33,6 +33,7 @@ export default function Home() {
                 return <SectionEditor
                     parsedSections={wizardState.parsedSections}
                     resume={wizardState.resume}
+                    pastedText={wizardState.pastedText}
                     onNext={handleWizardUpdate}
                 />
             case 'validate':

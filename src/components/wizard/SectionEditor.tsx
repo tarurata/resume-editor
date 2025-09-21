@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { WizardState, Resume, ExperienceEntry, EducationEntry, CertificationEntry, ParsedSection } from '@/types/resume'
-import { aiResumeExtractor } from '@/lib/aiResumeExtractor'
+import { createAIResumeExtractor } from '@/lib/aiResumeExtractorBackend'
 
 interface SectionEditorProps {
     parsedSections: ParsedSection[]
     resume: Partial<Resume>
+    pastedText?: string
     onNext: (updates: Partial<WizardState>) => void
 }
 
-export default function SectionEditor({ parsedSections, resume, onNext }: SectionEditorProps) {
+export default function SectionEditor({ parsedSections, resume, pastedText, onNext }: SectionEditorProps) {
     const [editedResume, setEditedResume] = useState<Partial<Resume>>({
         title: '',
         summary: '',
@@ -30,11 +31,12 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
             setIsLoading(true)
 
             try {
-                // Combine all section content for AI analysis
-                const combinedText = parsedSections.map(s => s.content).join('\n\n')
+                // Use the full pasted text for AI analysis if available, otherwise combine sections
+                const textForAnalysis = pastedText || parsedSections.map(s => s.content).join('\n\n')
 
                 // Use AI to extract structured resume data
-                const structuredData = await aiResumeExtractor.extractStructuredResume(combinedText)
+                const aiExtractor = createAIResumeExtractor()
+                const structuredData = await aiExtractor.extractStructuredResume(textForAnalysis)
 
                 setAiExtractionResult(structuredData)
 
@@ -120,7 +122,7 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
         }
 
         extractStructuredData()
-    }, [parsedSections, resume])
+    }, [parsedSections, resume, pastedText])
 
     const addExperience = () => {
         const newExperience: ExperienceEntry = {
@@ -757,7 +759,7 @@ export default function SectionEditor({ parsedSections, resume, onNext }: Sectio
 
             <div className="flex justify-between">
                 <button
-                    onClick={() => onNext({ step: 'parse' })}
+                    onClick={() => onNext({ step: 'parse', pastedText })}
                     className="btn-secondary"
                 >
                     Back

@@ -45,8 +45,9 @@ export const saveResumeToDatabase = async (
     jobTitle: string = 'Software Engineer',
     companyEmail?: string,
     jobDescription?: string,
-    extractedPersonalInfo?: PersonalInfo | null
-): Promise<void> => {
+    extractedPersonalInfo?: PersonalInfo | null,
+    forceNewResume: boolean = false
+): Promise<{ id: string } | null> => {
     console.log('saveResumeToDatabase called with:', { resume, companyName, jobTitle })
 
     try {
@@ -155,26 +156,39 @@ export const saveResumeToDatabase = async (
         console.log('Sanitized resume:', sanitizedResume)
 
         // Try to save to database first
-        console.log('Getting active version...')
-        const activeVersion = await resumeVersionApi.getActive()
-        console.log('Active version:', activeVersion)
+        let savedResume: { id: string } | null = null
 
-        if (activeVersion) {
-            // Update existing active version
-            console.log('Updating existing active version...')
-            await resumeVersionApi.update(activeVersion.id, {
-                resume_data: sanitizedResume,
-                job_title: jobTitle,
-                company_name: companyName,
-                company_email: companyEmail,
-                job_description: jobDescription
-            })
-            console.log('Updated existing version successfully')
-        } else {
-            // Create new resume version
-            console.log('Creating new resume version...')
-            await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
+        if (forceNewResume) {
+            // Always create new resume version (for wizard flow)
+            console.log('Creating new resume version (forced)...')
+            const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
             console.log('Created new version successfully')
+            savedResume = { id: createdResume.id }
+        } else {
+            // Check for existing active version (for regular updates)
+            console.log('Getting active version...')
+            const activeVersion = await resumeVersionApi.getActive()
+            console.log('Active version:', activeVersion)
+
+            if (activeVersion) {
+                // Update existing active version
+                console.log('Updating existing active version...')
+                await resumeVersionApi.update(activeVersion.id, {
+                    resume_data: sanitizedResume,
+                    job_title: jobTitle,
+                    company_name: companyName,
+                    company_email: companyEmail,
+                    job_description: jobDescription
+                })
+                console.log('Updated existing version successfully')
+                savedResume = { id: activeVersion.id }
+            } else {
+                // Create new resume version
+                console.log('Creating new resume version...')
+                const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
+                console.log('Created new version successfully')
+                savedResume = { id: createdResume.id }
+            }
         }
 
         // Also save to localStorage as backup
@@ -185,6 +199,8 @@ export const saveResumeToDatabase = async (
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeWithJobDescription))
         console.log('Saved to localStorage successfully')
+
+        return savedResume
     } catch (error) {
         console.error('Failed to save resume to database:', error)
 
@@ -198,7 +214,7 @@ export const saveResumeToDatabase = async (
             localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeWithJobDescription))
             console.warn('Saved to localStorage as fallback (API unavailable)')
             // Don't throw error - localStorage save was successful
-            return
+            return null // No ID available in localStorage fallback
         } catch (localError) {
             console.error('Failed to save resume to localStorage:', localError)
             throw new Error('Failed to save resume to both database and localStorage')
