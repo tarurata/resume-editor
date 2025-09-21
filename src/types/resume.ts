@@ -4,7 +4,7 @@ export interface ExperienceEntry {
     location?: string;
     startDate: string; // YYYY-MM format
     endDate: string | null; // YYYY-MM format or null for current
-    bullets: string[];
+    achievements: string[];
 }
 
 export interface FactsInventory {

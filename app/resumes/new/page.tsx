@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ResumeService } from '@/lib/resumeService'
 import { Resume } from '@/types/resume'
+import { syncExperiencesToDatabase } from '@/lib/experiencesApi'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 
 export default function NewResumePage() {
@@ -38,7 +39,7 @@ export default function NewResumePage() {
         try {
             // Create a new resume with the template data
             const { saveResumeToDatabase } = await import('@/lib/storage')
-            await saveResumeToDatabase(
+            const savedResume = await saveResumeToDatabase(
                 template,
                 formData.companyName,
                 formData.jobTitle,
@@ -55,6 +56,21 @@ export default function NewResumePage() {
             )
 
             if (newResume) {
+                // Sync experiences and achievements to database tables
+                if (template.experience && template.experience.length > 0) {
+                    console.log('Syncing template experiences and achievements to database...')
+                    try {
+                        await syncExperiencesToDatabase(
+                            newResume.id, // resume version ID
+                            template.experience
+                        )
+                        console.log('Template experiences and achievements synced successfully')
+                    } catch (syncError) {
+                        console.error('Failed to sync template experiences to database:', syncError)
+                        // Don't fail the entire process if experiences sync fails
+                    }
+                }
+
                 router.push(`/editor/${newResume.id}`)
             } else {
                 // Fallback to the old editor if we can't find the new resume

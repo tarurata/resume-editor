@@ -234,7 +234,7 @@ export const syncExperiencesToDatabase = async (
                 })
 
                 // Update achievements for this experience
-                if (exp.bullets && exp.bullets.length > 0) {
+                if (exp.achievements && exp.achievements.length > 0) {
                     const existingAchievements = await achievementApi.getByExperience(existingExp.id)
 
                     // Delete existing achievements
@@ -243,10 +243,10 @@ export const syncExperiencesToDatabase = async (
                     }
 
                     // Create new achievements
-                    for (let j = 0; j < exp.bullets.length; j++) {
-                        if (exp.bullets[j].trim()) {
+                    for (let j = 0; j < exp.achievements.length; j++) {
+                        if (exp.achievements[j].trim()) {
                             await achievementApi.create(existingExp.id, {
-                                achievement_text: exp.bullets[j],
+                                achievement_text: exp.achievements[j],
                                 order_index: j
                             })
                         }
@@ -266,11 +266,11 @@ export const syncExperiencesToDatabase = async (
                 })
 
                 // Create achievements for this experience
-                if (exp.bullets && exp.bullets.length > 0) {
-                    for (let j = 0; j < exp.bullets.length; j++) {
-                        if (exp.bullets[j].trim()) {
+                if (exp.achievements && exp.achievements.length > 0) {
+                    for (let j = 0; j < exp.achievements.length; j++) {
+                        if (exp.achievements[j].trim()) {
                             await achievementApi.create(newExp.id, {
-                                achievement_text: exp.bullets[j],
+                                achievement_text: exp.achievements[j],
                                 order_index: j
                             })
                         }

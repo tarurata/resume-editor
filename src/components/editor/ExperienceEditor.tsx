@@ -10,10 +10,20 @@ interface ExperienceEditorProps {
 }
 
 export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEditorProps) {
-    const [editedExperience, setEditedExperience] = useState<ExperienceEntry>(experience)
+    // Ensure achievements field exists and is an array
+    const normalizedExperience: ExperienceEntry = {
+        ...experience,
+        achievements: experience.achievements || []
+    }
+
+    const [editedExperience, setEditedExperience] = useState<ExperienceEntry>(normalizedExperience)
 
     useEffect(() => {
-        setEditedExperience(experience)
+        const normalizedExperience: ExperienceEntry = {
+            ...experience,
+            achievements: experience.achievements || []
+        }
+        setEditedExperience(normalizedExperience)
     }, [experience])
 
     const handleFieldChange = (field: keyof ExperienceEntry, value: string) => {
@@ -22,24 +32,27 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
         onUpdate(index, updated)
     }
 
-    const handleBulletChange = (bulletIndex: number, value: string) => {
-        const updatedBullets = [...editedExperience.bullets]
-        updatedBullets[bulletIndex] = value
-        const updated = { ...editedExperience, bullets: updatedBullets }
+    const handleAchievementChange = (achievementIndex: number, value: string) => {
+        const currentAchievements = editedExperience.achievements || []
+        const updatedAchievements = [...currentAchievements]
+        updatedAchievements[achievementIndex] = value
+        const updated = { ...editedExperience, achievements: updatedAchievements }
         setEditedExperience(updated)
         onUpdate(index, updated)
     }
 
-    const addBullet = () => {
-        const updatedBullets = [...editedExperience.bullets, '']
-        const updated = { ...editedExperience, bullets: updatedBullets }
+    const addAchievement = () => {
+        const currentAchievements = editedExperience.achievements || []
+        const updatedAchievements = [...currentAchievements, '']
+        const updated = { ...editedExperience, achievements: updatedAchievements }
         setEditedExperience(updated)
         onUpdate(index, updated)
     }
 
-    const removeBullet = (bulletIndex: number) => {
-        const updatedBullets = editedExperience.bullets.filter((_, i) => i !== bulletIndex)
-        const updated = { ...editedExperience, bullets: updatedBullets }
+    const removeAchievement = (achievementIndex: number) => {
+        const currentAchievements = editedExperience.achievements || []
+        const updatedAchievements = currentAchievements.filter((_, i) => i !== achievementIndex)
+        const updated = { ...editedExperience, achievements: updatedAchievements }
         setEditedExperience(updated)
         onUpdate(index, updated)
     }
@@ -228,17 +241,17 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                     Key Achievements
                 </label>
                 <div className="space-y-2">
-                    {editedExperience.bullets.map((bullet, bulletIndex) => (
-                        <div key={bulletIndex} className="flex gap-2">
+                    {(editedExperience.achievements || []).map((achievement, achievementIndex) => (
+                        <div key={achievementIndex} className="flex gap-2">
                             <input
                                 type="text"
-                                value={bullet}
-                                onChange={(e) => handleBulletChange(bulletIndex, e.target.value)}
+                                value={achievement}
+                                onChange={(e) => handleAchievementChange(achievementIndex, e.target.value)}
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 placeholder="Enter key achievement..."
                             />
                             <button
-                                onClick={() => removeBullet(bulletIndex)}
+                                onClick={() => removeAchievement(achievementIndex)}
                                 className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
                             >
                                 Remove
@@ -246,7 +259,7 @@ export function ExperienceEditor({ experience, index, onUpdate }: ExperienceEdit
                         </div>
                     ))}
                     <button
-                        onClick={addBullet}
+                        onClick={addAchievement}
                         className="w-full px-3 py-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-md transition-colors border border-dashed border-primary-300"
                     >
                         + Add Achievement

@@ -160,7 +160,7 @@ Extract sections:`
       "organization": "Company Name",
       "startDate": "2020-01",
       "endDate": "2023-12" or null for current,
-      "bullets": ["Achievement 1", "Achievement 2"]
+      "achievements": ["Achievement 1", "Achievement 2"]
     }
   ],
   "education": [

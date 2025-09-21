@@ -309,10 +309,10 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
                                     {formatDateRange(exp.startDate, exp.endDate)}
                                 </div>
                             </div>
-                            {exp.bullets && exp.bullets.length > 0 && (
+                            {exp.achievements && exp.achievements.length > 0 && (
                                 <ul className="experience-bullets">
-                                    {exp.bullets.map((bullet, bulletIndex) => (
-                                        <li key={bulletIndex}>{bullet}</li>
+                                    {exp.achievements.map((achievement, achievementIndex) => (
+                                        <li key={achievementIndex}>{achievement}</li>
                                     ))}
                                 </ul>
                             )}

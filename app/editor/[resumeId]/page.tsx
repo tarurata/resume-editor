@@ -105,7 +105,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                         location: exp.location || '',
                         startDate: exp.start_date,
                         endDate: exp.end_date || '',
-                        bullets: exp.achievements?.map((ach: any) => ach.achievement_text) || []
+                        achievements: exp.achievements?.map((ach: any) => ach.achievement_text) || []
                     }))
 
                     // Update the resume data with API data
@@ -289,7 +289,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 location: exp.location || '',
                 startDate: exp.start_date,
                 endDate: exp.end_date || '',
-                bullets: exp.achievements?.map((ach: any) => ach.achievement_text) || []
+                achievements: exp.achievements?.map((ach: any) => ach.achievement_text) || []
             }))
 
             // Update the resume data with API data
@@ -576,7 +576,7 @@ export default function EditorPage({ params }: EditorPageProps) {
             location: '',
             startDate: '',
             endDate: '',
-            bullets: ['']
+            achievements: ['']
         }
 
         const updatedResume = {

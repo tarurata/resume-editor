@@ -4,16 +4,61 @@ Multi-company resume management
 """
 
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from database.database import DatabaseService
 from database.models import ResumeVersion, ResumeVersionCreate, ResumeVersionUpdate
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+import json
 
 router = APIRouter()
 
 # Dependency to get database service
 def get_database_service():
     return DatabaseService()
+
+def validate_resume_data(resume_data: str) -> Dict[str, Any]:
+    """Validate resume data JSON structure"""
+    try:
+        data = json.loads(resume_data)
+        
+        # Check required fields
+        if not isinstance(data, dict):
+            raise ValueError("Resume data must be a JSON object")
+        
+        # Validate experience data structure
+        if 'experience' in data and isinstance(data['experience'], list):
+            for i, exp in enumerate(data['experience']):
+                if not isinstance(exp, dict):
+                    raise ValueError(f"Experience entry {i} must be an object")
+                
+                # Check required fields
+                if 'role' not in exp or not isinstance(exp['role'], str):
+                    raise ValueError(f"Experience entry {i} must have a 'role' field (string)")
+                if 'organization' not in exp or not isinstance(exp['organization'], str):
+                    raise ValueError(f"Experience entry {i} must have an 'organization' field (string)")
+                if 'startDate' not in exp or not isinstance(exp['startDate'], str):
+                    raise ValueError(f"Experience entry {i} must have a 'startDate' field (string)")
+                
+                # Check achievements field (should be array of strings)
+                if 'achievements' in exp:
+                    if not isinstance(exp['achievements'], list):
+                        raise ValueError(f"Experience entry {i} 'achievements' must be an array")
+                    for j, achievement in enumerate(exp['achievements']):
+                        if not isinstance(achievement, str):
+                            raise ValueError(f"Experience entry {i} achievement {j} must be a string")
+                elif 'bullets' in exp:
+                    # Legacy support: convert bullets to achievements
+                    if isinstance(exp['bullets'], list):
+                        exp['achievements'] = exp['bullets']
+                        del exp['bullets']
+                    else:
+                        raise ValueError(f"Experience entry {i} 'bullets' must be an array")
+        
+        return data
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in resume data: {str(e)}")
+    except Exception as e:
+        raise ValueError(f"Resume data validation failed: {str(e)}")
 
 # Request/Response models
 class ResumeVersionResponse(ResumeVersion):
@@ -32,6 +77,12 @@ async def create_resume_version(
 ):
     """Create a new resume version for a specific company"""
     try:
+        # Validate resume data structure
+        validated_data = validate_resume_data(resume_version_data.resume_data)
+        
+        # Update the resume data with validated/cleaned data
+        resume_version_data.resume_data = json.dumps(validated_data)
+        
         result = db.create_resume_version(resume_version_data, user_id)
         return result
     except ValueError as e:
@@ -78,6 +129,11 @@ async def update_resume_version(
 ):
     """Update a resume version"""
     try:
+        # Validate resume data if it's being updated
+        if hasattr(update_data, 'resume_data') and update_data.resume_data:
+            validated_data = validate_resume_data(update_data.resume_data)
+            update_data.resume_data = json.dumps(validated_data)
+        
         result = db.update_resume_version(version_id, update_data)
         if not result:
             raise HTTPException(
@@ -85,10 +141,10 @@ async def update_resume_version(
                 detail=f"Resume version with ID {version_id} not found"
             )
         return result
-    except HTTPException:
-        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 

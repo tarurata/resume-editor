@@ -38,6 +38,12 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
                 const aiExtractor = createAIResumeExtractor()
                 const structuredData = await aiExtractor.extractStructuredResume(textForAnalysis)
 
+                console.log('AI extracted structured data:', structuredData)
+                console.log('Experience data:', structuredData.experience)
+                if (structuredData.experience && structuredData.experience.length > 0) {
+                    console.log('First experience from AI:', structuredData.experience[0])
+                    console.log('First experience achievements:', structuredData.experience[0].achievements)
+                }
                 setAiExtractionResult(structuredData)
 
                 // Merge AI extraction with existing resume data
@@ -50,6 +56,8 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
                     ...resume
                 }
 
+                console.log('Final resume data before setting state:', newResume)
+                console.log('Final experience data:', newResume.experience)
                 setEditedResume(newResume)
             } catch (error) {
                 console.error('AI structured extraction failed, using basic parsing:', error)
@@ -80,7 +88,7 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
                                 organization: 'Company Name',
                                 startDate: '2020-01',
                                 endDate: null,
-                                bullets: ['Add your achievements here']
+                                achievements: ['Add your achievements here']
                             })
                             break
                         case 'skills':
@@ -130,7 +138,7 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
             organization: 'Company Name',
             startDate: '2020-01',
             endDate: null,
-            bullets: ['Add your achievements here']
+            achievements: ['Add your achievements here']
         }
         setEditedResume(prev => ({
             ...prev,
@@ -167,22 +175,22 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
         }
     }
 
-    const addBullet = (expIndex: number) => {
-        updateExperience(expIndex, 'bullets', [
-            ...(editedResume.experience?.[expIndex]?.bullets || []),
+    const addAchievement = (expIndex: number) => {
+        updateExperience(expIndex, 'achievements', [
+            ...(editedResume.experience?.[expIndex]?.achievements || []),
             'New achievement'
         ])
     }
 
-    const updateBullet = (expIndex: number, bulletIndex: number, value: string) => {
-        const newBullets = [...(editedResume.experience?.[expIndex]?.bullets || [])]
-        newBullets[bulletIndex] = value
-        updateExperience(expIndex, 'bullets', newBullets)
+    const updateAchievement = (expIndex: number, achievementIndex: number, value: string) => {
+        const newAchievements = [...(editedResume.experience?.[expIndex]?.achievements || [])]
+        newAchievements[achievementIndex] = value
+        updateExperience(expIndex, 'achievements', newAchievements)
     }
 
-    const removeBullet = (expIndex: number, bulletIndex: number) => {
-        const newBullets = editedResume.experience?.[expIndex]?.bullets?.filter((_, i) => i !== bulletIndex) || []
-        updateExperience(expIndex, 'bullets', newBullets)
+    const removeAchievement = (expIndex: number, achievementIndex: number) => {
+        const newAchievements = editedResume.experience?.[expIndex]?.achievements?.filter((_, i) => i !== achievementIndex) || []
+        updateExperience(expIndex, 'achievements', newAchievements)
     }
 
     const addSkill = () => {
@@ -336,6 +344,12 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
         setValidationErrors(errors)
 
         if (errors.length === 0) {
+            console.log('SectionEditor - Sending resume to validation:', editedResume)
+            console.log('SectionEditor - Experience data being sent:', editedResume.experience)
+            if (editedResume.experience && editedResume.experience.length > 0) {
+                console.log('SectionEditor - First experience achievements:', editedResume.experience[0].achievements)
+            }
+
             onNext({
                 step: 'validate',
                 resume: editedResume,
@@ -483,23 +497,23 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
                                     <div className="flex justify-between items-center mb-2">
                                         <label className="block text-sm font-medium text-gray-700">Achievements</label>
                                         <button
-                                            onClick={() => addBullet(index)}
+                                            onClick={() => addAchievement(index)}
                                             className="text-sm text-primary-600 hover:text-primary-700"
                                         >
                                             + Add Achievement
                                         </button>
                                     </div>
                                     <div className="space-y-2">
-                                        {exp.bullets.map((bullet, bulletIndex) => (
-                                            <div key={bulletIndex} className="flex space-x-2">
+                                        {exp.achievements.map((achievement, achievementIndex) => (
+                                            <div key={achievementIndex} className="flex space-x-2">
                                                 <input
                                                     type="text"
-                                                    value={bullet}
-                                                    onChange={(e) => updateBullet(index, bulletIndex, e.target.value)}
+                                                    value={achievement}
+                                                    onChange={(e) => updateAchievement(index, achievementIndex, e.target.value)}
                                                     className="input-field flex-1"
                                                 />
                                                 <button
-                                                    onClick={() => removeBullet(index, bulletIndex)}
+                                                    onClick={() => removeAchievement(index, achievementIndex)}
                                                     className="text-red-500 hover:text-red-700 px-2"
                                                 >
                                                     ×

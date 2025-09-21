@@ -48,8 +48,8 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
                     const index = parseInt(sectionId.split('-')[1])
                     const exp = resume.experience?.[index]
                     if (exp) {
-                        const bulletsList = exp.bullets?.map(bullet => `<li>${bullet}</li>`).join('') || ''
-                        return `<ul>${bulletsList}</ul>`
+                        const achievementsList = exp.achievements?.map(achievement => `<li>${achievement}</li>`).join('') || ''
+                        return `<ul>${achievementsList}</ul>`
                     }
                 }
                 if (sectionId.startsWith('education-')) {

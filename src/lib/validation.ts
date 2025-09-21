@@ -99,17 +99,17 @@ export function validateResumeData(resume: Resume): ValidationError[] {
                     })
                 }
 
-                if (exp.bullets && exp.bullets.length > 0) {
-                    exp.bullets.forEach((bullet, bulletIndex) => {
-                        if (!bullet || bullet.trim().length === 0) {
+                if (exp.achievements && exp.achievements.length > 0) {
+                    exp.achievements.forEach((achievement, achievementIndex) => {
+                        if (!achievement || achievement.trim().length === 0) {
                             errors.push({
-                                field: `experience[${index}].bullets[${bulletIndex}]`,
-                                message: 'Bullet point cannot be empty'
+                                field: `experience[${index}].achievements[${achievementIndex}]`,
+                                message: 'Achievement cannot be empty'
                             })
-                        } else if (bullet.length > 500) {
+                        } else if (achievement.length > 500) {
                             errors.push({
-                                field: `experience[${index}].bullets[${bulletIndex}]`,
-                                message: 'Bullet point must be less than 500 characters'
+                                field: `experience[${index}].achievements[${achievementIndex}]`,
+                                message: 'Achievement must be less than 500 characters'
                             })
                         }
                     })
@@ -214,7 +214,7 @@ export function sanitizeResumeForApi(resume: Resume): Resume {
             location: exp.location?.trim(),
             startDate: exp.startDate || '',
             endDate: exp.endDate,
-            bullets: exp.bullets?.map(bullet => bullet?.trim()).filter(bullet => bullet.length > 0) || []
+            achievements: exp.achievements?.map(achievement => achievement?.trim()).filter(achievement => achievement.length > 0) || []
         })) || [],
         education: resume.education?.map(edu => ({
             degree: edu.degree?.trim() || '',

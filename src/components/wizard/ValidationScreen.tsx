@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { WizardState, Resume } from '@/types/resume'
 import { saveResumeToDatabase } from '@/lib/storage'
+import { syncExperiencesToDatabase } from '@/lib/experiencesApi'
 
 interface ValidationScreenProps {
     resume: Resume
@@ -13,6 +14,12 @@ interface ValidationScreenProps {
 export default function ValidationScreen({ resume, validationErrors, onNext }: ValidationScreenProps) {
     const [isValid, setIsValid] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+
+    console.log('ValidationScreen - Received resume data:', resume)
+    console.log('ValidationScreen - Experience data:', resume.experience)
+    if (resume.experience && resume.experience.length > 0) {
+        console.log('ValidationScreen - First experience achievements:', resume.experience[0].achievements)
+    }
 
     useEffect(() => {
         // Check if resume meets minimum requirements
@@ -28,6 +35,9 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
 
         setIsSaving(true)
         try {
+            console.log('Saving resume to database:', resume)
+            console.log('Experience data being saved:', resume.experience)
+
             // Save to database without personal information
             const savedResume = await saveResumeToDatabase(
                 resume,
@@ -42,6 +52,23 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
             // Navigate to the specific resume editor
             if (savedResume && savedResume.id) {
                 console.log('New resume created with ID:', savedResume.id)
+
+                // Sync experiences and achievements to database tables
+                if (resume.experience && resume.experience.length > 0) {
+                    console.log('Syncing experiences and achievements to database...')
+                    try {
+                        await syncExperiencesToDatabase(
+                            savedResume.id, // resume version ID
+                            resume.experience
+                        )
+                        console.log('Experiences and achievements synced successfully')
+                    } catch (syncError) {
+                        console.error('Failed to sync experiences to database:', syncError)
+                        // Don't fail the entire process if experiences sync fails
+                        // The resume is already saved, just the experiences won't be in the separate tables
+                    }
+                }
+
                 window.location.href = `/editor/${savedResume.id}`
             } else {
                 console.error('Failed to get saved resume ID')
@@ -140,11 +167,11 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
                                         <div className="text-gray-500 text-sm">
                                             {exp.startDate} - {exp.endDate || 'Present'}
                                         </div>
-                                        {exp.bullets && exp.bullets.length > 0 && (
+                                        {exp.achievements && exp.achievements.length > 0 && (
                                             <ul className="mt-2 space-y-1">
-                                                {exp.bullets.map((bullet, bulletIndex) => (
-                                                    <li key={bulletIndex} className="text-gray-700 text-sm">
-                                                        • {bullet}
+                                                {exp.achievements.map((achievement, achievementIndex) => (
+                                                    <li key={achievementIndex} className="text-gray-700 text-sm">
+                                                        • {achievement}
                                                     </li>
                                                 ))}
                                             </ul>
