@@ -35,6 +35,16 @@ class ImproveResponse(BaseModel):
     confidence: Optional[float] = None
     errors: Optional[List[str]] = None
 
+class JDExtractRequest(BaseModel):
+    job_description: str
+    user_id: Optional[str] = None
+
+class JDExtractResponse(BaseModel):
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    confidence: Optional[float] = None
+    errors: Optional[List[str]] = None
+
 @router.post("/extract", response_model=ExtractResponse)
 async def extract_resume_data(
     request: ExtractRequest,
@@ -116,6 +126,37 @@ async def improve_resume_content(
             errors=[f"Improvement failed: {str(e)}"]
         )
 
+@router.post("/extract-jd", response_model=JDExtractResponse)
+async def extract_job_description(
+    request: JDExtractRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Extract key information from job description using AI
+    """
+    try:
+        ai_service = AIService()
+        result = await ai_service.extract_job_description(request.job_description)
+        
+        # Log extraction attempt
+        logger.info(f"JD extraction completed for user {request.user_id}")
+        
+        return JDExtractResponse(
+            success=True,
+            data=result.get("data"),
+            confidence=result.get("confidence", 0.0),
+            errors=result.get("errors", [])
+        )
+        
+    except Exception as e:
+        logger.error(f"JD extraction failed: {str(e)}")
+        return JDExtractResponse(
+            success=False,
+            data=None,
+            confidence=0.0,
+            errors=[f"JD extraction failed: {str(e)}"]
+        )
+
 @router.get("/health")
 async def ai_health_check():
     """
@@ -136,5 +177,59 @@ async def ai_health_check():
         logger.error(f"AI health check failed: {str(e)}")
         return {
             "status": "unhealthy",
+            "error": str(e)
+        }
+
+@router.get("/test-openai")
+async def test_openai_direct():
+    """
+    Test OpenAI API directly with aiohttp
+    """
+    try:
+        import aiohttp
+        import os
+        from ..core.config import get_settings
+        
+        settings = get_settings()
+        
+        if not settings.llm_api_key:
+            return {"success": False, "error": "No API key found"}
+        
+        headers = {
+            "Authorization": f"Bearer {settings.llm_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": settings.llm_model,
+            "messages": [{"role": "user", "content": "Say 'Hello from OpenAI'"}],
+            "max_tokens": 10
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{settings.llm_base_url}/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    return {
+                        "success": True,
+                        "response": result["choices"][0]["message"]["content"],
+                        "model": settings.llm_model
+                    }
+                else:
+                    error_text = await response.text()
+                    return {
+                        "success": False,
+                        "error": f"OpenAI API error {response.status}: {error_text}"
+                    }
+        
+    except Exception as e:
+        logger.error(f"Direct OpenAI test failed: {str(e)}")
+        return {
+            "success": False,
             "error": str(e)
         }

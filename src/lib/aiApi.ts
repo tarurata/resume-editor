@@ -1,4 +1,4 @@
-import { PersonalInfo, ParsedSection, Resume } from '@/types/resume'
+import { PersonalInfo, ParsedSection, Resume, JobDescriptionExtraction, JDExtractionResponse } from '@/types/resume'
 
 export interface AIExtractionRequest {
     text: string
@@ -243,6 +243,36 @@ class AIApiService {
         } catch (error) {
             console.error('AI content improvement failed:', error)
             return {
+                errors: [error instanceof Error ? error.message : 'Unknown error']
+            }
+        }
+    }
+
+    /**
+     * Extract information from job description
+     */
+    async extractJobDescription(jobDescription: string, userId?: string): Promise<JDExtractionResponse> {
+        try {
+            const response = await this.makeRequest('/api/ai/extract-jd', {
+                method: 'POST',
+                body: JSON.stringify({
+                    job_description: jobDescription,
+                    user_id: userId
+                })
+            })
+
+            return {
+                success: response.success,
+                data: response.data,
+                confidence: response.confidence,
+                errors: response.errors
+            }
+        } catch (error) {
+            console.error('JD extraction failed:', error)
+            return {
+                success: false,
+                data: undefined,
+                confidence: 0,
                 errors: [error instanceof Error ? error.message : 'Unknown error']
             }
         }

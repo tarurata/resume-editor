@@ -280,23 +280,35 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
                         
                         .skills-container {
                             display: flex;
-                            flex-wrap: wrap;
+                            flex-direction: column;
                             gap: 8pt;
                         }
                         
-                        .skill-category {
-                            margin-bottom: 8pt;
+                        .skill-subsection {
+                            margin-bottom: 6pt;
                         }
                         
-                        .skill-category-title {
+                        .skill-subsection-title {
                             font-weight: bold;
                             font-size: 10pt;
                             margin-bottom: 2pt;
                         }
                         
+                        .skill-subsection-title::after {
+                            content: ":";
+                        }
+                        
                         .skill-list {
                             font-size: 10pt;
                             line-height: 1.3;
+                        }
+                        
+                        .skill-item {
+                            display: inline;
+                        }
+                        
+                        .skill-item:not(:last-child)::after {
+                            content: ", ";
                         }
                         
                         @page {

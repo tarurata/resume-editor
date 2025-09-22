@@ -241,25 +241,33 @@ def generate_resume_html(resume: Resume) -> str:
             .bullets li {{
                 margin-bottom: 5px;
             }}
-            .skills {{
+            .skills-container {{
                 display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-            }}
-            .skill {{
-                background-color: #f0f0f0;
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-size: 14px;
+                flex-direction: column;
+                gap: 12px;
             }}
             .skill-subsection {{
-                margin-bottom: 15px;
+                margin-bottom: 8px;
             }}
-            .skill-subsection h4 {{
-                margin: 0 0 8px 0;
-                font-size: 16px;
-                font-weight: bold;
-                color: #555;
+            .skill-subsection-title {{
+                font-size: 11pt;
+                font-weight: 600;
+                color: #1a1a1a;
+                margin-bottom: 4px;
+            }}
+            .skill-subsection-title::after {{
+                content: ":";
+            }}
+            .skill-list {{
+                font-size: 10pt;
+                color: #374151;
+                line-height: 1.4;
+            }}
+            .skill-item {{
+                display: inline;
+            }}
+            .skill-item:not(:last-child)::after {{
+                content: ", ";
             }}
             @media print {{
                 body {{
@@ -287,8 +295,8 @@ def generate_resume_html(resume: Resume) -> str:
         </div>
         
         <div class="section">
-            <div class="section-title">Skills</div>
-            <div class="skills">
+            <div class="section-title">Technical Skills</div>
+            <div class="skills-container">
                 {generate_skills_html(resume.skills)}
             </div>
         </div>
@@ -330,11 +338,16 @@ def generate_skills_html(skills) -> str:
     for subsection in skills:
         if hasattr(subsection, 'name') and hasattr(subsection, 'skills'):
             # New structure with subsections
-            html += f'<div class="skill-subsection"><h4>{subsection.name}</h4><div class="skills">'
-            for skill in subsection.skills:
-                html += f'<span class="skill">{skill}</span>'
-            html += '</div></div>'
+            skills_list = subsection.skills or []
+            if skills_list:
+                skills_html = ''.join([f'<span class="skill-item">{skill}</span>' for skill in skills_list])
+                html += f'''
+                <div class="skill-subsection">
+                    <div class="skill-subsection-title">{subsection.name}</div>
+                    <div class="skill-list">{skills_html}</div>
+                </div>
+                '''
         else:
             # Fallback for old structure (string skills)
-            html += f'<span class="skill">{subsection}</span>'
+            html += f'<span class="skill-item">{subsection}</span>'
     return html

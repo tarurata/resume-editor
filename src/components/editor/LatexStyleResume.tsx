@@ -201,32 +201,35 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
 
                 .skills-container {
                     display: flex;
-                    flex-wrap: wrap;
+                    flex-direction: column;
                     gap: 8pt;
                 }
 
-                .skill-category {
-                    margin-bottom: 8pt;
+                .skill-subsection {
+                    margin-bottom: 6pt;
                 }
 
-                .skill-category-title {
+                .skill-subsection-title {
                     font-weight: bold;
                     font-size: 10pt;
                     margin-bottom: 2pt;
+                }
+
+                .skill-subsection-title::after {
+                    content: ":";
                 }
 
                 .skill-list {
                     font-size: 10pt;
                     line-height: 1.3;
                 }
-                .skill-subsection {
-                    margin-bottom: 8pt;
+
+                .skill-item {
+                    display: inline;
                 }
-                .skill-subsection-title {
-                    font-weight: 600;
-                    font-size: 9pt;
-                    color: #374151;
-                    margin-bottom: 3pt;
+
+                .skill-item:not(:last-child)::after {
+                    content: ", ";
                 }
 
                 /* Print styles */
@@ -374,9 +377,8 @@ export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps
                                 <div className="skill-subsection-title">{subsection.name || 'Untitled'}</div>
                                 <div className="skill-list">
                                     {(subsection.skills || []).map((skill, skillIndex) => (
-                                        <span key={skillIndex}>
+                                        <span key={skillIndex} className="skill-item">
                                             {skill}
-                                            {skillIndex < (subsection.skills || []).length - 1 && ', '}
                                         </span>
                                     ))}
                                 </div>
