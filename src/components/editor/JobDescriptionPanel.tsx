@@ -1,14 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { JobDescriptionExtraction } from '@/types/resume'
+import { aiApiService } from '@/lib/aiApi'
 
 interface JobDescriptionPanelProps {
     jdText: string
     onJdChange: (jdText: string) => void
+    onExtractionComplete?: (extraction: JobDescriptionExtraction) => void
 }
 
-export function JobDescriptionPanel({ jdText, onJdChange }: JobDescriptionPanelProps) {
+export function JobDescriptionPanel({ jdText, onJdChange, onExtractionComplete }: JobDescriptionPanelProps) {
     const [isExpanded, setIsExpanded] = useState(false)
+    const [isExtracting, setIsExtracting] = useState(false)
+    const [extraction, setExtraction] = useState<JobDescriptionExtraction | null>(null)
+    const [extractionError, setExtractionError] = useState<string | null>(null)
 
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         onJdChange(e.target.value)
@@ -25,6 +31,33 @@ export function JobDescriptionPanel({ jdText, onJdChange }: JobDescriptionPanelP
 
     const clearText = () => {
         onJdChange('')
+        setExtraction(null)
+        setExtractionError(null)
+    }
+
+    const handleExtract = async () => {
+        if (!jdText.trim()) {
+            setExtractionError('Please enter a job description first')
+            return
+        }
+
+        setIsExtracting(true)
+        setExtractionError(null)
+
+        try {
+            const response = await aiApiService.extractJobDescription(jdText)
+
+            if (response.success && response.data) {
+                setExtraction(response.data)
+                onExtractionComplete?.(response.data)
+            } else {
+                setExtractionError(response.errors?.[0] || 'Extraction failed')
+            }
+        } catch (error) {
+            setExtractionError(error instanceof Error ? error.message : 'Extraction failed')
+        } finally {
+            setIsExtracting(false)
+        }
     }
 
     const wordCount = jdText.trim().split(/\s+/).filter(word => word.length > 0).length
@@ -93,6 +126,13 @@ export function JobDescriptionPanel({ jdText, onJdChange }: JobDescriptionPanelP
                                         Paste from Clipboard
                                     </button>
                                     <button
+                                        onClick={handleExtract}
+                                        disabled={isExtracting || !jdText.trim()}
+                                        className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isExtracting ? 'Extracting...' : 'Extract Info'}
+                                    </button>
+                                    <button
                                         onClick={clearText}
                                         className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
                                     >
@@ -120,8 +160,108 @@ export function JobDescriptionPanel({ jdText, onJdChange }: JobDescriptionPanelP
                 )}
             </div>
 
+            {/* Extracted Information */}
+            {extraction && (
+                <div className="p-4 border-t border-gray-200 bg-green-50">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-green-800">Extracted Information</h3>
+                        <span className="text-xs text-green-600">✓ AI Analysis Complete</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        {/* Company & Job Title */}
+                        <div className="space-y-2">
+                            {extraction.company_name && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Company:</span>
+                                    <span className="ml-2 text-gray-900">{extraction.company_name}</span>
+                                </div>
+                            )}
+                            {extraction.job_title && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Job Title:</span>
+                                    <span className="ml-2 text-gray-900">{extraction.job_title}</span>
+                                </div>
+                            )}
+                            {extraction.location && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Location:</span>
+                                    <span className="ml-2 text-gray-900">{extraction.location}</span>
+                                </div>
+                            )}
+                            {extraction.compensation && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Compensation:</span>
+                                    <span className="ml-2 text-gray-900">{extraction.compensation}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Skills */}
+                        <div className="space-y-2">
+                            {extraction.required_skills && extraction.required_skills.length > 0 && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Required Skills:</span>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {extraction.required_skills.map((skill, index) => (
+                                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {extraction.preferred_skills && extraction.preferred_skills.length > 0 && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Preferred Skills:</span>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {extraction.preferred_skills.map((skill, index) => (
+                                            <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    {(extraction.experience_level || extraction.employment_type || extraction.remote_work) && (
+                        <div className="mt-3 pt-3 border-t border-green-200">
+                            <div className="flex flex-wrap gap-4 text-xs">
+                                {extraction.experience_level && (
+                                    <span className="text-gray-600">
+                                        <span className="font-medium">Level:</span> {extraction.experience_level}
+                                    </span>
+                                )}
+                                {extraction.employment_type && (
+                                    <span className="text-gray-600">
+                                        <span className="font-medium">Type:</span> {extraction.employment_type}
+                                    </span>
+                                )}
+                                {extraction.remote_work && (
+                                    <span className="text-gray-600">
+                                        <span className="font-medium">Remote:</span> {extraction.remote_work}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Error Display */}
+            {extractionError && (
+                <div className="p-4 border-t border-gray-200 bg-red-50">
+                    <div className="text-sm text-red-800">
+                        <span className="font-medium">Error:</span> {extractionError}
+                    </div>
+                </div>
+            )}
+
             {/* Quick Actions */}
-            {jdText && (
+            {jdText && !extraction && (
                 <div className="p-4 border-t border-gray-200 bg-gray-50">
                     <div className="text-xs text-gray-600 mb-2">Quick Actions:</div>
                     <div className="space-y-1">

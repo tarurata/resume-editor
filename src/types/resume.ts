@@ -110,3 +110,30 @@ export interface DiffState {
 
 export type SectionType = 'title' | 'summary' | 'experience' | 'skills' | 'education' | 'certifications'
 export type SectionId = string
+
+export interface JobDescriptionExtraction {
+    company_name?: string
+    job_title?: string
+    compensation?: string
+    location?: string
+    required_skills?: string[]
+    preferred_skills?: string[]
+    experience_level?: string
+    employment_type?: string
+    remote_work?: string
+    benefits?: string[]
+    responsibilities?: string[]
+    qualifications?: string[]
+}
+
+export interface JDExtractionRequest {
+    job_description: string
+    user_id?: string
+}
+
+export interface JDExtractionResponse {
+    success: boolean
+    data?: JobDescriptionExtraction
+    confidence?: number
+    errors?: string[]
+}

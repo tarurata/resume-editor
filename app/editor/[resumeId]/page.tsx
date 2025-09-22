@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { Resume, DiffState, ChangeEntry, SectionType, SectionId } from '@/types/resume'
+import { Resume, DiffState, ChangeEntry, SectionType, SectionId, JobDescriptionExtraction } from '@/types/resume'
 import { ResumeService, ResumeListItem } from '@/lib/resumeService'
 import { addChangeToHistory, getSectionHistory } from '@/lib/history'
 import { syncExperiencesToDatabase, experienceApi } from '@/lib/experiencesApi'
@@ -271,6 +271,34 @@ export default function EditorPage({ params }: EditorPageProps) {
             ...prev,
             jdText
         }))
+    }
+
+    const handleJDExtraction = async (extraction: JobDescriptionExtraction) => {
+        if (!resumeListItem) return
+
+        // Update the resume list item with extracted company name and job title
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            company_name: extraction.company_name || resumeListItem.company_name,
+            job_title: extraction.job_title || resumeListItem.job_title
+        }
+
+        setResumeListItem(updatedResumeListItem)
+
+        // Auto-save the changes
+        try {
+            const { saveResumeToDatabase } = await import('@/lib/storage')
+            await saveResumeToDatabase(
+                updatedResumeListItem.resume_data,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                editorState.jdText
+            )
+            console.log('JD extraction changes auto-saved successfully')
+        } catch (error) {
+            console.error('Failed to auto-save JD extraction changes:', error)
+        }
     }
 
     // Fetch experiences and achievements from API
@@ -1003,6 +1031,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                     <JobDescriptionPanel
                         jdText={editorState.jdText}
                         onJdChange={handleJdChange}
+                        onExtractionComplete={handleJDExtraction}
                     />
                 </div>
             </div>
