@@ -211,11 +211,19 @@ class PDFService:
             # Handle skills section
             if 'skills' in resume_data and resume_data['skills']:
                 skills_html = self._render_skills_section(resume_data['skills'])
-                html_content = html_content.replace('{% if skills %}', '')
-                html_content = html_content.replace('{% endif %}', '')
-                html_content = html_content.replace('{% for skill in skills %}', '')
-                html_content = html_content.replace('{% endfor %}', '')
-                html_content = html_content.replace('{{ skill }}', '{{ skill }}')
+                # Replace the entire skills section with rendered HTML
+                skills_section_start = html_content.find('{% if skills %}')
+                skills_section_end = html_content.find('{% endif %}', skills_section_start) + len('{% endif %}')
+                if skills_section_start != -1 and skills_section_end != -1:
+                    # Find the content between the if and endif tags
+                    content_start = html_content.find('>', skills_section_start) + 1
+                    content_end = html_content.rfind('<', skills_section_start, skills_section_end)
+                    if content_start != -1 and content_end != -1:
+                        # Replace the template content with our rendered HTML
+                        html_content = html_content[:content_start] + skills_html + html_content[content_end:]
+                    else:
+                        # Fallback: replace the entire section
+                        html_content = html_content[:skills_section_start] + f'<section class="resume-section"><h2 class="section-title">Technical Skills</h2>{skills_html}</section>' + html_content[skills_section_end:]
             else:
                 # Remove skills section if no data
                 html_content = self._remove_template_section(html_content, 'skills')
@@ -264,12 +272,30 @@ class PDFService:
         return ''.join(html_parts)
     
     def _render_skills_section(self, skills_data: list) -> str:
-        """Render skills section HTML"""
-        skill_tags = []
-        for skill in skills_data:
-            skill_tags.append(f'<span class="skill-tag">{skill}</span>')
+        """Render skills section HTML with subsections"""
+        if not skills_data:
+            return ""
         
-        return f'<div class="skills-container">{"".join(skill_tags)}</div>'
+        subsections_html = []
+        for subsection in skills_data:
+            if isinstance(subsection, dict) and 'name' in subsection and 'skills' in subsection:
+                # New SkillSubsection format
+                skills_list = subsection.get('skills', [])
+                if skills_list:
+                    skills_html = ''.join([f'<span class="skill-item">{skill}</span>' for skill in skills_list])
+                    subsection_html = f'''
+                    <div class="skill-subsection">
+                        <div class="skill-subsection-title">{subsection['name']}</div>
+                        <div class="skill-list">{skills_html}</div>
+                    </div>
+                    '''
+                    subsections_html.append(subsection_html)
+            else:
+                # Fallback for old string format
+                subsection_html = f'<span class="skill-item">{subsection}</span>'
+                subsections_html.append(subsection_html)
+        
+        return f'<div class="skills-container">{"".join(subsections_html)}</div>'
     
     def _remove_template_section(self, html_content: str, section_name: str) -> str:
         """Remove a template section if no data is available"""
