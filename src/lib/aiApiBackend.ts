@@ -167,7 +167,15 @@ Extract sections:`
     {
       "degree": "Degree Name",
       "school": "School Name",
-      "graduationDate": "2020-05"
+      "startDate": "2016-09",
+      "endDate": "2020-05"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "2022-03"
     }
   ],
   "skills": [
@@ -182,6 +190,7 @@ Guidelines:
 - Use YYYY-MM format for dates
 - Extract 3-5 key achievements per job
 - Group skills into logical categories (Technical Skills, Languages, etc.)
+- Include certifications with name, issuer, and date
 - Only include information that's clearly present in the text
 - Use null for missing optional fields
 
@@ -204,6 +213,7 @@ Extract structured data:`
                 summary: resume.summary || '',
                 experience: Array.isArray(resume.experience) ? resume.experience : [],
                 education: Array.isArray(resume.education) ? resume.education : [],
+                certifications: Array.isArray(resume.certifications) ? resume.certifications : [],
                 skills: Array.isArray(resume.skills) ? resume.skills : []
             }
         } catch (error) {
@@ -213,6 +223,7 @@ Extract structured data:`
                 summary: '',
                 experience: [],
                 education: [],
+                certifications: [],
                 skills: []
             }
         }

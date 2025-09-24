@@ -52,6 +52,7 @@ export default function SectionEditor({ parsedSections, resume, pastedText, onNe
                     summary: structuredData.summary || resume.summary || '',
                     experience: structuredData.experience || resume.experience || [],
                     education: structuredData.education || resume.education || [],
+                    certifications: structuredData.certifications || resume.certifications || [],
                     skills: structuredData.skills || resume.skills || [],
                     ...resume
                 }
