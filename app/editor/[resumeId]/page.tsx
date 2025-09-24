@@ -702,14 +702,64 @@ export default function EditorPage({ params }: EditorPageProps) {
         }))
 
         try {
-            console.log('Calling ResumeService to update resume...')
-            console.log('Current resumeListItem.resume_data.skills:', resumeListItem.resume_data.skills)
-            // Update the resume list item with current job description and latest resume data
-            const updatedResumeListItem = {
-                ...resumeListItem,
-                job_description: editorState.jdText,
-                resume_data: resumeListItem.resume_data // Use the current resume data which includes skills updates
+            // First, accept any pending changes if there are any
+            let updatedResumeListItem = { ...resumeListItem }
+
+            if (editorState.selectedSection && editorState.hasChanges) {
+                console.log('Auto-accepting pending changes before save...')
+
+                // Record the change in history
+                addChangeToHistory(
+                    editorState.selectedSection,
+                    editorState.originalContent,
+                    editorState.currentContent,
+                    'accept',
+                    'Auto-accepted changes on save'
+                )
+
+                // Update the resume data with current content
+                const updatedResume = { ...resumeListItem.resume_data }
+                const content = editorState.currentContent
+
+                switch (editorState.selectedSection) {
+                    case 'title':
+                        // Extract text from HTML
+                        updatedResume.title = content.replace(/<[^>]*>/g, '')
+                        break
+                    case 'summary':
+                        updatedResume.summary = content.replace(/<[^>]*>/g, '')
+                        break
+                    case 'skills':
+                        // For now, keep the existing skills structure
+                        // This will be handled by the SkillsEditor component
+                        break
+                }
+
+                // Update the resume list item with the accepted changes
+                updatedResumeListItem = {
+                    ...resumeListItem,
+                    resume_data: updatedResume,
+                    job_description: editorState.jdText
+                }
+
+                // Update local state to reflect the accepted changes
+                setResumeListItem(updatedResumeListItem)
+                setEditorState(prev => ({
+                    ...prev,
+                    originalContent: prev.currentContent,
+                    hasChanges: false
+                }))
+            } else {
+                // No pending changes, just update job description
+                updatedResumeListItem = {
+                    ...resumeListItem,
+                    job_description: editorState.jdText,
+                    resume_data: resumeListItem.resume_data
+                }
             }
+
+            console.log('Calling ResumeService to update resume...')
+            console.log('Current resumeListItem.resume_data.skills:', updatedResumeListItem.resume_data.skills)
 
             // Save the main resume data (existing functionality)
             const { saveResumeToDatabase } = await import('@/lib/storage')
@@ -735,8 +785,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 console.log('Experiences and achievements synced successfully')
             }
 
-            // Update the local state with the saved data
-            setResumeListItem(updatedResumeListItem)
+            // Update the local state with the saved data (if not already updated above)
+            if (!editorState.selectedSection || !editorState.hasChanges) {
+                setResumeListItem(updatedResumeListItem)
+            }
 
             setEditorState(prev => ({
                 ...prev,
