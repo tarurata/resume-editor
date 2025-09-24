@@ -17,3 +17,4 @@ __pycache__/
 .env.local
 backend-app/venv/
 *.db
+resume_editor.db
