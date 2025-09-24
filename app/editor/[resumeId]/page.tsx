@@ -16,6 +16,7 @@ import { ChangeHistoryPanel } from '@/components/editor/ChangeHistoryPanel'
 import { PrintView } from '@/components/editor/PrintView'
 import { ExperienceEditor } from '@/components/editor/ExperienceEditor'
 import { EducationEditor } from '@/components/editor/EducationEditor'
+import { CertificationEditor } from '@/components/editor/CertificationEditor'
 import { SkillsEditor } from '@/components/editor/SkillsEditor'
 import { ClientOnly } from '@/components/ClientOnly'
 import ApiStatus from '@/components/ApiStatus'
@@ -202,6 +203,13 @@ export default function EditorPage({ params }: EditorPageProps) {
                             const education = resume.education?.[index]
                             if (education) {
                                 content = `<div><strong>${education.degree}</strong> - ${education.school}</div>`
+                            }
+                        }
+                        if (section.startsWith('certification-')) {
+                            const index = parseInt(section.split('-')[1])
+                            const certification = resume.certifications?.[index]
+                            if (certification) {
+                                content = `<div><strong>${certification.name}</strong> - ${certification.issuer}</div>`
                             }
                         }
                 }
@@ -490,6 +498,51 @@ export default function EditorPage({ params }: EditorPageProps) {
         }
     }
 
+    const handleCertificationUpdate = async (index: number, updatedCertification: any) => {
+        if (!resumeListItem) return
+
+        const updatedResume = { ...resumeListItem.resume_data }
+        // Initialize certifications array if it doesn't exist
+        if (!updatedResume.certifications) {
+            updatedResume.certifications = []
+        }
+        updatedResume.certifications[index] = updatedCertification
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        setResumeListItem(updatedResumeListItem)
+
+        // Auto-save the changes
+        try {
+            const { saveResumeToDatabase } = await import('@/lib/storage')
+            await saveResumeToDatabase(
+                updatedResume,
+                updatedResumeListItem.company_name,
+                updatedResumeListItem.job_title,
+                updatedResumeListItem.company_email,
+                editorState.jdText,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
+            )
+            console.log('Certification changes auto-saved successfully')
+
+            // Remove this section from newly added set since it's now saved
+            const sectionId = `certification-${index}` as SectionId
+            setNewlyAddedSections(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(sectionId)
+                return newSet
+            })
+        } catch (error) {
+            console.error('Failed to auto-save certification changes:', error)
+            // Don't show error to user for auto-save failures
+        }
+    }
+
     const handleAcceptChanges = async () => {
         if (!editorState.selectedSection || !resumeListItem) return
 
@@ -728,6 +781,42 @@ export default function EditorPage({ params }: EditorPageProps) {
         const newIndex = updatedResume.education.length - 1
         const sectionId = `education-${newIndex}` as SectionId
         const content = `<div><strong>${newEducation.degree}</strong> - ${newEducation.school}</div>`
+
+        // Mark this section as newly added
+        setNewlyAddedSections(prev => new Set(prev).add(sectionId))
+
+        // Use a small delay to ensure state has updated
+        setTimeout(() => {
+            handleSectionSelect(sectionId, content)
+        }, 10)
+    }
+
+    const handleAddCertification = () => {
+        if (!resumeListItem) return
+
+        const newCertification = {
+            name: '',
+            issuer: '',
+            date: ''
+        }
+
+        const updatedResume = {
+            ...resumeListItem.resume_data,
+            certifications: [...(resumeListItem.resume_data.certifications || []), newCertification]
+        }
+
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            resume_data: updatedResume
+        }
+
+        // Update state only (don't save to database yet)
+        setResumeListItem(updatedResumeListItem)
+
+        // Select the new certification immediately
+        const newIndex = updatedResume.certifications.length - 1
+        const sectionId = `certification-${newIndex}` as SectionId
+        const content = `<div><strong>${newCertification.name}</strong> - ${newCertification.issuer}</div>`
 
         // Mark this section as newly added
         setNewlyAddedSections(prev => new Set(prev).add(sectionId))
@@ -1031,6 +1120,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                         onSectionSelect={handleSectionSelect}
                         onAddExperience={handleAddExperience}
                         onAddEducation={handleAddEducation}
+                        onAddCertification={handleAddCertification}
                     />
                 </div>
 
@@ -1081,6 +1171,23 @@ export default function EditorPage({ params }: EditorPageProps) {
                                             )
                                         }
                                         return <div>Education not found</div>
+                                    })()}
+                                </div>
+                            ) : editorState.selectedSection && editorState.selectedSection.startsWith('certification-') ? (
+                                <div className="h-full overflow-y-auto">
+                                    {(() => {
+                                        const index = parseInt(editorState.selectedSection.split('-')[1])
+                                        const certification = resume.certifications?.[index]
+                                        if (certification) {
+                                            return (
+                                                <CertificationEditor
+                                                    certification={certification}
+                                                    index={index}
+                                                    onUpdate={handleCertificationUpdate}
+                                                />
+                                            )
+                                        }
+                                        return <div>Certification not found</div>
                                     })()}
                                 </div>
                             ) : editorState.selectedSection === 'skills' ? (

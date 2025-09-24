@@ -15,3 +15,5 @@ __pycache__/
 .idea/
 .vscode/
 .env.local
+backend-app/venv/
+*.db

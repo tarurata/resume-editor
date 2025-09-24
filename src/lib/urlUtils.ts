@@ -78,9 +78,13 @@ export function validateURLParams(params: URLParams): { valid: boolean; errors: 
         // Validate section ID format
         const validSections = ['title', 'summary', 'skills']
         const isExperienceSection = params.section.startsWith('experience-')
+        const isEducationSection = params.section.startsWith('education-')
+        const isCertificationSection = params.section.startsWith('certification-')
         const isExperienceIndex = isExperienceSection && /^experience-\d+$/.test(params.section)
+        const isEducationIndex = isEducationSection && /^education-\d+$/.test(params.section)
+        const isCertificationIndex = isCertificationSection && /^certification-\d+$/.test(params.section)
 
-        if (!validSections.includes(params.section) && !isExperienceIndex) {
+        if (!validSections.includes(params.section) && !isExperienceIndex && !isEducationIndex && !isCertificationIndex) {
             errors.push(`Invalid section ID: ${params.section}`)
         }
     }
@@ -140,6 +144,14 @@ export function getSectionDisplayName(sectionId: SectionId): string {
         const index = sectionId.split('-')[1]
         return `Experience ${parseInt(index) + 1}`
     }
+    if (sectionId.startsWith('education-')) {
+        const index = sectionId.split('-')[1]
+        return `Education ${parseInt(index) + 1}`
+    }
+    if (sectionId.startsWith('certification-')) {
+        const index = sectionId.split('-')[1]
+        return `Certification ${parseInt(index) + 1}`
+    }
     return sectionId
 }
 
@@ -147,13 +159,31 @@ export function getSectionDisplayName(sectionId: SectionId): string {
  * Get all available sections for a resume
  */
 export function getAvailableSections(resume: any): SectionId[] {
-    const sections: SectionId[] = ['title', 'summary', 'skills']
+    const sections: SectionId[] = ['title', 'summary']
 
+    // Add experience sections
     if (resume.experience && resume.experience.length > 0) {
         for (let i = 0; i < resume.experience.length; i++) {
             sections.push(`experience-${i}`)
         }
     }
+
+    // Add education sections
+    if (resume.education && resume.education.length > 0) {
+        for (let i = 0; i < resume.education.length; i++) {
+            sections.push(`education-${i}`)
+        }
+    }
+
+    // Add certification sections
+    if (resume.certifications && resume.certifications.length > 0) {
+        for (let i = 0; i < resume.certifications.length; i++) {
+            sections.push(`certification-${i}`)
+        }
+    }
+
+    // Add skills section last
+    sections.push('skills')
 
     return sections
 }

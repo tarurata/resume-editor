@@ -10,9 +10,10 @@ interface SectionsTreeProps {
     onSectionSelect: (sectionId: SectionId, content: string) => void
     onAddExperience?: () => void
     onAddEducation?: () => void
+    onAddCertification?: () => void
 }
 
-export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddExperience, onAddEducation }: SectionsTreeProps) {
+export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddExperience, onAddEducation, onAddCertification }: SectionsTreeProps) {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['experience']))
 
     const toggleExpanded = (sectionId: string) => {
@@ -57,6 +58,13 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
                     const edu = resume.education?.[index]
                     if (edu) {
                         return `<div><strong>${edu.degree}</strong> - ${edu.school}</div>`
+                    }
+                }
+                if (sectionId.startsWith('certification-')) {
+                    const index = parseInt(sectionId.split('-')[1])
+                    const cert = resume.certifications?.[index]
+                    if (cert) {
+                        return `<div><strong>${cert.name}</strong> - ${cert.issuer}</div>`
                     }
                 }
                 return ''
@@ -165,19 +173,6 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
                         )}
                     </div>
 
-                    {/* Skills Section */}
-                    <div className="mb-2">
-                        <button
-                            onClick={() => handleSectionClick('skills', getSectionContent('skills'))}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === 'skills'
-                                ? 'bg-primary-100 text-primary-800'
-                                : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                        >
-                            🛠️ Skills
-                        </button>
-                    </div>
-
                     {/* Education Section */}
                     <div className="mb-2">
                         <button
@@ -245,6 +240,87 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
                             </div>
                         )}
                     </div>
+
+                    {/* Certifications Section */}
+                    <div className="mb-2">
+                        <button
+                            onClick={() => {
+                                if (resume.certifications && resume.certifications.length > 0) {
+                                    toggleExpanded('certifications')
+                                } else if (onAddCertification) {
+                                    onAddCertification()
+                                }
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
+                        >
+                            <span>🏆 Certifications</span>
+                            {resume.certifications && resume.certifications.length > 0 && (
+                                <span className={`transform transition-transform ${expandedSections.has('certifications') ? 'rotate-90' : ''}`}>
+                                    ▶
+                                </span>
+                            )}
+                        </button>
+
+                        {expandedSections.has('certifications') && resume.certifications && resume.certifications.length > 0 && (
+                            <div className="ml-4 mt-1 space-y-1">
+                                {resume.certifications.map((cert, index) => {
+                                    const sectionId = `certification-${index}` as SectionId
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleSectionClick(sectionId, getSectionContent(sectionId))}
+                                            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedSection === sectionId
+                                                ? 'bg-primary-100 text-primary-800'
+                                                : 'text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            <div className="truncate">
+                                                <div className="font-medium">{cert.name}</div>
+                                                <div className="text-xs text-gray-500">{cert.issuer}</div>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
+                                {onAddCertification && (
+                                    <button
+                                        onClick={onAddCertification}
+                                        className="w-full text-left px-3 py-2 rounded-lg text-sm text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors border border-dashed border-primary-300"
+                                    >
+                                        + Add Certification
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {(!resume.certifications || resume.certifications.length === 0) && (
+                            <div className="ml-4 mt-1">
+                                <div className="text-xs text-gray-500 px-3 py-2 mb-2">
+                                    No certifications yet
+                                </div>
+                                {onAddCertification && (
+                                    <button
+                                        onClick={onAddCertification}
+                                        className="w-full text-left px-3 py-2 rounded-lg text-sm text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors border border-dashed border-primary-300"
+                                    >
+                                        + Add Certification
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Skills Section */}
+                    <div className="mb-2">
+                        <button
+                            onClick={() => handleSectionClick('skills', getSectionContent('skills'))}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedSection === 'skills'
+                                ? 'bg-primary-100 text-primary-800'
+                                : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                        >
+                            🛠️ Skills
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -262,6 +338,9 @@ export function SectionsTree({ resume, selectedSection, onSectionSelect, onAddEx
                             }
                             {selectedSection.startsWith('education-') &&
                                 `Education ${parseInt(selectedSection.split('-')[1]) + 1}`
+                            }
+                            {selectedSection.startsWith('certification-') &&
+                                `Certification ${parseInt(selectedSection.split('-')[1]) + 1}`
                             }
                         </div>
                     </div>
