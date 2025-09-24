@@ -15,7 +15,7 @@ export const templates: Template[] = [
                     location: 'City, State',
                     startDate: '2020-01',
                     endDate: null,
-                    bullets: [
+                    achievements: [
                         'Developed and maintained web applications using modern JavaScript frameworks',
                         'Collaborated with cross-functional teams to deliver high-quality software solutions',
                         'Implemented automated testing and continuous integration processes',
@@ -57,7 +57,7 @@ export const templates: Template[] = [
                     location: 'San Francisco, CA',
                     startDate: '2021-03',
                     endDate: null,
-                    bullets: [
+                    achievements: [
                         'Led development of microservices architecture serving 1M+ daily active users',
                         'Improved application performance by 40% through code optimization and caching strategies',
                         'Mentored 3 junior developers and established code review best practices',

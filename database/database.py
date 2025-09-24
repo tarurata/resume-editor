@@ -727,6 +727,66 @@ class DatabaseService:
             
             return list(experiences.values())
 
+    def copy_experiences(self, from_resume_version_id: str, to_resume_version_id: str) -> List[Experience]:
+        """Copy all experiences from one resume version to another"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Get all experiences from the source resume version
+            cursor.execute("""
+                SELECT * FROM experiences 
+                WHERE resume_version_id = ? 
+                ORDER BY order_index ASC, created_at ASC
+            """, (from_resume_version_id,))
+            source_experiences = cursor.fetchall()
+            
+            copied_experiences = []
+            
+            for exp_row in source_experiences:
+                # Create new experience for the target resume version
+                new_experience_id = str(uuid.uuid4())
+                now = datetime.now()
+                
+                cursor.execute("""
+                    INSERT INTO experiences (id, resume_version_id, role, organization, 
+                                          location, start_date, end_date, order_index, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    new_experience_id, to_resume_version_id, exp_row['role'],
+                    exp_row['organization'], exp_row['location'], exp_row['start_date'],
+                    exp_row['end_date'], exp_row['order_index'], now, now
+                ))
+                
+                # Copy achievements for this experience
+                cursor.execute("""
+                    SELECT * FROM achievements 
+                    WHERE experience_id = ? 
+                    ORDER BY order_index ASC, created_at ASC
+                """, (exp_row['id'],))
+                source_achievements = cursor.fetchall()
+                
+                for ach_row in source_achievements:
+                    new_achievement_id = str(uuid.uuid4())
+                    cursor.execute("""
+                        INSERT INTO achievements (id, experience_id, achievement_text, order_index, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        new_achievement_id, new_experience_id, ach_row['achievement_text'],
+                        ach_row['order_index'], now, now
+                    ))
+                
+                # Create Experience object for return
+                copied_experiences.append(Experience(
+                    id=new_experience_id, resume_version_id=to_resume_version_id,
+                    role=exp_row['role'], organization=exp_row['organization'],
+                    location=exp_row['location'], start_date=exp_row['start_date'],
+                    end_date=exp_row['end_date'], order_index=exp_row['order_index'],
+                    created_at=now, updated_at=now
+                ))
+            
+            conn.commit()
+            return copied_experiences
+
 
 # FastAPI dependency for database access
 def get_db():

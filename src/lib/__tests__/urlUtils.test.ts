@@ -173,8 +173,8 @@ describe('urlUtils', () => {
                 summary: 'Test Summary',
                 skills: ['Skill 1', 'Skill 2'],
                 experience: [
-                    { role: 'Developer', organization: 'Company 1', startDate: '2020-01', endDate: '2021-01', bullets: [] },
-                    { role: 'Senior Developer', organization: 'Company 2', startDate: '2021-01', endDate: null, bullets: [] }
+                    { role: 'Developer', organization: 'Company 1', startDate: '2020-01', endDate: '2021-01', achievements: [] },
+                    { role: 'Senior Developer', organization: 'Company 2', startDate: '2021-01', endDate: null, achievements: [] }
                 ]
             }
 

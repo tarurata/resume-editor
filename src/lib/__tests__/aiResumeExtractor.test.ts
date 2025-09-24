@@ -143,7 +143,7 @@ describe('AIResumeExtractor', () => {
                             organization: 'Tech Corp',
                             startDate: '2020-01',
                             endDate: '2023-12',
-                            bullets: ['Built scalable applications', 'Led team of 5 developers']
+                            achievements: ['Built scalable applications', 'Led team of 5 developers']
                         }
                     ],
                     education: [

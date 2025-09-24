@@ -95,7 +95,7 @@ export class ResumeService {
                                 location: 'San Francisco, CA',
                                 startDate: '2021-01',
                                 endDate: null,
-                                bullets: [
+                                achievements: [
                                     'Led development of microservices architecture serving 1M+ users',
                                     'Improved application performance by 40% through code optimization',
                                     'Mentored 3 junior developers and conducted code reviews'
@@ -136,7 +136,7 @@ export class ResumeService {
                                 location: 'Remote',
                                 startDate: '2020-06',
                                 endDate: '2022-12',
-                                bullets: [
+                                achievements: [
                                     'Built responsive web applications using React and Node.js',
                                     'Implemented CI/CD pipelines reducing deployment time by 60%',
                                     'Collaborated with design team to create intuitive user interfaces'
@@ -177,7 +177,7 @@ export class ResumeService {
                                 location: 'Seattle, WA',
                                 startDate: '2019-03',
                                 endDate: '2021-08',
-                                bullets: [
+                                achievements: [
                                     'Developed reusable component library used across 10+ products',
                                     'Optimized bundle size resulting in 30% faster page load times',
                                     'Led migration from class components to functional components with hooks'
@@ -277,6 +277,15 @@ export class ResumeService {
                 originalResume.company_email,
                 originalResume.job_description
             )
+
+            // Copy experiences from the original resume to the duplicated one
+            try {
+                await resumeVersionApi.copyExperiences(duplicatedResume.id, id)
+                console.log('Successfully copied experiences to duplicated resume')
+            } catch (experienceError) {
+                console.warn('Failed to copy experiences, but resume duplication succeeded:', experienceError)
+                // Don't fail the entire operation if experience copying fails
+            }
 
             return {
                 id: duplicatedResume.id,

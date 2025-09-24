@@ -191,6 +191,22 @@ export const resumeVersionApi = {
         await apiRequest(`/resume-versions/${versionId}`, {
             method: 'DELETE',
         })
+    },
+
+    // Copy experiences from one resume version to another
+    async copyExperiences(targetVersionId: string, sourceVersionId: string): Promise<{ message: string; copied_count: number; success: boolean }> {
+        const response = await apiRequest<{ message: string; copied_count: number; success: boolean }>(
+            `/resume-versions/${targetVersionId}/copy-experiences?source_version_id=${sourceVersionId}`,
+            {
+                method: 'POST',
+            }
+        )
+
+        if (!response.data) {
+            throw new ApiError('Failed to copy experiences', response.status)
+        }
+
+        return response.data
     }
 }
 

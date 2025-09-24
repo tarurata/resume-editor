@@ -213,3 +213,39 @@ async def get_active_resume_version(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.post("/{version_id}/copy-experiences", response_model=dict)
+async def copy_experiences_to_version(
+    version_id: str,
+    source_version_id: str,
+    db: DatabaseService = Depends(get_database_service)
+):
+    """Copy experiences from one resume version to another"""
+    try:
+        # Verify both resume versions exist
+        source_version = db.get_resume_version(source_version_id)
+        if not source_version:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Source resume version with ID {source_version_id} not found"
+            )
+        
+        target_version = db.get_resume_version(version_id)
+        if not target_version:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Target resume version with ID {version_id} not found"
+            )
+        
+        # Copy experiences
+        copied_experiences = db.copy_experiences(source_version_id, version_id)
+        
+        return {
+            "message": f"Successfully copied {len(copied_experiences)} experiences",
+            "copied_count": len(copied_experiences),
+            "success": True
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

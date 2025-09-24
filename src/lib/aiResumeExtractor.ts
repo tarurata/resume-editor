@@ -221,7 +221,7 @@ JSON:`
         const prompt = `Extract structured resume data. Return ONLY valid JSON.
 
 Format:
-{"title": "name", "summary": "text", "experience": [{"role": "title", "organization": "company", "startDate": "2020-01", "endDate": "2023-12", "bullets": ["achievement"]}], "education": [{"degree": "degree", "school": "school", "graduationDate": "2020-05"}], "skills": [{"name": "category", "skills": ["skill1", "skill2"]}]}
+{"title": "name", "summary": "text", "experience": [{"role": "title", "organization": "company", "startDate": "2020-01", "endDate": "2023-12", "achievements": ["achievement"]}], "education": [{"degree": "degree", "school": "school", "graduationDate": "2020-05"}], "skills": [{"name": "category", "skills": ["skill1", "skill2"]}]}
 
 Rules:
 - Return ONLY JSON, no explanations
