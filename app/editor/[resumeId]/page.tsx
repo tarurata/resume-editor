@@ -30,6 +30,7 @@ export interface EditorState {
     currentContent: string
     hasChanges: boolean
     jdText: string
+    companyName: string
     diffState: DiffState
     sectionHistory: Record<string, string> // sectionId -> original content when first loaded
     showPrintView: boolean
@@ -58,6 +59,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         currentContent: '',
         hasChanges: false,
         jdText: '',
+        companyName: '',
         diffState: { viewMode: 'clean', showHistory: false },
         sectionHistory: {},
         showPrintView: false,
@@ -273,6 +275,39 @@ export default function EditorPage({ params }: EditorPageProps) {
         }))
     }
 
+    const handleCompanyNameChange = (companyName: string) => {
+        setEditorState(prev => ({
+            ...prev,
+            companyName
+        }))
+    }
+
+    const handleJobTitleChange = (jobTitle: string) => {
+        if (!resumeListItem) return
+
+        // Update the resume list item with the new job title
+        const updatedResumeListItem = {
+            ...resumeListItem,
+            job_title: jobTitle,
+            resume_data: {
+                ...resumeListItem.resume_data,
+                title: jobTitle
+            }
+        }
+
+        setResumeListItem(updatedResumeListItem)
+
+        // If the title section is currently selected, refresh the editor content
+        if (editorState.selectedSection === 'title') {
+            setEditorState(prev => ({
+                ...prev,
+                originalContent: jobTitle,
+                currentContent: jobTitle,
+                hasChanges: false
+            }))
+        }
+    }
+
     const handleJDExtraction = async (extraction: JobDescriptionExtraction) => {
         if (!resumeListItem) return
 
@@ -280,10 +315,25 @@ export default function EditorPage({ params }: EditorPageProps) {
         const updatedResumeListItem = {
             ...resumeListItem,
             company_name: extraction.company_name || resumeListItem.company_name,
-            job_title: extraction.job_title || resumeListItem.job_title
+            job_title: extraction.job_title || resumeListItem.job_title,
+            resume_data: {
+                ...resumeListItem.resume_data,
+                title: extraction.job_title || resumeListItem.resume_data.title
+            }
         }
 
         setResumeListItem(updatedResumeListItem)
+
+        // If the title section is currently selected and we have a job title, refresh the editor content
+        if (editorState.selectedSection === 'title' && extraction.job_title) {
+            const jobTitle = extraction.job_title
+            setEditorState(prev => ({
+                ...prev,
+                originalContent: jobTitle,
+                currentContent: jobTitle,
+                hasChanges: false
+            }))
+        }
 
         // Auto-save the changes
         try {
@@ -1102,6 +1152,9 @@ export default function EditorPage({ params }: EditorPageProps) {
                         jdText={editorState.jdText}
                         onJdChange={handleJdChange}
                         onExtractionComplete={handleJDExtraction}
+                        companyName={editorState.companyName}
+                        onCompanyNameChange={handleCompanyNameChange}
+                        onJobTitleChange={handleJobTitleChange}
                     />
                 </div>
             </div>

@@ -8,13 +8,24 @@ interface JobDescriptionPanelProps {
     jdText: string
     onJdChange: (jdText: string) => void
     onExtractionComplete?: (extraction: JobDescriptionExtraction) => void
+    companyName?: string
+    onCompanyNameChange?: (companyName: string) => void
+    onJobTitleChange?: (jobTitle: string) => void
 }
 
-export function JobDescriptionPanel({ jdText, onJdChange, onExtractionComplete }: JobDescriptionPanelProps) {
+export function JobDescriptionPanel({
+    jdText,
+    onJdChange,
+    onExtractionComplete,
+    companyName = '',
+    onCompanyNameChange,
+    onJobTitleChange
+}: JobDescriptionPanelProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [isExtracting, setIsExtracting] = useState(false)
     const [extraction, setExtraction] = useState<JobDescriptionExtraction | null>(null)
     const [extractionError, setExtractionError] = useState<string | null>(null)
+    const [autoExtract, setAutoExtract] = useState(true)
 
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         onJdChange(e.target.value)
@@ -50,6 +61,16 @@ export function JobDescriptionPanel({ jdText, onJdChange, onExtractionComplete }
             if (response.success && response.data) {
                 setExtraction(response.data)
                 onExtractionComplete?.(response.data)
+
+                // Auto-extract company name and job title if enabled
+                if (autoExtract && response.data) {
+                    if (response.data.company_name && onCompanyNameChange) {
+                        onCompanyNameChange(response.data.company_name)
+                    }
+                    if (response.data.job_title && onJobTitleChange) {
+                        onJobTitleChange(response.data.job_title)
+                    }
+                }
             } else {
                 setExtractionError(response.errors?.[0] || 'Extraction failed')
             }
@@ -105,6 +126,20 @@ export function JobDescriptionPanel({ jdText, onJdChange, onExtractionComplete }
                 ) : (
                     // Expanded view
                     <div className="flex-1 flex flex-col">
+                        {/* Company Name Input */}
+                        <div className="p-4 border-b border-gray-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Company Name
+                            </label>
+                            <input
+                                type="text"
+                                value={companyName}
+                                onChange={(e) => onCompanyNameChange?.(e.target.value)}
+                                placeholder="Enter company name..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            />
+                        </div>
+
                         {/* Text Area */}
                         <div className="flex-1 p-4">
                             <textarea
@@ -117,6 +152,21 @@ export function JobDescriptionPanel({ jdText, onJdChange, onExtractionComplete }
 
                         {/* Actions */}
                         <div className="p-4 border-t border-gray-200 bg-gray-50">
+                            {/* Auto-extract checkbox */}
+                            <div className="mb-3">
+                                <label className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoExtract}
+                                        onChange={(e) => setAutoExtract(e.target.checked)}
+                                        className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                        Automatically Add Company Name and Job Title from extracted data
+                                    </span>
+                                </label>
+                            </div>
+
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex space-x-2">
                                     <button
