@@ -293,7 +293,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
-                editorState.jdText
+                editorState.jdText,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
             )
             console.log('JD extraction changes auto-saved successfully')
         } catch (error) {
@@ -362,7 +365,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
-                editorState.jdText
+                editorState.jdText,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
             )
             console.log('Experience changes auto-saved successfully')
 
@@ -414,7 +420,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
-                editorState.jdText
+                editorState.jdText,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
             )
             console.log('Education changes auto-saved successfully')
 
@@ -444,7 +453,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                     resumeListItem.company_name,
                     resumeListItem.job_title,
                     resumeListItem.company_email,
-                    editorState.jdText
+                    editorState.jdText,
+                    null, // extractedPersonalInfo
+                    false, // forceNewResume
+                    resumeId // specificResumeId
                 )
                 console.log('Experience changes auto-saved successfully')
             } catch (error) {
@@ -503,7 +515,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
-                updatedResumeListItem.job_description
+                updatedResumeListItem.job_description,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
             )
             console.log('Changes auto-saved successfully')
         } catch (error) {
@@ -703,7 +718,10 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
-                updatedResumeListItem.job_description
+                updatedResumeListItem.job_description,
+                null, // extractedPersonalInfo
+                false, // forceNewResume
+                resumeId // specificResumeId
             )
             console.log('Resume saved successfully')
 

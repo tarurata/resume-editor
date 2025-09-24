@@ -46,7 +46,8 @@ export const saveResumeToDatabase = async (
     companyEmail?: string,
     jobDescription?: string,
     extractedPersonalInfo?: PersonalInfo | null,
-    forceNewResume: boolean = false
+    forceNewResume: boolean = false,
+    specificResumeId?: string
 ): Promise<{ id: string } | null> => {
     console.log('saveResumeToDatabase called with:', { resume, companyName, jobTitle })
 
@@ -165,29 +166,44 @@ export const saveResumeToDatabase = async (
             console.log('Created new version successfully')
             savedResume = { id: createdResume.id }
         } else {
-            // Check for existing active version (for regular updates)
-            console.log('Getting active version...')
-            const activeVersion = await resumeVersionApi.getActive()
-            console.log('Active version:', activeVersion)
-
-            if (activeVersion) {
-                // Update existing active version
-                console.log('Updating existing active version...')
-                await resumeVersionApi.update(activeVersion.id, {
+            // Check if we have a specific resume ID to update
+            if (specificResumeId) {
+                // Update the specific resume version
+                console.log('Updating specific resume version:', specificResumeId)
+                await resumeVersionApi.update(specificResumeId, {
                     resume_data: sanitizedResume,
                     job_title: jobTitle,
                     company_name: companyName,
                     company_email: companyEmail,
                     job_description: jobDescription
                 })
-                console.log('Updated existing version successfully')
-                savedResume = { id: activeVersion.id }
+                console.log('Updated specific version successfully')
+                savedResume = { id: specificResumeId }
             } else {
-                // Create new resume version
-                console.log('Creating new resume version...')
-                const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
-                console.log('Created new version successfully')
-                savedResume = { id: createdResume.id }
+                // Check for existing active version (for regular updates)
+                console.log('Getting active version...')
+                const activeVersion = await resumeVersionApi.getActive()
+                console.log('Active version:', activeVersion)
+
+                if (activeVersion) {
+                    // Update existing active version
+                    console.log('Updating existing active version...')
+                    await resumeVersionApi.update(activeVersion.id, {
+                        resume_data: sanitizedResume,
+                        job_title: jobTitle,
+                        company_name: companyName,
+                        company_email: companyEmail,
+                        job_description: jobDescription
+                    })
+                    console.log('Updated existing version successfully')
+                    savedResume = { id: activeVersion.id }
+                } else {
+                    // Create new resume version
+                    console.log('Creating new resume version...')
+                    const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
+                    console.log('Created new version successfully')
+                    savedResume = { id: createdResume.id }
+                }
             }
         }
 

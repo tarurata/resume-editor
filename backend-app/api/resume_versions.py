@@ -16,10 +16,16 @@ router = APIRouter()
 def get_database_service():
     return DatabaseService()
 
-def validate_resume_data(resume_data: str) -> Dict[str, Any]:
+def validate_resume_data(resume_data) -> Dict[str, Any]:
     """Validate resume data JSON structure"""
     try:
-        data = json.loads(resume_data)
+        # Handle both string and dict inputs
+        if isinstance(resume_data, str):
+            data = json.loads(resume_data)
+        elif isinstance(resume_data, dict):
+            data = resume_data
+        else:
+            raise ValueError("Resume data must be a JSON string or dictionary")
         
         # Check required fields
         if not isinstance(data, dict):
@@ -80,8 +86,8 @@ async def create_resume_version(
         # Validate resume data structure
         validated_data = validate_resume_data(resume_version_data.resume_data)
         
-        # Update the resume data with validated/cleaned data
-        resume_version_data.resume_data = json.dumps(validated_data)
+        # Update the resume data with validated/cleaned data (keep as dict)
+        resume_version_data.resume_data = validated_data
         
         result = db.create_resume_version(resume_version_data, user_id)
         return result
@@ -132,7 +138,8 @@ async def update_resume_version(
         # Validate resume data if it's being updated
         if hasattr(update_data, 'resume_data') and update_data.resume_data:
             validated_data = validate_resume_data(update_data.resume_data)
-            update_data.resume_data = json.dumps(validated_data)
+            # Convert back to dict for storage (database expects dict)
+            update_data.resume_data = validated_data
         
         result = db.update_resume_version(version_id, update_data)
         if not result:
