@@ -251,16 +251,6 @@ export function StrategyPresets({ sectionId, jdText, currentContent, onContentCh
                             <option>Match JD</option>
                         </select>
                     </div>
-                    <div className="flex items-center space-x-2 text-xs">
-                        <input
-                            type="checkbox"
-                            id="no-fabrication"
-                            className="rounded"
-                        />
-                        <label htmlFor="no-fabrication" className="text-gray-600">
-                            No fabrication (M1 UI only)
-                        </label>
-                    </div>
                 </div>
             </div>
         </div>

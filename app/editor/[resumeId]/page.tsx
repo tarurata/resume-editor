@@ -1125,7 +1125,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 </div>
 
                 {/* Center Panel - Rich Editor */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col max-w-5xl">
                     <div className="flex-1 p-6">
                         <ClientOnly fallback={
                             <div className="h-full flex items-center justify-center">
@@ -1254,7 +1254,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 </div>
 
                 {/* Right Panel - Job Description */}
-                <div className="w-80 bg-white border-l border-gray-200">
+                <div className="w-96 bg-white border-l border-gray-200">
                     <JobDescriptionPanel
                         jdText={editorState.jdText}
                         onJdChange={handleJdChange}
