@@ -268,6 +268,8 @@ export default function EditorPage({ params }: EditorPageProps) {
     }
 
     const handleContentChange = (content: string) => {
+        console.log('handleContentChange called with:', content)
+        console.log('Current selectedSection:', editorState.selectedSection)
         setEditorState(prev => ({
             ...prev,
             currentContent: content,
@@ -291,6 +293,8 @@ export default function EditorPage({ params }: EditorPageProps) {
     }
 
     const handleJobTitleChange = (jobTitle: string) => {
+        console.log('handleJobTitleChange called with:', jobTitle)
+        console.log('Current selectedSection:', editorState.selectedSection)
         if (!resumeListItem) return
 
         // Update the resume list item with the new job title
@@ -307,6 +311,7 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         // If the title section is currently selected, refresh the editor content
         if (editorState.selectedSection === 'title') {
+            console.log('Title section is selected, updating editor content with:', jobTitle)
             setEditorState(prev => ({
                 ...prev,
                 originalContent: jobTitle,
@@ -583,8 +588,31 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         switch (editorState.selectedSection) {
             case 'title':
-                // Extract text from HTML
-                updatedResume.title = content.replace(/<[^>]*>/g, '')
+                // Extract text from HTML - use a more robust method
+                console.log('Title accept - original content:', content)
+                let strippedTitle = content
+
+                // First, try to extract text from common HTML patterns
+                if (content.includes('<h1>') && content.includes('</h1>')) {
+                    const match = content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)
+                    if (match) {
+                        strippedTitle = match[1]
+                    }
+                } else if (content.includes('<p>') && content.includes('</p>')) {
+                    const match = content.match(/<p[^>]*>([\s\S]*?)<\/p>/)
+                    if (match) {
+                        strippedTitle = match[1]
+                    }
+                } else {
+                    // Fallback to regex stripping
+                    strippedTitle = content.replace(/<[^>]*>/g, '')
+                }
+
+                // Clean up any remaining HTML entities
+                strippedTitle = strippedTitle.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+
+                console.log('Title accept - stripped title:', strippedTitle)
+                updatedResume.title = strippedTitle
                 break
             case 'summary':
                 updatedResume.summary = content.replace(/<[^>]*>/g, '')
@@ -862,8 +890,31 @@ export default function EditorPage({ params }: EditorPageProps) {
 
                 switch (editorState.selectedSection) {
                     case 'title':
-                        // Extract text from HTML
-                        updatedResume.title = content.replace(/<[^>]*>/g, '')
+                        // Extract text from HTML - use a more robust method
+                        console.log('Title save - original content:', content)
+                        let strippedTitle = content
+
+                        // First, try to extract text from common HTML patterns
+                        if (content.includes('<h1>') && content.includes('</h1>')) {
+                            const match = content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)
+                            if (match) {
+                                strippedTitle = match[1]
+                            }
+                        } else if (content.includes('<p>') && content.includes('</p>')) {
+                            const match = content.match(/<p[^>]*>([\s\S]*?)<\/p>/)
+                            if (match) {
+                                strippedTitle = match[1]
+                            }
+                        } else {
+                            // Fallback to regex stripping
+                            strippedTitle = content.replace(/<[^>]*>/g, '')
+                        }
+
+                        // Clean up any remaining HTML entities
+                        strippedTitle = strippedTitle.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+
+                        console.log('Title save - stripped title:', strippedTitle)
+                        updatedResume.title = strippedTitle
                         break
                     case 'summary':
                         updatedResume.summary = content.replace(/<[^>]*>/g, '')
@@ -899,6 +950,7 @@ export default function EditorPage({ params }: EditorPageProps) {
 
             console.log('Calling ResumeService to update resume...')
             console.log('Current resumeListItem.resume_data.skills:', updatedResumeListItem.resume_data.skills)
+            console.log('Current resumeListItem.resume_data.title:', updatedResumeListItem.resume_data.title)
 
             // Save the main resume data (existing functionality)
             const { saveResumeToDatabase } = await import('@/lib/storage')
