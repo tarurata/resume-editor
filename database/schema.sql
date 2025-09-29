@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS resume_versions (
     user_id TEXT NOT NULL,
     company_name TEXT NOT NULL,
     company_email TEXT NOT NULL,
+    company_url TEXT,
     job_title TEXT NOT NULL,
     job_description TEXT,
     resume_data TEXT NOT NULL, -- JSON string of resume data

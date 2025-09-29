@@ -10,6 +10,7 @@ export interface ResumeListItem {
     is_active: boolean
     resume_data: Resume
     company_email?: string
+    company_url?: string
     job_description?: string
 }
 

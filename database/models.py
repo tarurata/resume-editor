@@ -116,6 +116,7 @@ class ResumeVersion(BaseModel):
     user_id: str
     company_name: str = Field(..., min_length=1, max_length=100)
     company_email: str = Field(..., min_length=1, max_length=100)
+    company_url: Optional[str] = None
     job_title: str = Field(..., min_length=1, max_length=100)
     job_description: Optional[str] = None
     resume_data: dict = Field(..., description="JSON data of resume")
@@ -129,6 +130,24 @@ class ResumeVersion(BaseModel):
         import re
         if not re.match(r'^[^@]+@[^@]+\.[^@]+$', v):
             raise ValueError('Invalid email format')
+        return v
+
+    @field_validator('company_url')
+    @classmethod
+    def validate_company_url(cls, v):
+        if v is None or v == '':
+            return v
+        import re
+        # Basic URL validation
+        url_pattern = re.compile(
+            r'^https?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        if not url_pattern.match(v):
+            raise ValueError('Invalid URL format')
         return v
 
 
@@ -194,6 +213,7 @@ class ResumeVersionCreate(BaseModel):
     """Model for creating a new resume version"""
     company_name: str = Field(..., min_length=1, max_length=100)
     company_email: str = Field(..., min_length=1, max_length=100)
+    company_url: Optional[str] = None
     job_title: str = Field(..., min_length=1, max_length=100)
     job_description: Optional[str] = None
     resume_data: dict = Field(..., description="JSON data of resume")
@@ -203,6 +223,7 @@ class ResumeVersionUpdate(BaseModel):
     """Model for updating a resume version"""
     company_name: Optional[str] = Field(None, min_length=1, max_length=100)
     company_email: Optional[str] = Field(None, min_length=1, max_length=100)
+    company_url: Optional[str] = None
     job_title: Optional[str] = Field(None, min_length=1, max_length=100)
     job_description: Optional[str] = None
     resume_data: Optional[dict] = None

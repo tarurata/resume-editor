@@ -12,6 +12,8 @@ interface JobDescriptionPanelProps {
     onCompanyNameChange?: (companyName: string) => void
     companyEmail?: string
     onCompanyEmailChange?: (companyEmail: string) => void
+    companyUrl?: string
+    onCompanyUrlChange?: (companyUrl: string) => void
     onJobTitleChange?: (jobTitle: string) => void
 }
 
@@ -23,6 +25,8 @@ export function JobDescriptionPanel({
     onCompanyNameChange,
     companyEmail = '',
     onCompanyEmailChange,
+    companyUrl = '',
+    onCompanyUrlChange,
     onJobTitleChange
 }: JobDescriptionPanelProps) {
     const [isExpanded, setIsExpanded] = useState(false)
@@ -66,13 +70,16 @@ export function JobDescriptionPanel({
                 setExtraction(response.data)
                 onExtractionComplete?.(response.data)
 
-                // Auto-extract company name, company email, and job title if enabled
+                // Auto-extract company name, company email, company URL, and job title if enabled
                 if (autoExtract && response.data) {
                     if (response.data.company_name && onCompanyNameChange) {
                         onCompanyNameChange(response.data.company_name)
                     }
                     if (response.data.company_email && onCompanyEmailChange) {
                         onCompanyEmailChange(response.data.company_email)
+                    }
+                    if (response.data.company_url && onCompanyUrlChange) {
+                        onCompanyUrlChange(response.data.company_url)
                     }
                     if (response.data.job_title && onJobTitleChange) {
                         onJobTitleChange(response.data.job_title)
@@ -161,6 +168,20 @@ export function JobDescriptionPanel({
                             />
                         </div>
 
+                        {/* Company URL Input */}
+                        <div className="p-4 border-b border-gray-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Company URL
+                            </label>
+                            <input
+                                type="url"
+                                value={companyUrl}
+                                onChange={(e) => onCompanyUrlChange?.(e.target.value)}
+                                placeholder="Enter company URL (e.g., https://company.com/careers)..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            />
+                        </div>
+
                         {/* Text Area */}
                         <div className="flex-1 p-4">
                             <textarea
@@ -184,7 +205,7 @@ export function JobDescriptionPanel({
                                         className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        Automatically Add Company Name, Email, and Job Title from extracted data
+                                        Automatically Add Company Name, Email, URL, and Job Title from extracted data
                                     </span>
                                 </label>
                             </div>
@@ -253,6 +274,19 @@ export function JobDescriptionPanel({
                                 <div>
                                     <span className="font-medium text-gray-700">Company Email:</span>
                                     <span className="ml-2 text-gray-900">{extraction.company_email}</span>
+                                </div>
+                            )}
+                            {extraction.company_url && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Company URL:</span>
+                                    <a
+                                        href={extraction.company_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                        {extraction.company_url}
+                                    </a>
                                 </div>
                             )}
                             {extraction.job_title && (

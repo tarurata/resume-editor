@@ -33,6 +33,7 @@ export interface EditorState {
     jdText: string
     companyName: string
     companyEmail: string
+    companyUrl: string
     diffState: DiffState
     sectionHistory: Record<string, string> // sectionId -> original content when first loaded
     showPrintView: boolean
@@ -63,6 +64,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         jdText: '',
         companyName: '',
         companyEmail: '',
+        companyUrl: '',
         diffState: { viewMode: 'clean', showHistory: false },
         sectionHistory: {},
         showPrintView: false,
@@ -97,11 +99,12 @@ export default function EditorPage({ params }: EditorPageProps) {
                     }))
                 }
 
-                // Set company name and email if available
+                // Set company name, email, and URL if available
                 setEditorState(prev => ({
                     ...prev,
                     companyName: resumeData.company_name || '',
-                    companyEmail: resumeData.company_email || ''
+                    companyEmail: resumeData.company_email || '',
+                    companyUrl: resumeData.company_url || ''
                 }))
 
                 // Fetch latest experiences and achievements from API
@@ -316,6 +319,21 @@ export default function EditorPage({ params }: EditorPageProps) {
         }
     }
 
+    const handleCompanyUrlChange = (companyUrl: string) => {
+        setEditorState(prev => ({
+            ...prev,
+            companyUrl
+        }))
+
+        // Also update the resumeListItem to keep it in sync
+        if (resumeListItem) {
+            setResumeListItem(prev => prev ? {
+                ...prev,
+                company_url: companyUrl
+            } : null)
+        }
+    }
+
     const handleJobTitleChange = (jobTitle: string) => {
         console.log('handleJobTitleChange called with:', jobTitle)
         console.log('Current selectedSection:', editorState.selectedSection)
@@ -348,11 +366,12 @@ export default function EditorPage({ params }: EditorPageProps) {
     const handleJDExtraction = async (extraction: JobDescriptionExtraction) => {
         if (!resumeListItem) return
 
-        // Update the resume list item with extracted company name, company email, and job title
+        // Update the resume list item with extracted company name, company email, company URL, and job title
         const updatedResumeListItem = {
             ...resumeListItem,
             company_name: extraction.company_name || resumeListItem.company_name,
             company_email: extraction.company_email || resumeListItem.company_email,
+            company_url: extraction.company_url || resumeListItem.company_url,
             job_title: extraction.job_title || resumeListItem.job_title,
             resume_data: {
                 ...resumeListItem.resume_data,
@@ -1340,6 +1359,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                         onCompanyNameChange={handleCompanyNameChange}
                         companyEmail={editorState.companyEmail}
                         onCompanyEmailChange={handleCompanyEmailChange}
+                        companyUrl={editorState.companyUrl}
+                        onCompanyUrlChange={handleCompanyUrlChange}
                         onJobTitleChange={handleJobTitleChange}
                     />
                 </div>

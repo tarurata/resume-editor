@@ -241,21 +241,21 @@ class DatabaseService:
             now = datetime.now()
             
             cursor.execute("""
-                INSERT INTO resume_versions (id, user_id, company_name, company_email, 
+                INSERT INTO resume_versions (id, user_id, company_name, company_email, company_url,
                                           job_title, job_description, resume_data, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 version_id, user_id, resume_version.company_name, resume_version.company_email,
-                resume_version.job_title, resume_version.job_description,
+                resume_version.company_url, resume_version.job_title, resume_version.job_description,
                 json.dumps(resume_version.resume_data), False, now, now
             ))
             conn.commit()
             
             return ResumeVersion(
                 id=version_id, user_id=user_id, company_name=resume_version.company_name,
-                company_email=resume_version.company_email, job_title=resume_version.job_title,
-                job_description=resume_version.job_description, resume_data=resume_version.resume_data,
-                is_active=False, created_at=now, updated_at=now
+                company_email=resume_version.company_email, company_url=resume_version.company_url,
+                job_title=resume_version.job_title, job_description=resume_version.job_description, 
+                resume_data=resume_version.resume_data, is_active=False, created_at=now, updated_at=now
             )
     
     def get_resume_versions(self, user_id: str) -> List[ResumeVersion]:
@@ -299,6 +299,10 @@ class DatabaseService:
             if update_data.company_email is not None:
                 update_fields.append("company_email = ?")
                 values.append(update_data.company_email)
+            
+            if update_data.company_url is not None:
+                update_fields.append("company_url = ?")
+                values.append(update_data.company_url)
             
             if update_data.job_title is not None:
                 update_fields.append("job_title = ?")
