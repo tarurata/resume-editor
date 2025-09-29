@@ -44,6 +44,7 @@ export default function NewResumePage() {
                 formData.companyName,
                 formData.jobTitle,
                 undefined, // companyEmail
+                undefined, // companyUrl
                 undefined, // jobDescription
                 null // Don't extract personal info from template data
             )
@@ -108,6 +109,7 @@ export default function NewResumePage() {
                 formData.companyName,
                 formData.jobTitle,
                 undefined, // companyEmail
+                undefined, // companyUrl
                 undefined, // jobDescription
                 null // Don't extract personal info from blank resume
             )

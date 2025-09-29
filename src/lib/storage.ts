@@ -44,6 +44,7 @@ export const saveResumeToDatabase = async (
     companyName: string = 'Default Company',
     jobTitle: string = 'Software Engineer',
     companyEmail?: string,
+    companyUrl?: string,
     jobDescription?: string,
     extractedPersonalInfo?: PersonalInfo | null,
     forceNewResume: boolean = false,
@@ -162,7 +163,7 @@ export const saveResumeToDatabase = async (
         if (forceNewResume) {
             // Always create new resume version (for wizard flow)
             console.log('Creating new resume version (forced)...')
-            const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
+            const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', companyUrl, jobDescription)
             console.log('Created new version successfully')
             savedResume = { id: createdResume.id }
         } else {
@@ -200,7 +201,7 @@ export const saveResumeToDatabase = async (
                 } else {
                     // Create new resume version
                     console.log('Creating new resume version...')
-                    const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', jobDescription)
+                    const createdResume = await resumeVersionApi.create(sanitizedResume, companyName, jobTitle, companyEmail || 'default@company.com', companyUrl, jobDescription)
                     console.log('Created new version successfully')
                     savedResume = { id: createdResume.id }
                 }

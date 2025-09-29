@@ -400,6 +400,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 editorState.jdText,
                 null, // extractedPersonalInfo
                 false, // forceNewResume
@@ -472,6 +473,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 editorState.jdText,
                 null, // extractedPersonalInfo
                 false, // forceNewResume
@@ -527,6 +529,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 editorState.jdText,
                 null, // extractedPersonalInfo
                 false, // forceNewResume
@@ -572,6 +575,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 editorState.jdText,
                 null, // extractedPersonalInfo
                 false, // forceNewResume
@@ -605,6 +609,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                     resumeListItem.company_name,
                     resumeListItem.job_title,
                     resumeListItem.company_email,
+                    resumeListItem.company_url,
                     editorState.jdText,
                     null, // extractedPersonalInfo
                     false, // forceNewResume
@@ -690,6 +695,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 updatedResumeListItem.job_description,
                 null, // extractedPersonalInfo
                 false, // forceNewResume
@@ -913,8 +919,16 @@ export default function EditorPage({ params }: EditorPageProps) {
         }))
 
         try {
-            // First, accept any pending changes if there are any
-            let updatedResumeListItem = { ...resumeListItem }
+            // First, sync editor state values to resumeListItem
+            let updatedResumeListItem = { 
+                ...resumeListItem,
+                company_email: editorState.companyEmail || resumeListItem.company_email || '',
+                company_url: editorState.companyUrl || resumeListItem.company_url || '',
+                job_description: editorState.jdText || resumeListItem.job_description || ''
+            }
+            
+            // Update the resumeListItem state to keep it in sync
+            setResumeListItem(updatedResumeListItem)
 
             if (editorState.selectedSection && editorState.hasChanges) {
                 console.log('Auto-accepting pending changes before save...')
@@ -973,6 +987,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem = {
                     ...resumeListItem,
                     resume_data: updatedResume,
+                    company_email: editorState.companyEmail || resumeListItem.company_email || '',
+                    company_url: editorState.companyUrl || resumeListItem.company_url || '',
                     job_description: editorState.jdText
                 }
 
@@ -987,6 +1003,8 @@ export default function EditorPage({ params }: EditorPageProps) {
                 // No pending changes, just update job description
                 updatedResumeListItem = {
                     ...resumeListItem,
+                    company_email: editorState.companyEmail || resumeListItem.company_email || '',
+                    company_url: editorState.companyUrl || resumeListItem.company_url || '',
                     job_description: editorState.jdText,
                     resume_data: resumeListItem.resume_data
                 }
@@ -1003,6 +1021,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem.company_name,
                 updatedResumeListItem.job_title,
                 updatedResumeListItem.company_email,
+                updatedResumeListItem.company_url,
                 updatedResumeListItem.job_description,
                 null, // extractedPersonalInfo
                 false, // forceNewResume

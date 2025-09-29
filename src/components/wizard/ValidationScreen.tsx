@@ -44,6 +44,7 @@ export default function ValidationScreen({ resume, validationErrors, onNext }: V
                 'Default Company',
                 resume.title || 'Software Engineer',
                 undefined, // companyEmail
+                undefined, // companyUrl
                 undefined, // jobDescription
                 null, // No personal information from import
                 true // forceNewResume - always create new resume from wizard

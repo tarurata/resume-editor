@@ -95,7 +95,7 @@ async function apiRequest<T>(
 // Resume Version API functions
 export const resumeVersionApi = {
     // Create a new resume version
-    async create(resumeData: Resume, companyName: string, jobTitle: string, companyEmail?: string, jobDescription?: string): Promise<ResumeVersion> {
+    async create(resumeData: Resume, companyName: string, jobTitle: string, companyEmail?: string, companyUrl?: string, jobDescription?: string): Promise<ResumeVersion> {
         const response = await apiRequest<ResumeVersion>(
             `/resume-versions/?user_id=${TEMP_USER_ID}`,
             {
@@ -103,6 +103,7 @@ export const resumeVersionApi = {
                 body: JSON.stringify({
                     company_name: companyName,
                     company_email: companyEmail || '',
+                    company_url: companyUrl || '',
                     job_title: jobTitle,
                     job_description: jobDescription,
                     resume_data: resumeData,
