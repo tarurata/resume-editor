@@ -296,6 +296,7 @@ Extract structured data:"""
         prompt = f"""Extract key information from the following job description. Return a JSON object with the following structure:
 {{
   "company_name": "Company Name",
+  "company_email": "Company email address (e.g., careers@company.com, jobs@company.com)",
   "job_title": "Job Title",
   "compensation": "Salary range or compensation details",
   "location": "Job location (city, state, country, or remote)",
@@ -311,6 +312,7 @@ Extract structured data:"""
 
 Guidelines:
 - Extract the exact company name and job title as they appear
+- Extract company email address if mentioned (look for patterns like careers@, jobs@, hr@, recruiting@, etc.)
 - For compensation, include salary ranges, hourly rates, or other compensation mentioned
 - For location, be specific about city/state if mentioned, or note if remote/hybrid
 - List 5-10 most important required skills

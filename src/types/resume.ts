@@ -113,6 +113,7 @@ export type SectionId = string
 
 export interface JobDescriptionExtraction {
     company_name?: string
+    company_email?: string
     job_title?: string
     compensation?: string
     location?: string
