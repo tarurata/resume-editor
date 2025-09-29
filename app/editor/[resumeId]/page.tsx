@@ -920,13 +920,13 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         try {
             // First, sync editor state values to resumeListItem
-            let updatedResumeListItem = { 
+            let updatedResumeListItem = {
                 ...resumeListItem,
                 company_email: editorState.companyEmail || resumeListItem.company_email || '',
                 company_url: editorState.companyUrl || resumeListItem.company_url || '',
                 job_description: editorState.jdText || resumeListItem.job_description || ''
             }
-            
+
             // Update the resumeListItem state to keep it in sync
             setResumeListItem(updatedResumeListItem)
 

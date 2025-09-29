@@ -276,6 +276,7 @@ export class ResumeService {
                 newCompanyName,
                 newJobTitle,
                 originalResume.company_email,
+                originalResume.company_url,
                 originalResume.job_description
             )
 

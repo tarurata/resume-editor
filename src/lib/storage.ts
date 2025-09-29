@@ -176,6 +176,7 @@ export const saveResumeToDatabase = async (
                     job_title: jobTitle,
                     company_name: companyName,
                     company_email: companyEmail,
+                    company_url: companyUrl,
                     job_description: jobDescription
                 })
                 console.log('Updated specific version successfully')
@@ -194,6 +195,7 @@ export const saveResumeToDatabase = async (
                         job_title: jobTitle,
                         company_name: companyName,
                         company_email: companyEmail,
+                        company_url: companyUrl,
                         job_description: jobDescription
                     })
                     console.log('Updated existing version successfully')

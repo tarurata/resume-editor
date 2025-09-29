@@ -18,6 +18,7 @@ interface ResumeVersion {
     user_id: string
     company_name: string
     company_email: string
+    company_url?: string
     job_title: string
     job_description?: string
     resume_data: Resume
