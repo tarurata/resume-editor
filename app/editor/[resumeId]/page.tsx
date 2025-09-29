@@ -306,7 +306,7 @@ export default function EditorPage({ params }: EditorPageProps) {
             ...prev,
             companyEmail
         }))
-        
+
         // Also update the resumeListItem to keep it in sync
         if (resumeListItem) {
             setResumeListItem(prev => prev ? {
