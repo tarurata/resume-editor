@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { ResumeListItem, ResumeFilters, ResumeService } from '@/lib/resumeService'
 import ResumeCard from './ResumeCard'
+import ResumeListItemComponent from './ResumeListItem'
 import SearchBar from './SearchBar'
 // Icons as inline SVG components
 const FunnelIcon = ({ className }: { className?: string }) => (
@@ -29,6 +30,18 @@ const DocumentTextIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const Squares2X2Icon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+  </svg>
+)
+
+const ListBulletIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+  </svg>
+)
+
 interface ResumeListProps {
   onEditResume: (id: string) => void
   onCreateResume: () => void
@@ -36,6 +49,7 @@ interface ResumeListProps {
 
 type SortOption = 'date' | 'company' | 'job_title'
 type SortOrder = 'asc' | 'desc'
+type ViewType = 'card' | 'list'
 
 export default function ResumeList({ onEditResume, onCreateResume }: ResumeListProps) {
   const [resumes, setResumes] = useState<ResumeListItem[]>([])
@@ -48,6 +62,7 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
   })
   const [showSortMenu, setShowSortMenu] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+  const [viewType, setViewType] = useState<ViewType>('card')
 
   // Load resumes
   const loadResumes = async () => {
@@ -312,52 +327,97 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
             placeholder="Search by company, job title, or resume title..."
           />
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowSortMenu(!showSortMenu)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200"
-          >
-            <FunnelIcon className="h-4 w-4" />
-            {getCurrentSortLabel()}
-            <ChevronDownIcon className="h-4 w-4" />
-          </button>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+            <button
+              onClick={() => setViewType('card')}
+              className={`p-2 rounded-l-lg transition-colors duration-200 ${
+                viewType === 'card'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+              title="Card view"
+            >
+              <Squares2X2Icon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewType('list')}
+              className={`p-2 rounded-r-lg transition-colors duration-200 ${
+                viewType === 'list'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+              title="List view"
+            >
+              <ListBulletIcon className="h-4 w-4" />
+            </button>
+          </div>
 
-          {showSortMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-              <div className="py-1">
-                {sortOptions.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSortChange(option.value as SortOption, option.order)}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
-                      filters.sortBy === option.value && filters.sortOrder === option.order
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+          {/* Sort Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+            >
+              <FunnelIcon className="h-4 w-4" />
+              {getCurrentSortLabel()}
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+
+            {showSortMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="py-1">
+                  {sortOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSortChange(option.value as SortOption, option.order)}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
+                        filters.sortBy === option.value && filters.sortOrder === option.order
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Resume Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {resumes.map((resume) => (
-          <ResumeCard
-            key={resume.id}
-            resume={resume}
-            onEdit={handleEdit}
-            onDuplicate={handleDuplicate}
-            onDelete={handleDelete}
-            onSetActive={handleSetActive}
-            isDeleting={deletingIds.has(resume.id)}
-          />
-        ))}
-      </div>
+      {/* Resume Display */}
+      {viewType === 'card' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {resumes.map((resume) => (
+            <ResumeCard
+              key={resume.id}
+              resume={resume}
+              onEdit={handleEdit}
+              onDuplicate={handleDuplicate}
+              onDelete={handleDelete}
+              onSetActive={handleSetActive}
+              isDeleting={deletingIds.has(resume.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {resumes.map((resume) => (
+            <ResumeListItemComponent
+              key={resume.id}
+              resume={resume}
+              onEdit={handleEdit}
+              onDuplicate={handleDuplicate}
+              onDelete={handleDelete}
+              onSetActive={handleSetActive}
+              isDeleting={deletingIds.has(resume.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
