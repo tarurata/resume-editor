@@ -161,7 +161,7 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
   ]
 
   const getCurrentSortLabel = () => {
-    const option = sortOptions.find(opt => 
+    const option = sortOptions.find(opt =>
       opt.value === filters.sortBy && opt.order === filters.sortOrder
     )
     return option?.label || 'Sort by...'
@@ -184,7 +184,7 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
           <div className="flex-1">
             <SearchBar
               searchTerm=""
-              onSearchChange={() => {}}
+              onSearchChange={() => { }}
               className="pointer-events-none"
             />
           </div>
@@ -280,7 +280,7 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
           <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No resumes found</h3>
           <p className="mt-1 text-sm text-gray-500">
-            {filters.search 
+            {filters.search
               ? 'No resumes match your search criteria. Try adjusting your search terms.'
               : 'Get started by creating your first resume.'
             }
@@ -332,22 +332,20 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
           <div className="flex items-center border border-gray-300 rounded-lg bg-white">
             <button
               onClick={() => setViewType('card')}
-              className={`p-2 rounded-l-lg transition-colors duration-200 ${
-                viewType === 'card'
+              className={`p-2 rounded-l-lg transition-colors duration-200 ${viewType === 'card'
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
               title="Card view"
             >
               <Squares2X2Icon className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewType('list')}
-              className={`p-2 rounded-r-lg transition-colors duration-200 ${
-                viewType === 'list'
+              className={`p-2 rounded-r-lg transition-colors duration-200 ${viewType === 'list'
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
               title="List view"
             >
               <ListBulletIcon className="h-4 w-4" />
@@ -372,11 +370,10 @@ export default function ResumeList({ onEditResume, onCreateResume }: ResumeListP
                     <button
                       key={index}
                       onClick={() => handleSortChange(option.value as SortOption, option.order)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
-                        filters.sortBy === option.value && filters.sortOrder === option.order
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${filters.sortBy === option.value && filters.sortOrder === option.order
                           ? 'bg-blue-50 text-blue-700'
                           : 'text-gray-700'
-                      }`}
+                        }`}
                     >
                       {option.label}
                     </button>

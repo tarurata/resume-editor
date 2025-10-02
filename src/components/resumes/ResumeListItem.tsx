@@ -103,7 +103,7 @@ export default function ResumeListItem({
                                 <StarIconSolid className="h-5 w-5 text-yellow-500 flex-shrink-0" />
                             )}
                         </div>
-                        
+
                         <div className="flex items-center gap-6 text-sm text-gray-600 mb-2">
                             <div className="flex items-center gap-1">
                                 <BuildingOfficeIcon className="h-4 w-4" />
