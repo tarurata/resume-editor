@@ -362,6 +362,242 @@ Extract job information:"""
                 "confidence": 0.0,
                 "errors": [f"Extraction failed: {str(e)}"]
             }
+    
+    async def rewrite_resume_with_jd_tone(
+        self, 
+        resume_data: Dict[str, Any], 
+        job_description: str, 
+        target_sections: List[str],
+        word_limit: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Rewrite specific sections of a resume to match job description tone"""
+        
+        # Build comprehensive prompt
+        prompt = self._build_rewrite_prompt(resume_data, job_description, target_sections, word_limit)
+        
+        try:
+            # Try direct OpenAI call first
+            if self.settings.llm_api_key:
+                logger.info("Attempting direct OpenAI call for resume rewrite")
+                response = await self._call_openai_direct(prompt, max_tokens=2000, temperature=0.3)
+                logger.info(f"Direct OpenAI call response: {response[:200]}...")
+            else:
+                logger.info("No API key, using mock response")
+                response = self._get_mock_rewrite_response(target_sections)
+            
+            # Parse the response
+            rewritten_sections = self._parse_rewrite_response(response, target_sections)
+            
+            return {
+                "rewritten_sections": rewritten_sections,
+                "suggestions": [
+                    "Review the rewritten content for accuracy",
+                    "Ensure metrics and achievements are preserved",
+                    "Check that the tone matches your personal style"
+                ],
+                "confidence": 0.8,
+                "errors": []
+            }
+            
+        except Exception as e:
+            logger.error(f"Resume rewrite failed: {e}")
+            return {
+                "rewritten_sections": None,
+                "suggestions": None,
+                "confidence": 0.0,
+                "errors": [f"Resume rewrite failed: {str(e)}"]
+            }
+    
+    def _build_rewrite_prompt(
+        self, 
+        resume_data: Dict[str, Any], 
+        job_description: str, 
+        target_sections: List[str],
+        word_limit: Optional[int]
+    ) -> str:
+        """Build comprehensive prompt for resume rewriting"""
+        
+        # Extract current content for target sections
+        current_content = {}
+        for section in target_sections:
+            if section == 'title':
+                current_content[section] = resume_data.get('title', '')
+            elif section == 'summary':
+                current_content[section] = resume_data.get('summary', '')
+            elif section == 'experience':
+                experience_entries = resume_data.get('experience', [])
+                current_content[section] = self._format_experience_for_prompt(experience_entries)
+            elif section == 'education':
+                education_entries = resume_data.get('education', [])
+                current_content[section] = self._format_education_for_prompt(education_entries)
+            elif section == 'certifications':
+                cert_entries = resume_data.get('certifications', [])
+                current_content[section] = self._format_certifications_for_prompt(cert_entries)
+            elif section == 'skills':
+                skills_data = resume_data.get('skills', [])
+                current_content[section] = self._format_skills_for_prompt(skills_data)
+        
+        # Build the prompt
+        word_limit_text = f" Keep each section under {word_limit} words." if word_limit else ""
+        
+        prompt = f"""You are an expert resume writer. Rewrite the specified sections of this resume to match the tone, language, and style of the job description while maintaining factual accuracy.
+
+JOB DESCRIPTION:
+{job_description}
+
+CURRENT RESUME SECTIONS TO REWRITE:
+{self._format_current_content_for_prompt(current_content)}
+
+INSTRUCTIONS:
+1. Analyze the job description's tone, language patterns, and key terminology
+2. Rewrite ONLY the specified sections to match this tone
+3. Maintain all factual information (dates, companies, achievements, metrics)
+4. Use similar vocabulary and phrasing as the job description
+5. Keep the same structure and format
+6. Do not fabricate or add information not present in the original{word_limit_text}
+
+RESPONSE FORMAT:
+Return a JSON object with the rewritten sections:
+{{
+  "title": "rewritten title if title was requested",
+  "summary": "rewritten summary if summary was requested", 
+  "experience": "rewritten experience bullets if experience was requested",
+  "education": "rewritten education if education was requested",
+  "certifications": "rewritten certifications if certifications was requested",
+  "skills": "rewritten skills if skills was requested"
+}}
+
+Only include sections that were requested to be rewritten. Return only the JSON object, no additional text."""
+
+        return prompt
+    
+    def _format_experience_for_prompt(self, experience_entries: List[Dict]) -> str:
+        """Format experience entries for the prompt"""
+        if not experience_entries:
+            return "No experience entries"
+        
+        formatted = []
+        for exp in experience_entries:
+            bullets = exp.get('bullets', [])
+            bullets_text = '\n'.join([f"  • {bullet}" for bullet in bullets]) if bullets else "  • No bullets"
+            formatted.append(f"{exp.get('role', 'Unknown Role')} at {exp.get('organization', 'Unknown Company')}\n{bullets_text}")
+        
+        return '\n\n'.join(formatted)
+    
+    def _format_education_for_prompt(self, education_entries: List[Dict]) -> str:
+        """Format education entries for the prompt"""
+        if not education_entries:
+            return "No education entries"
+        
+        formatted = []
+        for edu in education_entries:
+            formatted.append(f"{edu.get('degree', 'Unknown Degree')} from {edu.get('school', 'Unknown School')}")
+        
+        return '\n'.join(formatted)
+    
+    def _format_certifications_for_prompt(self, cert_entries: List[Dict]) -> str:
+        """Format certification entries for the prompt"""
+        if not cert_entries:
+            return "No certifications"
+        
+        formatted = []
+        for cert in cert_entries:
+            formatted.append(f"{cert.get('name', 'Unknown Certification')} from {cert.get('issuer', 'Unknown Issuer')}")
+        
+        return '\n'.join(formatted)
+    
+    def _format_skills_for_prompt(self, skills_data: List[Dict]) -> str:
+        """Format skills data for the prompt"""
+        if not skills_data:
+            return "No skills listed"
+        
+        formatted = []
+        for skill_group in skills_data:
+            group_name = skill_group.get('name', 'Unknown Category')
+            skills = skill_group.get('skills', [])
+            skills_text = ', '.join(skills) if skills else 'No skills'
+            formatted.append(f"{group_name}: {skills_text}")
+        
+        return '\n'.join(formatted)
+    
+    def _format_current_content_for_prompt(self, current_content: Dict[str, str]) -> str:
+        """Format current content for the prompt"""
+        formatted = []
+        for section, content in current_content.items():
+            if content.strip():
+                formatted.append(f"{section.upper()}:\n{content}")
+            else:
+                formatted.append(f"{section.upper()}:\n[No content]")
+        
+        return '\n\n'.join(formatted)
+    
+    def _parse_rewrite_response(self, response: str, target_sections: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Parse the AI response into structured format"""
+        try:
+            # Try to extract JSON from response
+            import json
+            import re
+            
+            # Look for JSON object in the response
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group()
+                parsed_data = json.loads(json_str)
+                
+                # Format the response according to our expected structure
+                result = {}
+                for section in target_sections:
+                    if section in parsed_data:
+                        original_content = ""  # We don't have the original content here
+                        rewritten_content = parsed_data[section]
+                        
+                        result[section] = {
+                            "original_content": original_content,
+                            "rewritten_content": rewritten_content,
+                            "word_count": len(rewritten_content.split()) if rewritten_content else 0,
+                            "changes": [f"Rewritten to match JD tone"]
+                        }
+                
+                return result
+            else:
+                # Fallback: treat entire response as a single section rewrite
+                logger.warning("Could not parse JSON from response, using fallback parsing")
+                return self._get_fallback_rewrite_response(response, target_sections)
+                
+        except Exception as e:
+            logger.error(f"Failed to parse rewrite response: {e}")
+            return self._get_fallback_rewrite_response(response, target_sections)
+    
+    def _get_fallback_rewrite_response(self, response: str, target_sections: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Fallback parsing when JSON parsing fails"""
+        result = {}
+        for section in target_sections:
+            result[section] = {
+                "original_content": "",
+                "rewritten_content": response.strip(),
+                "word_count": len(response.split()),
+                "changes": [f"Rewritten to match JD tone (fallback parsing)"]
+            }
+        return result
+    
+    def _get_mock_rewrite_response(self, target_sections: List[str]) -> str:
+        """Generate mock response for development/testing"""
+        mock_responses = {
+            "title": "Senior Software Engineer - Full Stack Development",
+            "summary": "Results-driven software engineer with expertise in building scalable web applications. Proven track record of delivering high-quality solutions using modern technologies and agile methodologies.",
+            "experience": "Led development of microservices architecture serving 2M+ daily active users, improving system performance by 40% through optimization and caching strategies",
+            "education": "Bachelor of Science in Computer Science from University of Technology",
+            "certifications": "AWS Certified Solutions Architect from Amazon Web Services",
+            "skills": "Programming Languages: JavaScript, TypeScript, Python\nFrameworks: React, Node.js, Express\nCloud & DevOps: AWS, Docker, Kubernetes"
+        }
+        
+        result = {}
+        for section in target_sections:
+            if section in mock_responses:
+                result[section] = mock_responses[section]
+        
+        import json
+        return json.dumps(result)
 
     async def get_health_status(self) -> Dict[str, Any]:
         """Get AI service health status"""

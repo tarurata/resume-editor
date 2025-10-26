@@ -45,6 +45,21 @@ class JDExtractResponse(BaseModel):
     confidence: Optional[float] = None
     errors: Optional[List[str]] = None
 
+class ResumeRewriteRequest(BaseModel):
+    resume_data: Dict[str, Any]  # Complete resume data structure
+    job_description: str
+    word_limit: Optional[int] = None
+    target_sections: List[str]  # Sections to rewrite: ['title', 'summary', 'experience', 'education', 'certifications', 'skills']
+    current_section_id: Optional[str] = None
+    user_id: Optional[str] = None
+
+class ResumeRewriteResponse(BaseModel):
+    success: bool
+    rewritten_sections: Optional[Dict[str, Dict[str, Any]]] = None
+    suggestions: Optional[List[str]] = None
+    confidence: Optional[float] = None
+    errors: Optional[List[str]] = None
+
 @router.post("/extract", response_model=ExtractResponse)
 async def extract_resume_data(
     request: ExtractRequest,
@@ -233,3 +248,61 @@ async def test_openai_direct():
             "success": False,
             "error": str(e)
         }
+
+@router.post("/rewrite-resume", response_model=ResumeRewriteResponse)
+async def rewrite_resume_with_jd_tone(
+    request: ResumeRewriteRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Rewrite specific sections of a resume to match the tone and language of a job description
+    """
+    try:
+        ai_service = AIService()
+        
+        # Validate target sections
+        valid_sections = ['title', 'summary', 'experience', 'education', 'certifications', 'skills']
+        invalid_sections = [s for s in request.target_sections if s not in valid_sections]
+        if invalid_sections:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid target sections: {invalid_sections}. Valid sections are: {valid_sections}"
+            )
+        
+        # Validate job description
+        if not request.job_description or len(request.job_description.strip()) < 50:
+            raise HTTPException(
+                status_code=400,
+                detail="Job description must be at least 50 characters long"
+            )
+        
+        # Call AI service to rewrite resume sections
+        result = await ai_service.rewrite_resume_with_jd_tone(
+            resume_data=request.resume_data,
+            job_description=request.job_description,
+            target_sections=request.target_sections,
+            word_limit=request.word_limit
+        )
+        
+        # Log rewrite attempt
+        logger.info(f"Resume rewrite completed for user {request.user_id}, sections: {request.target_sections}")
+        
+        return ResumeRewriteResponse(
+            success=True,
+            rewritten_sections=result.get("rewritten_sections"),
+            suggestions=result.get("suggestions", []),
+            confidence=result.get("confidence", 0.0),
+            errors=result.get("errors", [])
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resume rewrite failed: {str(e)}")
+        return ResumeRewriteResponse(
+            success=False,
+            rewritten_sections=None,
+            suggestions=None,
+            confidence=0.0,
+            errors=[f"Resume rewrite failed: {str(e)}"]
+        )

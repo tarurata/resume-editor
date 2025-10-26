@@ -1344,13 +1344,14 @@ export default function EditorPage({ params }: EditorPageProps) {
                     </div>
 
                     {/* Strategy Presets */}
-                    {editorState.selectedSection && (
+                    {editorState.selectedSection && resumeListItem && (
                         <div className="border-t border-gray-200 p-4 bg-gray-50">
                             <StrategyPresets
                                 sectionId={editorState.selectedSection}
                                 jdText={editorState.jdText}
                                 currentContent={editorState.currentContent}
                                 onContentChange={handleContentChange}
+                                resumeData={resumeListItem.resume_data}
                             />
                         </div>
                     )}

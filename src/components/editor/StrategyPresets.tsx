@@ -1,6 +1,6 @@
 'use client'
 
-import { SectionId } from '@/types/resume'
+import { SectionId, Resume } from '@/types/resume'
 import { useState } from 'react'
 
 interface StrategyPresetsProps {
@@ -8,6 +8,7 @@ interface StrategyPresetsProps {
     jdText: string
     currentContent: string
     onContentChange: (content: string) => void
+    resumeData?: Resume // Full resume data for comprehensive rewriting
 }
 
 interface Preset {
@@ -88,7 +89,7 @@ const presets: Record<string, Preset[]> = {
     ]
 }
 
-export function StrategyPresets({ sectionId, jdText, currentContent, onContentChange }: StrategyPresetsProps) {
+export function StrategyPresets({ sectionId, jdText, currentContent, onContentChange, resumeData }: StrategyPresetsProps) {
     const [isGenerating, setIsGenerating] = useState(false)
     const [lastGenerated, setLastGenerated] = useState<string | null>(null)
 
@@ -114,27 +115,58 @@ export function StrategyPresets({ sectionId, jdText, currentContent, onContentCh
         setIsGenerating(true)
 
         try {
-            // Mock API call - in real implementation this would call MSW mock
-            const response = await fetch('/api/edit/preview', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sectionId,
-                    presetId,
-                    currentContent,
-                    jdText
+            // For "match-jd" strategy, use the new backend endpoint with full resume data
+            if (presetId === 'match-jd' && resumeData) {
+                const response = await fetch('http://localhost:8000/api/ai/rewrite-resume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        resume_data: resumeData,
+                        job_description: jdText,
+                        target_sections: [sectionType],
+                        word_limit: sectionType === 'summary' ? 100 : undefined,
+                        current_section_id: sectionId
+                    })
                 })
-            })
 
-            if (!response.ok) {
-                throw new Error('Failed to generate suggestion')
+                if (!response.ok) {
+                    throw new Error('Failed to generate suggestion')
+                }
+
+                const data = await response.json()
+
+                if (data.success && data.rewritten_sections && data.rewritten_sections[sectionType]) {
+                    const rewrittenContent = data.rewritten_sections[sectionType].rewritten_content
+                    setLastGenerated(rewrittenContent)
+                    onContentChange(rewrittenContent)
+                } else {
+                    throw new Error('No rewritten content received')
+                }
+            } else {
+                // For other strategies, use the existing mock API call
+                const response = await fetch('/api/edit/preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sectionId,
+                        presetId,
+                        currentContent,
+                        jdText
+                    })
+                })
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate suggestion')
+                }
+
+                const data = await response.json()
+                setLastGenerated(data.suggestion)
+                onContentChange(data.suggestion)
             }
-
-            const data = await response.json()
-            setLastGenerated(data.suggestion)
-            onContentChange(data.suggestion)
         } catch (error) {
             console.error('Error generating suggestion:', error)
             // Fallback to mock data for development
