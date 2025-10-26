@@ -381,6 +381,14 @@ export default function EditorPage({ params }: EditorPageProps) {
 
         setResumeListItem(updatedResumeListItem)
 
+        // Update editor state with extracted company name, email, and URL
+        setEditorState(prev => ({
+            ...prev,
+            companyName: extraction.company_name || prev.companyName,
+            companyEmail: extraction.company_email || prev.companyEmail,
+            companyUrl: extraction.company_url || prev.companyUrl
+        }))
+
         // If the title section is currently selected and we have a job title, refresh the editor content
         if (editorState.selectedSection === 'title' && extraction.job_title) {
             const jobTitle = extraction.job_title
@@ -922,6 +930,7 @@ export default function EditorPage({ params }: EditorPageProps) {
             // First, sync editor state values to resumeListItem
             let updatedResumeListItem = {
                 ...resumeListItem,
+                company_name: editorState.companyName || resumeListItem.company_name || '',
                 company_email: editorState.companyEmail || resumeListItem.company_email || '',
                 company_url: editorState.companyUrl || resumeListItem.company_url || '',
                 job_description: editorState.jdText || resumeListItem.job_description || ''
@@ -987,6 +996,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 updatedResumeListItem = {
                     ...resumeListItem,
                     resume_data: updatedResume,
+                    company_name: editorState.companyName || resumeListItem.company_name || '',
                     company_email: editorState.companyEmail || resumeListItem.company_email || '',
                     company_url: editorState.companyUrl || resumeListItem.company_url || '',
                     job_description: editorState.jdText
@@ -1003,6 +1013,7 @@ export default function EditorPage({ params }: EditorPageProps) {
                 // No pending changes, just update job description
                 updatedResumeListItem = {
                     ...resumeListItem,
+                    company_name: editorState.companyName || resumeListItem.company_name || '',
                     company_email: editorState.companyEmail || resumeListItem.company_email || '',
                     company_url: editorState.companyUrl || resumeListItem.company_url || '',
                     job_description: editorState.jdText,
