@@ -69,7 +69,15 @@ async function apiRequest<T>(
             },
         })
 
-        const data = response.ok ? await response.json() : null
+        // Parse JSON response, but handle empty bodies (like 204 No Content)
+        let data = null
+        if (response.status !== 204) {
+            try {
+                data = await response.json()
+            } catch {
+                // Empty or invalid JSON body - that's fine
+            }
+        }
 
         if (!response.ok) {
             const errorMessage = data?.detail || `HTTP ${response.status}: ${response.statusText}`
