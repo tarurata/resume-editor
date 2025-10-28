@@ -58,6 +58,11 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
         setExportError(null)
 
         try {
+            // Wait for personal info to be loaded
+            if (isLoadingPersonalInfo) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+            }
+
             // Create a temporary container to render the LaTeX-style resume
             const tempContainer = document.createElement('div')
             tempContainer.style.position = 'absolute'
@@ -373,7 +378,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
         } finally {
             setIsExporting(false)
         }
-    }, [resume])
+    }, [resume, personalInfo, isLoadingPersonalInfo])
 
     const handleServerSideExport = useCallback(async () => {
         setIsExporting(true)
