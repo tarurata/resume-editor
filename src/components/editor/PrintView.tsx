@@ -1,7 +1,8 @@
 'use client'
 
 import { Resume, PersonalInfo } from '@/types/resume'
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
+import { useReactToPrint } from 'react-to-print'
 import { pdfExportApi, personalInfoApi, ApiError } from '@/lib/api'
 import { LatexStyleResume } from './LatexStyleResume'
 
@@ -15,6 +16,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
     const [exportError, setExportError] = useState<string | null>(null)
     const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null)
     const [isLoadingPersonalInfo, setIsLoadingPersonalInfo] = useState(true)
+    const printRef = useRef<HTMLDivElement>(null)
 
     // Load personal information
     useEffect(() => {
@@ -40,12 +42,16 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
         loadPersonalInfo()
     }, [])
 
-    const handlePrint = useCallback(() => {
-        // Ensure the print dialog opens with proper settings
-        setTimeout(() => {
-            window.print()
-        }, 100)
-    }, [])
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `${resume.title} - Resume`,
+        pageStyle: `
+            @page {
+                size: letter;
+                margin: 0.5in;
+            }
+        `
+    })
 
     const handleBrowserPDFExport = useCallback(async () => {
         setIsExporting(true)
@@ -397,40 +403,6 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
     }, [resume])
 
     useEffect(() => {
-        // Add print-specific styles when component mounts
-        const style = document.createElement('style')
-        style.textContent = `
-            @media print {
-                body * {
-                    visibility: hidden;
-                }
-                .print-resume, .print-resume * {
-                    visibility: visible;
-                }
-                .print-resume {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                }
-                .no-print {
-                    display: none !important;
-                }
-                /* Ensure proper page breaks */
-                .page-break-before {
-                    page-break-before: always;
-                }
-                .page-break-after {
-                    page-break-after: always;
-                }
-                .page-break-inside-avoid {
-                    page-break-inside: avoid;
-                    break-inside: avoid;
-                }
-            }
-        `
-        document.head.appendChild(style)
-
         // Add keyboard shortcut for print (Ctrl/Cmd + P)
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
@@ -442,9 +414,6 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
         document.addEventListener('keydown', handleKeyDown)
 
         return () => {
-            if (document.head.contains(style)) {
-                document.head.removeChild(style)
-            }
             document.removeEventListener('keydown', handleKeyDown)
         }
     }, [handlePrint])
@@ -506,7 +475,7 @@ export function PrintView({ resume, onClose }: PrintViewProps) {
 
                 {/* Print Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-                    <div className="print-resume max-w-4xl mx-auto">
+                    <div ref={printRef} className="print-resume max-w-4xl mx-auto">
                         <LatexStyleResume resume={resume} personalInfo={personalInfo} />
                     </div>
                 </div>
