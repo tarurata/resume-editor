@@ -150,7 +150,7 @@ export default function NewResumePage() {
                         location: 'City, State',
                         startDate: '2020-01',
                         endDate: null,
-                        bullets: [
+                        achievements: [
                             'Developed and maintained web applications using modern technologies',
                             'Collaborated with cross-functional teams to deliver high-quality software',
                             'Implemented CI/CD pipelines and automated testing processes',
@@ -192,7 +192,7 @@ export default function NewResumePage() {
                         location: 'City, State',
                         startDate: '2020-01',
                         endDate: null,
-                        bullets: [
+                        achievements: [
                             'Developed machine learning models to solve business problems',
                             'Analyzed large datasets to identify trends and patterns',
                             'Created data visualizations and dashboards for stakeholders',
@@ -234,7 +234,7 @@ export default function NewResumePage() {
                         location: 'City, State',
                         startDate: '2020-01',
                         endDate: null,
-                        bullets: [
+                        achievements: [
                             'Led product strategy and roadmap development',
                             'Conducted market research and competitive analysis',
                             'Collaborated with engineering and design teams',

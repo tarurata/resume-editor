@@ -23,7 +23,7 @@ const sampleResume: Resume = {
             location: 'San Francisco, CA',
             startDate: '2021-03',
             endDate: null,
-            bullets: [
+            achievements: [
                 'Led development of microservices architecture serving 1M+ daily active users',
                 'Improved application performance by 40% through code optimization and caching strategies',
                 'Mentored 3 junior developers and established code review best practices',
@@ -36,7 +36,7 @@ const sampleResume: Resume = {
             location: 'Remote',
             startDate: '2019-06',
             endDate: '2021-02',
-            bullets: [
+            achievements: [
                 'Built responsive React applications with TypeScript and Redux',
                 'Developed RESTful APIs using Node.js and Express',
                 'Collaborated with design team to implement pixel-perfect UI components',
