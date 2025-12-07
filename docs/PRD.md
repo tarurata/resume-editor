@@ -35,10 +35,14 @@ A web-based resume editor that allows users to create, edit, and export professi
 - ✅ End-to-end edit suggestions within target latency
 - ✅ No unreviewed fabrications
 
+## M3 Scope - Login
+- ✅ Real /edit with guardrails + diffHtml
+
 ## Technical Architecture
 - **Canonical Format:** resume.json
 - **M1 Rendering:** JSON → React Components → HTML → PDF (print-css)
 - **M2 Rendering:** JSON → Server-side HTML → PDF
+- **M3 Authentication:** JWT-based auth with email/password
 - **Storage:** Browser localStorage (M1), Database (M2)
 
 ## M1 Acceptance Criteria
@@ -63,6 +67,11 @@ A web-based resume editor that allows users to create, edit, and export professi
 - [ ] Server-side PDF rendering via /export endpoint
 - [ ] Real-time editing with guardrails via /edit endpoint
 - [ ] Basic logging and healthcheck endpoints
+
+## M3 Acceptance Criteria
+- [ ] User can signup with their pw and email
+- [ ] User can login/logout 
+- [ ] User can see each own resumes after login
 
 ## Quick Start
 ```bash
