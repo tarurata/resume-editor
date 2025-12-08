@@ -10,10 +10,11 @@ interface LatexStyleResumeProps {
 export function LatexStyleResume({ resume, personalInfo }: LatexStyleResumeProps) {
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return 'Present'
-        const date = new Date(dateStr + '-01')
-        return date.toLocaleDateString('en-US', {
+        const date = new Date(dateStr + '-01') // Append day to make it a valid date
+        return date.toLocaleDateString(undefined, { // undefined uses the user's locale
             year: 'numeric',
-            month: 'short'
+            month: 'short',
+            timeZone: 'UTC',
         })
     }
 
