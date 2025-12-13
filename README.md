@@ -175,9 +175,10 @@ cat fixtures/sample-resume.json
 
 ## 🎯 Roadmap
 
-- **M1 (Current):** Core editor (frontend-only)
-- **M1.5 (Next):** PDF import beta with section verification
-- **M2 (Future):** Python backend with AI suggestions
+- **M1 :** Core editor (frontend-only)
+- **M1.5 :** PDF import beta with section verification
+- **M2 :** Python backend with AI suggestions
+- **M3 :** Login and user accounts
 
 ## 🤝 Contributing
 

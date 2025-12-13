@@ -74,3 +74,15 @@ These tasks address the immediate frontend accessibility issues and then focus o
 -   [ ] Write unit and integration tests for new backend authentication endpoints.
 -   [ ] Write end-to-end tests for the login and registration flows on the frontend.
 -   [ ] Verify that resume data is correctly segregated by user.
+
+## 4. Frontend Implementation (Untracked Files)
+
+The following files are part of the frontend implementation for the login feature. They are currently untracked and need to be committed.
+
+-   [ ] `app/login/`
+-   [ ] `app/register/`
+-   [ ] `docs/FRONTEND_LOGIN_TODO.md`
+-   [ ] `src/components/common/Navbar.tsx`
+-   [ ] `src/lib/AuthContext.tsx`
+-   [ ] `src/lib/withAuth.tsx`
+

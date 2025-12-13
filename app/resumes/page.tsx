@@ -4,8 +4,9 @@ import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ResumeList from '@/components/resumes/ResumeList'
+import withAuth from '@/lib/withAuth'
 
-export default function ResumesPage() {
+function ResumesPage() {
     const router = useRouter()
 
     const handleEditResume = (id: string) => {
@@ -51,3 +52,5 @@ export default function ResumesPage() {
         </div>
     )
 }
+
+export default withAuth(ResumesPage)

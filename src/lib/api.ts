@@ -3,9 +3,6 @@ import { Resume } from '@/types/resume'
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
 
-// Temporary user ID for M1 (no authentication required)
-const TEMP_USER_ID = 'temp-user-m1'
-
 // API Response Types
 interface ApiResponse<T> {
     data?: T
@@ -56,8 +53,16 @@ async function apiRequest<T>(
 ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`
 
-    const defaultHeaders = {
+    const defaultHeaders: HeadersInit = {
         'Content-Type': 'application/json',
+    }
+
+    // Retrieve JWT token  from localStorage
+    if (typeof window !== 'undefined') { // Ensure localStorage is only accessed on the client side
+        const token = localStorage.getItem('jwt_Token')
+        if (token) {
+            defaultHeaders['Authorization'] = `Bearer ${token}`
+        }
     }
 
     try {
@@ -106,7 +111,7 @@ export const resumeVersionApi = {
     // Create a new resume version
     async create(resumeData: Resume, companyName: string, jobTitle: string, companyEmail?: string, companyUrl?: string, jobDescription?: string): Promise<ResumeVersion> {
         const response = await apiRequest<ResumeVersion>(
-            `/resume-versions/?user_id=${TEMP_USER_ID}`,
+            `/resume-versions/`,
             {
                 method: 'POST',
                 body: JSON.stringify({
@@ -130,7 +135,7 @@ export const resumeVersionApi = {
 
     // Get all resume versions for user
     async getAll(): Promise<ResumeVersion[]> {
-        const response = await apiRequest<ResumeVersion[]>(`/resume-versions/user/${TEMP_USER_ID}`)
+        const response = await apiRequest<ResumeVersion[]>(`/resume-versions/`)
 
         if (!response.data) {
             throw new ApiError('Failed to fetch resume versions', response.status)
@@ -153,7 +158,7 @@ export const resumeVersionApi = {
     // Get active resume version
     async getActive(): Promise<ResumeVersion | null> {
         try {
-            const response = await apiRequest<ResumeVersion>(`/resume-versions/user/${TEMP_USER_ID}/active`)
+            const response = await apiRequest<ResumeVersion>(`/resume-versions/user/active`)
             return response.data || null
         } catch (error) {
             if (error instanceof ApiError && error.status === 404) {
@@ -183,7 +188,7 @@ export const resumeVersionApi = {
     // Set active resume version
     async setActive(versionId: string): Promise<ResumeVersion> {
         const response = await apiRequest<ResumeVersion>(
-            `/resume-versions/${versionId}/activate?user_id=${TEMP_USER_ID}`,
+            `/resume-versions/${versionId}/activate`,
             {
                 method: 'POST',
             }
@@ -223,14 +228,13 @@ export const resumeVersionApi = {
 // Personal Info API functions
 export const personalInfoApi = {
     // Create personal info
-    async create(personalInfo: Omit<PersonalInfo, 'user_id'>): Promise<PersonalInfo> {
+    async create(personalInfo: Omit<PersonalInfo, 'user_id' | 'id'>): Promise<PersonalInfo> {
         const response = await apiRequest<PersonalInfo>(
             '/personal-info/',
             {
                 method: 'POST',
                 body: JSON.stringify({
                     ...personalInfo,
-                    user_id: TEMP_USER_ID,
                 }),
             }
         )
@@ -245,7 +249,7 @@ export const personalInfoApi = {
     // Get personal info
     async get(): Promise<PersonalInfo | null> {
         try {
-            const response = await apiRequest<PersonalInfo>(`/personal-info/${TEMP_USER_ID}`)
+            const response = await apiRequest<PersonalInfo>(`/personal-info/`)
             return response.data || null
         } catch (error) {
             if (error instanceof ApiError && error.status === 404) {
@@ -258,7 +262,7 @@ export const personalInfoApi = {
     // Update personal info
     async update(updates: Partial<Omit<PersonalInfo, 'user_id'>>): Promise<PersonalInfo> {
         const response = await apiRequest<PersonalInfo>(
-            `/personal-info/${TEMP_USER_ID}`,
+            `/personal-info/`,
             {
                 method: 'PUT',
                 body: JSON.stringify(updates),
@@ -274,7 +278,7 @@ export const personalInfoApi = {
 
     // Delete personal info
     async delete(): Promise<void> {
-        await apiRequest(`/personal-info/${TEMP_USER_ID}`, {
+        await apiRequest(`/personal-info/`, {
             method: 'DELETE',
         })
     }
@@ -318,11 +322,18 @@ export const pdfExportApi = {
         const url = `${API_BASE_URL}/export/pdf-from-html`
 
         try {
+            const defaultHeaders: HeadersInit = {
+                'Content-Type': 'application/json',
+            }
+
+            if (typeof window  !== 'undefined') { 
+                const token = localStorage.getItem('jwt_Token')
+                if (token) {
+                    defaultHeaders['Authorization'] = `Bearer ${token}`
+                }
+
             const response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     html_content: htmlContent,
                     filename: filename || 'document.pdf',
@@ -373,6 +384,3 @@ export const healthApi = {
         return response.data
     }
 }
-
-// Export the temporary user ID for use in other parts of the app
-export { TEMP_USER_ID }

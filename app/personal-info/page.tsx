@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import PersonalInfoDisplay from '@/components/personal-info/PersonalInfoDisplay'
 import PersonalInfoEditor from '@/components/personal-info/PersonalInfoEditor'
 import { PersonalInfo } from '@/types/resume'
+import withAuth from '@/lib/withAuth' // Import withAuth HOC
 
-export default function PersonalInfoPage() {
+function PersonalInfoPage() { // Change to a regular function component
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [personalInfo, setPersonalInfo] = useState<PersonalInfo | null>(null)
@@ -68,7 +69,7 @@ export default function PersonalInfoPage() {
                             <div className="w-5 h-5 text-blue-600 mt-0.5">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                            </svg>
                             </div>
                             <div>
                                 <h3 className="text-blue-900 font-medium mb-1">About Personal Information</h3>
@@ -86,3 +87,5 @@ export default function PersonalInfoPage() {
         </div>
     )
 }
+
+export default withAuth(PersonalInfoPage)
