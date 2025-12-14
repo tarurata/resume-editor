@@ -79,10 +79,10 @@ These tasks address the immediate frontend accessibility issues and then focus o
 
 The following files are part of the frontend implementation for the login feature. They are currently untracked and need to be committed.
 
--   [ ] `app/login/`
--   [ ] `app/register/`
--   [ ] `docs/FRONTEND_LOGIN_TODO.md`
--   [ ] `src/components/common/Navbar.tsx`
--   [ ] `src/lib/AuthContext.tsx`
--   [ ] `src/lib/withAuth.tsx`
+-   [x] `app/login/`
+-   [x] `app/register/`
+-   [x] `docs/FRONTEND_LOGIN_TODO.md`
+-   [x] `src/components/common/Navbar.tsx`
+-   [x] `src/lib/AuthContext.tsx`
+-   [x] `src/lib/withAuth.tsx`
 

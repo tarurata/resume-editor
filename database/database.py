@@ -792,6 +792,27 @@ class DatabaseService:
             return copied_experiences
 
 
+    def get_users(self) -> List[Dict[str, Any]]:
+        """Get all users"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, email, hashed_password FROM users")
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
+    def update_user_password(self, user_id: str, hashed_password: str) -> bool:
+        """Update user password"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users 
+                SET hashed_password = ?, updated_at = ?
+                WHERE id = ?
+            """, (hashed_password, datetime.now(), user_id))
+            conn.commit()
+            return cursor.rowcount > 0
+
+
 # FastAPI dependency for database access
 def get_db():
     """FastAPI dependency to get database service instance"""
