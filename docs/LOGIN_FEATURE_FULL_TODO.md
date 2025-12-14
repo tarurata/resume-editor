@@ -8,9 +8,9 @@ These tasks focus on creating the necessary backend infrastructure for user auth
 
 -   [x] **Database Changes:**
     -   Add `hashed_password` to the `users` table in the database. (This requires a migration script if the database is already deployed).
--   [ ] **Post-Migration Cleanup:**
-    -   Update the existing user(s) with a real hashed password. The user created before this migration has a placeholder password 'NOT_A_VALID_PASSWORD'.
-    -   Once all users are updated, create a new migration to remove the `DEFAULT` value from the `hashed_password` column to enforce password creation at the application level.
+-   [x] **Post-Migration Cleanup:**
+    -   [x] Update the existing user(s) with a real hashed password. The user created before this migration has a placeholder password 'NOT_A_VALID_PASSWORD'.
+    -   [x] Once all users are updated, create a new migration to remove the `DEFAULT` value from the `hashed_password` column to enforce password creation at the application level.
 -   [ ] **Create Pydantic Models for User:**
     -   In `backend-app/models/user.py` (or similar), define `User` (for database representation) and `UserCreate` (for registration input).
 -   [ ] **Implement Password Hashing Utility:**
