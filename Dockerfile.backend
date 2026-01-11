@@ -48,7 +48,7 @@ RUN playwright install chromium
 
 # Copy application code
 COPY backend-app/ ./app/
-COPY database/ ./database/
+COPY database/ ./app/database/
 COPY schemas/ ./schemas/
 
 # Copy PDF templates

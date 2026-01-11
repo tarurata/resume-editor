@@ -5,20 +5,16 @@ CRUD operations for personal information
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
-from database.database import DatabaseService
-from database.models import PersonalInfo
+from app.database.database import get_db, DatabaseService
+from app.models.user import User
+from app.core.security import get_current_user
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Dependency to get database service
-def get_database_service():
-    return DatabaseService()
-
 # Request/Response models
 class PersonalInfoCreate(BaseModel):
     """Model for creating personal information"""
-    user_id: str
     full_name: str
     email: str
     phone: Optional[str] = None
@@ -35,84 +31,90 @@ class PersonalInfoUpdate(BaseModel):
     linkedin_url: Optional[str] = None
     portfolio_url: Optional[str] = None
 
-@router.post("/", response_model=PersonalInfo, status_code=201)
+class PersonalInfoResponse(BaseModel):
+    """Response model for personal information"""
+    id: int
+    user_id: int
+    full_name: str
+    email: str
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+@router.post("/", response_model=PersonalInfoResponse, status_code=201)
 async def create_personal_info(
     personal_info_data: PersonalInfoCreate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create personal information for a user"""
     try:
         # Check if personal info already exists for user
-        existing = db.get_personal_info(personal_info_data.user_id)
+        existing = db.get_personal_info(current_user.id)
         if existing:
             raise HTTPException(
                 status_code=400,
-                detail=f"Personal information already exists for user {personal_info_data.user_id}"
+                detail=f"Personal information already exists for user {current_user.id}"
             )
         
         # Create new personal info
-        personal_info = PersonalInfo(**personal_info_data.dict())
-        result = db.create_personal_info(personal_info)
+        result = db.create_personal_info(current_user.id, personal_info_data)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.get("/{user_id}", response_model=PersonalInfo)
+@router.get("/", response_model=PersonalInfoResponse)
 async def get_personal_info(
-    user_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get personal information by user ID"""
-    personal_info = db.get_personal_info(user_id)
+    personal_info = db.get_personal_info(current_user.id)
     if not personal_info:
         raise HTTPException(
             status_code=404,
-            detail=f"Personal information not found for user {user_id}"
+            detail=f"Personal information not found for user {current_user.id}"
         )
     return personal_info
 
-@router.put("/{user_id}", response_model=PersonalInfo)
+@router.put("/", response_model=PersonalInfoResponse)
 async def update_personal_info(
-    user_id: str,
     personal_info_data: PersonalInfoUpdate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update personal information for a user"""
     try:
-        # Get existing personal info
-        existing = db.get_personal_info(user_id)
-        if not existing:
+        result = db.update_personal_info(current_user.id, personal_info_data)
+        if not result:
             raise HTTPException(
                 status_code=404,
-                detail=f"Personal information not found for user {user_id}"
+                detail=f"Personal information not found for user {current_user.id}"
             )
-        
-        # Update only provided fields
-        update_data = personal_info_data.dict(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(existing, field, value)
-        
-        result = db.update_personal_info(existing)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.delete("/{user_id}", status_code=204)
+@router.delete("/", status_code=204)
 async def delete_personal_info(
-    user_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Delete personal information for a user"""
     try:
-        success = db.delete_personal_info(user_id)
+        success = db.delete_personal_info(current_user.id)
         if not success:
             raise HTTPException(
                 status_code=404,
-                detail=f"Personal information not found for user {user_id}"
+                detail=f"Personal information not found for user {current_user.id}"
             )
         return None
     except HTTPException:

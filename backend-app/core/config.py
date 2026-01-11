@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # AI rate limiting
     ai_max_requests_per_minute: int = 60
     ai_max_tokens_per_minute: int = 150000
+
+    # JWT settings
+    jwt_secret_key: str = "a_very_secret_key"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
     
     class Config:
         env_file = ".env.local"

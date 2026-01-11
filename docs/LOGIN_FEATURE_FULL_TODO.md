@@ -11,14 +11,14 @@ These tasks focus on creating the necessary backend infrastructure for user auth
 -   [x] **Post-Migration Cleanup:**
     -   [x] Update the existing user(s) with a real hashed password. The user created before this migration has a placeholder password 'NOT_A_VALID_PASSWORD'.
     -   [x] Once all users are updated, create a new migration to remove the `DEFAULT` value from the `hashed_password` column to enforce password creation at the application level.
--   [ ] **Create Pydantic Models for User:**
+-   [x] **Create Pydantic Models for User:**
     -   In `backend-app/models/user.py` (or similar), define `User` (for database representation) and `UserCreate` (for registration input).
--   [ ] **Implement Password Hashing Utility:**
+-   [x] **Implement Password Hashing Utility:**
     -   In `backend-app/core/security.py` (or similar), create functions for securely hashing and verifying passwords (e.g., using `passlib` and `cryptography`).
--   [ ] **Create Backend API Endpoints for User Registration:**
+-   [x] **Create Backend API Endpoints for User Registration:**
     -   Define a new endpoint (e.g., in `backend-app/api/auth.py`) that accepts `UserCreate` data.
     -   Hash the password and save the new user to the `users` table.
--   [ ] **Create Backend API Endpoints for User Login:**
+-   [x] **Create Backend API Endpoints for User Login:**
     -   Define a new endpoint that accepts credentials (e.g., email and password).
     -   Verify the password against the stored hash.
     -   Generate and return a JWT upon successful authentication.

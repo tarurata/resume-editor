@@ -73,7 +73,7 @@ class DatabaseService:
                 return PersonalInfo(**dict(row))
             return None
     
-    def update_personal_info(self, personal_info: PersonalInfo) -> PersonalInfo:
+    def update_personal_info(self, user_id: str, personal_info: PersonalInfo) -> PersonalInfo:
         """Update personal information"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -83,14 +83,14 @@ class DatabaseService:
                 UPDATE personal_info 
                 SET full_name = ?, email = ?, phone = ?, location = ?, 
                     linkedin_url = ?, portfolio_url = ?, updated_at = ?
-                WHERE id = ?
+                WHERE user_id = ?
             """, (
                 personal_info.full_name, personal_info.email, personal_info.phone,
                 personal_info.location, personal_info.linkedin_url, personal_info.portfolio_url,
-                personal_info.updated_at, personal_info.id
+                personal_info.updated_at, user_id
             ))
             conn.commit()
-            return personal_info
+            return self.get_personal_info(user_id)
     
     def delete_personal_info(self, user_id: str) -> bool:
         """Delete personal information"""
@@ -101,11 +101,12 @@ class DatabaseService:
             return cursor.rowcount > 0
     
     # Education operations
-    def create_education(self, education: Education) -> Education:
+    def create_education(self, user_id: str, education: Education) -> Education:
         """Create education entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             education.id = str(uuid.uuid4())
+            education.user_id = user_id
             education.created_at = datetime.now()
             education.updated_at = datetime.now()
             
@@ -129,7 +130,7 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Education(**dict(row)) for row in rows]
     
-    def update_education(self, education: Education) -> Education:
+    def update_education(self, education_id: str, user_id: str, education: Education) -> Education:
         """Update education entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -139,29 +140,30 @@ class DatabaseService:
                 UPDATE education 
                 SET degree = ?, institution = ?, field_of_study = ?, graduation_date = ?,
                     gpa = ?, location = ?, updated_at = ?
-                WHERE id = ?
+                WHERE id = ? AND user_id = ?
             """, (
                 education.degree, education.institution, education.field_of_study,
                 education.graduation_date, education.gpa, education.location,
-                education.updated_at, education.id
+                education.updated_at, education_id, user_id
             ))
             conn.commit()
-            return education
+            return self.get_education_by_id(education_id, user_id)
     
-    def delete_education(self, education_id: str) -> bool:
+    def delete_education(self, education_id: str, user_id: str) -> bool:
         """Delete education entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM education WHERE id = ?", (education_id,))
+            cursor.execute("DELETE FROM education WHERE id = ? AND user_id = ?", (education_id, user_id))
             conn.commit()
             return cursor.rowcount > 0
     
     # Certification operations
-    def create_certification(self, certification: Certification) -> Certification:
+    def create_certification(self, user_id: str, certification: Certification) -> Certification:
         """Create certification entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             certification.id = str(uuid.uuid4())
+            certification.user_id = user_id
             certification.created_at = datetime.now()
             certification.updated_at = datetime.now()
             
@@ -185,7 +187,7 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Certification(**dict(row)) for row in rows]
     
-    def update_certification(self, certification: Certification) -> Certification:
+    def update_certification(self, certification_id: str, user_id: str, certification: Certification) -> Certification:
         """Update certification entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -195,38 +197,38 @@ class DatabaseService:
                 UPDATE certifications 
                 SET name = ?, issuer = ?, issue_date = ?, expiry_date = ?,
                     credential_id = ?, updated_at = ?
-                WHERE id = ?
+                WHERE id = ? AND user_id = ?
             """, (
                 certification.name, certification.issuer, certification.issue_date,
                 certification.expiry_date, certification.credential_id,
-                certification.updated_at, certification.id
+                certification.updated_at, certification_id, user_id
             ))
             conn.commit()
-            return certification
+            return self.get_certification_by_id(certification_id, user_id)
     
-    def delete_certification(self, certification_id: str) -> bool:
+    def delete_certification(self, certification_id: str, user_id: str) -> bool:
         """Delete certification entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM certifications WHERE id = ?", (certification_id,))
+            cursor.execute("DELETE FROM certifications WHERE id = ? AND user_id = ?", (certification_id, user_id))
             conn.commit()
             return cursor.rowcount > 0
     
-    def get_education_by_id(self, education_id: str) -> Optional[Education]:
+    def get_education_by_id(self, education_id: str, user_id: str) -> Optional[Education]:
         """Get education entry by ID"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM education WHERE id = ?", (education_id,))
+            cursor.execute("SELECT * FROM education WHERE id = ? AND user_id = ?", (education_id, user_id))
             row = cursor.fetchone()
             if row:
                 return Education(**dict(row))
             return None
     
-    def get_certification_by_id(self, certification_id: str) -> Optional[Certification]:
+    def get_certification_by_id(self, certification_id: str, user_id: str) -> Optional[Certification]:
         """Get certification by ID"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM certifications WHERE id = ?", (certification_id,))
+            cursor.execute("SELECT * FROM certifications WHERE id = ? AND user_id = ?", (certification_id, user_id))
             row = cursor.fetchone()
             if row:
                 return Certification(**dict(row))
@@ -271,11 +273,11 @@ class DatabaseService:
                 versions.append(ResumeVersion(**data))
             return versions
     
-    def get_resume_version(self, version_id: str) -> Optional[ResumeVersion]:
+    def get_resume_version(self, version_id: str, user_id: str) -> Optional[ResumeVersion]:
         """Get specific resume version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM resume_versions WHERE id = ?", (version_id,))
+            cursor.execute("SELECT * FROM resume_versions WHERE id = ? AND user_id = ?", (version_id, user_id))
             row = cursor.fetchone()
             if row:
                 data = dict(row)
@@ -283,7 +285,7 @@ class DatabaseService:
                 return ResumeVersion(**data)
             return None
     
-    def update_resume_version(self, version_id: str, update_data: ResumeVersionUpdate) -> Optional[ResumeVersion]:
+    def update_resume_version(self, version_id: str, update_data: ResumeVersionUpdate, user_id: str) -> Optional[ResumeVersion]:
         """Update resume version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -321,23 +323,24 @@ class DatabaseService:
                 values.append(update_data.is_active)
             
             if not update_fields:
-                return self.get_resume_version(version_id)
+                return self.get_resume_version(version_id, user_id)
             
             update_fields.append("updated_at = ?")
             values.append(datetime.now())
             values.append(version_id)
+            values.append(user_id)
             
-            query = f"UPDATE resume_versions SET {', '.join(update_fields)} WHERE id = ?"
+            query = f"UPDATE resume_versions SET {', '.join(update_fields)} WHERE id = ? AND user_id = ?"
             cursor.execute(query, values)
             conn.commit()
             
-            return self.get_resume_version(version_id)
+            return self.get_resume_version(version_id, user_id)
     
-    def delete_resume_version(self, version_id: str) -> bool:
+    def delete_resume_version(self, version_id: str, user_id: str) -> bool:
         """Delete resume version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM resume_versions WHERE id = ?", (version_id,))
+            cursor.execute("DELETE FROM resume_versions WHERE id = ? AND user_id = ?", (version_id, user_id))
             conn.commit()
             return cursor.rowcount > 0
     
@@ -356,7 +359,7 @@ class DatabaseService:
             return cursor.rowcount > 0
     
     # Application operations
-    def create_application(self, application: ApplicationCreate) -> Application:
+    def create_application(self, user_id: str, application: ApplicationCreate) -> Application:
         """Create application tracking entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -395,7 +398,7 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Application(**dict(row)) for row in rows]
     
-    def update_application(self, application_id: str, update_data: ApplicationUpdate) -> Optional[Application]:
+    def update_application(self, application_id: str, user_id: str, update_data: ApplicationUpdate) -> Optional[Application]:
         """Update application"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -429,43 +432,49 @@ class DatabaseService:
                 values.append(update_data.follow_up_date)
             
             if not update_fields:
-                return self.get_application(application_id)
+                return self.get_application(application_id, user_id)
             
             update_fields.append("updated_at = ?")
             values.append(datetime.now())
             values.append(application_id)
+            values.append(user_id)
             
-            query = f"UPDATE applications SET {', '.join(update_fields)} WHERE id = ?"
+            query = f"UPDATE applications SET {', '.join(update_fields)} WHERE id = ? AND resume_version_id IN (SELECT id FROM resume_versions WHERE user_id = ?)"
             cursor.execute(query, values)
             conn.commit()
             
-            return self.get_application(application_id)
+            return self.get_application(application_id, user_id)
     
-    def get_application(self, application_id: str) -> Optional[Application]:
+    def get_application(self, application_id: str, user_id: str) -> Optional[Application]:
         """Get specific application"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM applications WHERE id = ?", (application_id,))
+            cursor.execute("SELECT a.* FROM applications a JOIN resume_versions rv ON a.resume_version_id = rv.id WHERE a.id = ? AND rv.user_id = ?", (application_id, user_id))
             row = cursor.fetchone()
             if row:
                 return Application(**dict(row))
             return None
     
-    def delete_application(self, application_id: str) -> bool:
+    def delete_application(self, application_id: str, user_id: str) -> bool:
         """Delete application"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM applications WHERE id = ?", (application_id,))
+            cursor.execute("DELETE FROM applications WHERE id = ? AND resume_version_id IN (SELECT id FROM resume_versions WHERE user_id = ?)", (application_id, user_id))
             conn.commit()
             return cursor.rowcount > 0
     
     # Resume History operations
-    def add_resume_history(self, resume_version_id: str, change_type: str, 
+    def add_resume_history(self, resume_version_id: str, user_id: str, change_type: str, 
                           section_changed: str, old_value: Optional[dict] = None,
                           new_value: Optional[dict] = None, change_reason: Optional[str] = None):
         """Add entry to resume history"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this resume version
+            rv = self.get_resume_version(resume_version_id, user_id)
+            if not rv:
+                return
+
             history_id = str(uuid.uuid4())
             now = datetime.now()
             
@@ -481,10 +490,15 @@ class DatabaseService:
             ))
             conn.commit()
     
-    def get_resume_history(self, resume_version_id: str) -> List[ResumeHistory]:
+    def get_resume_history(self, resume_version_id: str, user_id: str) -> List[ResumeHistory]:
         """Get resume history for a version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this resume version
+            rv = self.get_resume_version(resume_version_id, user_id)
+            if not rv:
+                return []
+                
             cursor.execute("""
                 SELECT * FROM resume_history 
                 WHERE resume_version_id = ? 
@@ -500,10 +514,15 @@ class DatabaseService:
             return history
 
     # Experience operations
-    def create_experience(self, experience: ExperienceCreate) -> Experience:
+    def create_experience(self, experience: ExperienceCreate, user_id: str) -> Experience:
         """Create a new experience entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this resume version
+            rv = self.get_resume_version(experience.resume_version_id, user_id)
+            if not rv:
+                return None
+
             experience_id = str(uuid.uuid4())
             now = datetime.now()
             
@@ -526,10 +545,15 @@ class DatabaseService:
                 created_at=now, updated_at=now
             )
 
-    def get_experiences(self, resume_version_id: str) -> List[Experience]:
+    def get_experiences(self, resume_version_id: str, user_id: str) -> List[Experience]:
         """Get all experiences for a resume version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this resume version
+            rv = self.get_resume_version(resume_version_id, user_id)
+            if not rv:
+                return []
+
             cursor.execute("""
                 SELECT * FROM experiences 
                 WHERE resume_version_id = ? 
@@ -538,17 +562,17 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Experience(**dict(row)) for row in rows]
 
-    def get_experience(self, experience_id: str) -> Optional[Experience]:
+    def get_experience(self, experience_id: str, user_id: str) -> Optional[Experience]:
         """Get specific experience by ID"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM experiences WHERE id = ?", (experience_id,))
+            cursor.execute("SELECT e.* FROM experiences e JOIN resume_versions rv ON e.resume_version_id = rv.id WHERE e.id = ? AND rv.user_id = ?", (experience_id, user_id))
             row = cursor.fetchone()
             if row:
                 return Experience(**dict(row))
             return None
 
-    def update_experience(self, experience_id: str, update_data: ExperienceUpdate) -> Optional[Experience]:
+    def update_experience(self, experience_id: str, update_data: ExperienceUpdate, user_id: str) -> Optional[Experience]:
         """Update experience entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -582,23 +606,29 @@ class DatabaseService:
                 values.append(update_data.order_index)
             
             if not update_fields:
-                return self.get_experience(experience_id)
+                return self.get_experience(experience_id, user_id)
             
             update_fields.append("updated_at = ?")
             values.append(datetime.now())
             values.append(experience_id)
+            values.append(user_id)
             
-            query = f"UPDATE experiences SET {', '.join(update_fields)} WHERE id = ?"
+            query = f"UPDATE experiences SET {', '.join(update_fields)} WHERE id = ? AND resume_version_id IN (SELECT id FROM resume_versions WHERE user_id = ?)"
             cursor.execute(query, values)
             conn.commit()
             
-            return self.get_experience(experience_id)
+            return self.get_experience(experience_id, user_id)
 
-    def delete_experience(self, experience_id: str) -> bool:
+    def delete_experience(self, experience_id: str, user_id: str) -> bool:
         """Delete experience entry and all its achievements"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
+            # First, verify the user has access to this experience
+            exp = self.get_experience(experience_id, user_id)
+            if not exp:
+                return False
+
             # Delete all achievements first (CASCADE should handle this, but being explicit)
             cursor.execute("DELETE FROM achievements WHERE experience_id = ?", (experience_id,))
             
@@ -608,10 +638,15 @@ class DatabaseService:
             return cursor.rowcount > 0
 
     # Achievement operations
-    def create_achievement(self, achievement: AchievementCreate) -> Achievement:
+    def create_achievement(self, achievement: AchievementCreate, user_id: str) -> Achievement:
         """Create a new achievement"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this experience
+            exp = self.get_experience(achievement.experience_id, user_id)
+            if not exp:
+                return None
+
             achievement_id = str(uuid.uuid4())
             now = datetime.now()
             
@@ -630,10 +665,14 @@ class DatabaseService:
                 created_at=now, updated_at=now
             )
 
-    def get_achievements(self, experience_id: str) -> List[Achievement]:
+    def get_achievements(self, experience_id: str, user_id: str) -> List[Achievement]:
         """Get all achievements for an experience"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this experience
+            exp = self.get_experience(experience_id, user_id)
+            if not exp:
+                return []
             cursor.execute("""
                 SELECT * FROM achievements 
                 WHERE experience_id = ? 
@@ -642,20 +681,24 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Achievement(**dict(row)) for row in rows]
 
-    def get_achievement(self, achievement_id: str) -> Optional[Achievement]:
+    def get_achievement(self, achievement_id: str, user_id: str) -> Optional[Achievement]:
         """Get specific achievement by ID"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM achievements WHERE id = ?", (achievement_id,))
+            cursor.execute("SELECT a.* FROM achievements a JOIN experiences e ON a.experience_id = e.id JOIN resume_versions rv ON e.resume_version_id = rv.id WHERE a.id = ? AND rv.user_id = ?", (achievement_id, user_id))
             row = cursor.fetchone()
             if row:
                 return Achievement(**dict(row))
             return None
 
-    def update_achievement(self, achievement_id: str, update_data: AchievementUpdate) -> Optional[Achievement]:
+    def update_achievement(self, achievement_id: str, update_data: AchievementUpdate, user_id: str) -> Optional[Achievement]:
         """Update achievement"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this achievement
+            ach = self.get_achievement(achievement_id, user_id)
+            if not ach:
+                return None
             
             # Build dynamic update query
             update_fields = []
@@ -670,7 +713,7 @@ class DatabaseService:
                 values.append(update_data.order_index)
             
             if not update_fields:
-                return self.get_achievement(achievement_id)
+                return self.get_achievement(achievement_id, user_id)
             
             update_fields.append("updated_at = ?")
             values.append(datetime.now())
@@ -680,20 +723,28 @@ class DatabaseService:
             cursor.execute(query, values)
             conn.commit()
             
-            return self.get_achievement(achievement_id)
+            return self.get_achievement(achievement_id, user_id)
 
-    def delete_achievement(self, achievement_id: str) -> bool:
+    def delete_achievement(self, achievement_id: str, user_id: str) -> bool:
         """Delete achievement"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this achievement
+            ach = self.get_achievement(achievement_id, user_id)
+            if not ach:
+                return False
             cursor.execute("DELETE FROM achievements WHERE id = ?", (achievement_id,))
             conn.commit()
             return cursor.rowcount > 0
 
-    def get_experiences_with_achievements(self, resume_version_id: str) -> List[Dict[str, Any]]:
+    def get_experiences_with_achievements(self, resume_version_id: str, user_id: str) -> List[Dict[str, Any]]:
         """Get experiences with their achievements for a resume version"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            # First, verify the user has access to this resume version
+            rv = self.get_resume_version(resume_version_id, user_id)
+            if not rv:
+                return []
             cursor.execute("""
                 SELECT e.*, a.id as achievement_id, a.achievement_text, a.order_index as achievement_order
                 FROM experiences e
@@ -731,22 +782,17 @@ class DatabaseService:
             
             return list(experiences.values())
 
-    def copy_experiences(self, from_resume_version_id: str, to_resume_version_id: str) -> List[Experience]:
+    def copy_experiences(self, from_resume_version_id: str, to_resume_version_id: str, user_id: str) -> List[Experience]:
         """Copy all experiences from one resume version to another"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
             # Get all experiences from the source resume version
-            cursor.execute("""
-                SELECT * FROM experiences 
-                WHERE resume_version_id = ? 
-                ORDER BY order_index ASC, created_at ASC
-            """, (from_resume_version_id,))
-            source_experiences = cursor.fetchall()
+            source_experiences = self.get_experiences(from_resume_version_id, user_id)
             
             copied_experiences = []
             
-            for exp_row in source_experiences:
+            for exp in source_experiences:
                 # Create new experience for the target resume version
                 new_experience_id = str(uuid.uuid4())
                 now = datetime.now()
@@ -756,35 +802,30 @@ class DatabaseService:
                                           location, start_date, end_date, order_index, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    new_experience_id, to_resume_version_id, exp_row['role'],
-                    exp_row['organization'], exp_row['location'], exp_row['start_date'],
-                    exp_row['end_date'], exp_row['order_index'], now, now
+                    new_experience_id, to_resume_version_id, exp.role,
+                    exp.organization, exp.location, exp.start_date,
+                    exp.end_date, exp.order_index, now, now
                 ))
                 
                 # Copy achievements for this experience
-                cursor.execute("""
-                    SELECT * FROM achievements 
-                    WHERE experience_id = ? 
-                    ORDER BY order_index ASC, created_at ASC
-                """, (exp_row['id'],))
-                source_achievements = cursor.fetchall()
+                source_achievements = self.get_achievements(exp.id, user_id)
                 
-                for ach_row in source_achievements:
+                for ach in source_achievements:
                     new_achievement_id = str(uuid.uuid4())
                     cursor.execute("""
                         INSERT INTO achievements (id, experience_id, achievement_text, order_index, created_at, updated_at)
                         VALUES (?, ?, ?, ?, ?, ?)
                     """, (
-                        new_achievement_id, new_experience_id, ach_row['achievement_text'],
-                        ach_row['order_index'], now, now
+                        new_achievement_id, new_experience_id, ach.achievement_text,
+                        ach.order_index, now, now
                     ))
                 
                 # Create Experience object for return
                 copied_experiences.append(Experience(
                     id=new_experience_id, resume_version_id=to_resume_version_id,
-                    role=exp_row['role'], organization=exp_row['organization'],
-                    location=exp_row['location'], start_date=exp_row['start_date'],
-                    end_date=exp_row['end_date'], order_index=exp_row['order_index'],
+                    role=exp.role, organization=exp.organization,
+                    location=exp.location, start_date=exp.start_date,
+                    end_date=exp.end_date, order_index=exp.order_index,
                     created_at=now, updated_at=now
                 ))
             
@@ -811,6 +852,33 @@ class DatabaseService:
             """, (hashed_password, datetime.now(), user_id))
             conn.commit()
             return cursor.rowcount > 0
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Get user by email"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+            return None
+
+    def create_user(self, user: "UserCreate", hashed_password: str) -> Dict[str, Any]:
+        """Create a new user"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            user_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            cursor.execute("""
+                INSERT INTO users (id, email, hashed_password, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                user_id, user.email, hashed_password, True, now, now
+            ))
+            conn.commit()
+            
+            return {"id": user_id, "email": user.email, "is_active": True}
 
 
 # FastAPI dependency for database access

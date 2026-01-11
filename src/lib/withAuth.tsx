@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from './AuthContext'
 import { ComponentType } from 'react'
 
@@ -9,14 +9,15 @@ const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
   const ComponentWithAuth = (props: P) => {
     const { isAuthenticated } = useAuth()
     const router = useRouter()
+    const pathname = usePathname()
 
     useEffect(() => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated && pathname !== '/login' && pathname !== '/register') {
         router.push('/login')
       }
-    }, [isAuthenticated, router])
+    }, [isAuthenticated, router, pathname])
 
-    return isAuthenticated ? <WrappedComponent {...props} /> : null
+    return isAuthenticated || pathname === '/login' || pathname === '/register' ? <WrappedComponent {...props} /> : null
   }
 
   return ComponentWithAuth

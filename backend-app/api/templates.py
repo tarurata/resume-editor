@@ -5,15 +5,22 @@ Resume template management
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
-from database.database import DatabaseService
-from database.models import Template
+from app.database.database import get_db, DatabaseService
+from app.models.user import User
+from app.core.security import get_current_user
 from pydantic import BaseModel
 
-router = APIRouter()
+# Mock Template model since this feature is not implemented
+class Template(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    industry: Optional[str] = None
+    template_data: dict
+    is_public: bool = False
 
-# Dependency to get database service
-def get_database_service():
-    return DatabaseService()
+
+router = APIRouter()
 
 # Request/Response models
 class TemplateCreate(BaseModel):
@@ -23,7 +30,6 @@ class TemplateCreate(BaseModel):
     industry: Optional[str] = None
     template_data: dict
     is_public: bool = False
-    created_by: Optional[str] = None
 
 class TemplateUpdate(BaseModel):
     """Model for updating template"""
@@ -40,7 +46,8 @@ class TemplateResponse(Template):
 @router.post("/", response_model=Template, status_code=201)
 async def create_template(
     template_data: TemplateCreate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new resume template"""
     try:
@@ -57,7 +64,8 @@ async def create_template(
 async def get_templates(
     is_public: Optional[bool] = None,
     industry: Optional[str] = None,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all templates with optional filtering"""
     try:
@@ -72,8 +80,9 @@ async def get_templates(
 
 @router.get("/{template_id}", response_model=Template)
 async def get_template(
-    template_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    template_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get a specific template by ID"""
     try:
@@ -88,9 +97,10 @@ async def get_template(
 
 @router.put("/{template_id}", response_model=Template)
 async def update_template(
-    template_id: str,
+    template_id: int,
     template_data: TemplateUpdate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update a template"""
     try:
@@ -105,8 +115,9 @@ async def update_template(
 
 @router.delete("/{template_id}", status_code=204)
 async def delete_template(
-    template_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    template_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Delete a template"""
     try:
@@ -122,7 +133,8 @@ async def delete_template(
 @router.get("/industry/{industry}", response_model=List[Template])
 async def get_templates_by_industry(
     industry: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get templates filtered by industry"""
     try:
@@ -137,7 +149,8 @@ async def get_templates_by_industry(
 
 @router.get("/public/", response_model=List[Template])
 async def get_public_templates(
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all public templates"""
     try:

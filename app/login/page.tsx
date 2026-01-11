@@ -2,17 +2,40 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function LoginPage() {
     const router = useRouter()
+    const { login } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Implement actual login logic
-        console.log('Logging in with:', { email, password })
-        router.push('/resumes')
+        setError('')
+
+        try {
+            const response = await fetch('/api/v1/auth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    username: email,
+                    password: password,
+                }),
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                login(data.access_token)
+                router.push('/resumes')
+            } else {
+                const errorData = await response.json()
+                setError(errorData.detail || 'Failed to login')
+            }
+        } catch (error) {
+            setError('An error occurred. Please try again.')
+        }
     }
 
     return (
@@ -26,6 +49,7 @@ export default function LoginPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                     <form className="space-y-6" onSubmit={handleLogin}>
+                        {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Email address

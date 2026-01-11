@@ -1,15 +1,20 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
 from app.models.resume import EditRequest, EditResponse, StrategyEditRequest, StrategyEditResponse, Resume
 from app.services.fact_checker import FactChecker
 import uuid
 from datetime import datetime
+from app.core.security import get_current_user
+
+
+
+from app.models.user import User
 
 router = APIRouter()
 
 
 @router.post("/edit", response_model=EditResponse)
-async def edit_resume_section(edit_request: EditRequest) -> EditResponse:
+async def edit_resume_section(edit_request: EditRequest, current_user: User = Depends(get_current_user)) -> EditResponse:
     """
     Edit a specific section of a resume.
     
@@ -51,7 +56,7 @@ async def edit_resume_section(edit_request: EditRequest) -> EditResponse:
 
 
 @router.get("/edit/history/{section_id}", response_model=List[EditResponse])
-async def get_section_history(section_id: str) -> List[EditResponse]:
+async def get_section_history(section_id: str, current_user: User = Depends(get_current_user)) -> List[EditResponse]:
     """
     Get the edit history for a specific section.
     
@@ -63,7 +68,7 @@ async def get_section_history(section_id: str) -> List[EditResponse]:
 
 
 @router.post("/edit/restore/{change_id}", response_model=EditResponse)
-async def restore_edit(change_id: str) -> EditResponse:
+async def restore_edit(change_id: str, current_user: User = Depends(get_current_user)) -> EditResponse:
     """
     Restore a previous edit by its change ID.
     
@@ -78,7 +83,7 @@ async def restore_edit(change_id: str) -> EditResponse:
 
 
 @router.post("/strategy", response_model=StrategyEditResponse)
-async def edit_with_strategy(strategy_request: StrategyEditRequest) -> StrategyEditResponse:
+async def edit_with_strategy(strategy_request: StrategyEditRequest, current_user: User = Depends(get_current_user)) -> StrategyEditResponse:
     """
     Edit a resume section using AI strategy-based prompts.
     

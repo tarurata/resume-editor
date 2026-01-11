@@ -4,19 +4,52 @@ Handles CRUD operations for work experiences and achievements
 """
 
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
-from database.database import DatabaseService
-from database.models import (
-    Experience, Achievement, ExperienceCreate, ExperienceUpdate,
-    AchievementCreate, AchievementUpdate
-)
+from app.database.database import get_db, DatabaseService
+from app.models.user import User
+from app.core.security import get_current_user
+from pydantic import BaseModel
+
+# Mock models since resume.py is not implemented
+class Achievement(BaseModel):
+    id: int
+    description: str
+    experience_id: int
+
+class AchievementCreate(BaseModel):
+    description: str
+
+class AchievementUpdate(BaseModel):
+    description: Optional[str] = None
+
+class Experience(BaseModel):
+    id: int
+    company_name: str
+    role: str
+    start_date: str # Assuming date as string for simplicity
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    resume_version_id: int
+    # achievements: List[Achievement] = [] # Commenting out to avoid complexity
+
+class ExperienceCreate(BaseModel):
+    company_name: str
+    role: str
+    start_date: str
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+class ExperienceUpdate(BaseModel):
+    company_name: Optional[str] = None
+    role: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+
 
 router = APIRouter()
-
-# Dependency to get database service
-def get_database_service():
-    return DatabaseService()
 
 # Request models
 class AchievementCreateRequest(BaseModel):
@@ -24,39 +57,41 @@ class AchievementCreateRequest(BaseModel):
     achievement_text: str
     order_index: int = 0
 
-
 @router.post("/", response_model=Experience)
 async def create_experience(
     experience: ExperienceCreate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new experience entry"""
     try:
-        return db.create_experience(experience)
+        return db.create_experience(experience, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/resume/{resume_version_id}", response_model=List[Experience])
 async def get_experiences(
-    resume_version_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    resume_version_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all experiences for a resume version"""
     try:
-        return db.get_experiences(resume_version_id)
+        return db.get_experiences(resume_version_id, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{experience_id}", response_model=Experience)
 async def get_experience(
-    experience_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    experience_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get specific experience by ID"""
     try:
-        experience = db.get_experience(experience_id)
+        experience = db.get_experience(experience_id, current_user.id)
         if not experience:
             raise HTTPException(status_code=404, detail="Experience not found")
         return experience
@@ -68,13 +103,14 @@ async def get_experience(
 
 @router.put("/{experience_id}", response_model=Experience)
 async def update_experience(
-    experience_id: str,
+    experience_id: int,
     update_data: ExperienceUpdate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update experience entry"""
     try:
-        experience = db.update_experience(experience_id, update_data)
+        experience = db.update_experience(experience_id, update_data, current_user.id)
         if not experience:
             raise HTTPException(status_code=404, detail="Experience not found")
         return experience
@@ -86,12 +122,13 @@ async def update_experience(
 
 @router.delete("/{experience_id}")
 async def delete_experience(
-    experience_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    experience_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Delete experience entry and all its achievements"""
     try:
-        success = db.delete_experience(experience_id)
+        success = db.delete_experience(experience_id, current_user.id)
         if not success:
             raise HTTPException(status_code=404, detail="Experience not found")
         return {"message": "Experience deleted successfully"}
@@ -103,12 +140,13 @@ async def delete_experience(
 
 @router.get("/resume/{resume_version_id}/with-achievements")
 async def get_experiences_with_achievements(
-    resume_version_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    resume_version_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get experiences with their achievements for a resume version"""
     try:
-        return db.get_experiences_with_achievements(resume_version_id)
+        return db.get_experiences_with_achievements(resume_version_id, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -116,9 +154,10 @@ async def get_experiences_with_achievements(
 # Achievement endpoints
 @router.post("/{experience_id}/achievements", response_model=Achievement)
 async def create_achievement(
-    experience_id: str,
+    experience_id: int,
     achievement: AchievementCreateRequest,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new achievement for an experience"""
     try:
@@ -128,31 +167,33 @@ async def create_achievement(
             achievement_text=achievement.achievement_text,
             order_index=achievement.order_index
         )
-        return db.create_achievement(achievement_data)
+        return db.create_achievement(achievement_data, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{experience_id}/achievements", response_model=List[Achievement])
 async def get_achievements(
-    experience_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    experience_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all achievements for an experience"""
     try:
-        return db.get_achievements(experience_id)
+        return db.get_achievements(experience_id, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/achievements/{achievement_id}", response_model=Achievement)
 async def get_achievement(
-    achievement_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    achievement_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get specific achievement by ID"""
     try:
-        achievement = db.get_achievement(achievement_id)
+        achievement = db.get_achievement(achievement_id, current_user.id)
         if not achievement:
             raise HTTPException(status_code=404, detail="Achievement not found")
         return achievement
@@ -164,13 +205,14 @@ async def get_achievement(
 
 @router.put("/achievements/{achievement_id}", response_model=Achievement)
 async def update_achievement(
-    achievement_id: str,
+    achievement_id: int,
     update_data: AchievementUpdate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update achievement"""
     try:
-        achievement = db.update_achievement(achievement_id, update_data)
+        achievement = db.update_achievement(achievement_id, update_data, current_user.id)
         if not achievement:
             raise HTTPException(status_code=404, detail="Achievement not found")
         return achievement
@@ -182,12 +224,13 @@ async def update_achievement(
 
 @router.delete("/achievements/{achievement_id}")
 async def delete_achievement(
-    achievement_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    achievement_id: int,
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Delete achievement"""
     try:
-        success = db.delete_achievement(achievement_id)
+        success = db.delete_achievement(achievement_id, current_user.id)
         if not success:
             raise HTTPException(status_code=404, detail="Achievement not found")
         return {"message": "Achievement deleted successfully"}

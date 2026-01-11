@@ -8,12 +8,31 @@ export default function RegisterPage() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Implement actual registration logic
-        console.log('Registering with:', { name, email, password })
-        router.push('/login')
+        setError('')
+
+        try {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                }),
+            })
+
+            if (response.ok) {
+                router.push('/login')
+            } else {
+                const errorData = await response.json()
+                setError(errorData.detail || 'Failed to register')
+            }
+        } catch (error) {
+            setError('An error occurred. Please try again.')
+        }
     }
 
     return (
@@ -27,6 +46,7 @@ export default function RegisterPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                     <form className="space-y-6" onSubmit={handleRegister}>
+                        {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                                 Name

@@ -15,6 +15,7 @@ from app.api.experiences import router as experiences_router
 from app.api.ai_extract import router as ai_extract_router
 from app.api.resume_import import router as resume_import_router
 from app.api.llm_proxy import router as llm_proxy_router
+from app.api.auth import router as auth_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -29,8 +30,8 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=False,  # Set to False when using allow_origins=["*"]
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -39,6 +40,7 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api/v1", tags=["health"])
 app.include_router(edit_router, prefix="/api/v1", tags=["edit"])
 app.include_router(export_router, prefix="/api/v1", tags=["export"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 
 # AI-powered features
 app.include_router(ai_extract_router, tags=["ai"])
@@ -130,18 +132,6 @@ app.openapi = custom_openapi
 @app.get("/")
 async def root():
     return {"message": "Resume Editor API v2.0 - Now with AI-powered features!"}
-
-# Manual CORS handler for OPTIONS requests
-@app.options("/{path:path}")
-async def options_handler(path: str):
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
 
 if __name__ == "__main__":
     import uvicorn

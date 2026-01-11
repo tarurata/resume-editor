@@ -5,16 +5,15 @@ Multi-company resume management
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional, Dict, Any
-from database.database import DatabaseService
-from database.models import ResumeVersion, ResumeVersionCreate, ResumeVersionUpdate
+from app.database.database import get_db, DatabaseService
+from app.models.user import User
+from app.core.security import get_current_user
+
+from app.models.resume import ResumeVersion, ResumeVersionCreate, ResumeVersionUpdate
 from pydantic import BaseModel, ValidationError
 import json
 
 router = APIRouter()
-
-# Dependency to get database service
-def get_database_service():
-    return DatabaseService()
 
 def validate_resume_data(resume_data) -> Dict[str, Any]:
     """Validate resume data JSON structure"""
@@ -73,13 +72,13 @@ class ResumeVersionResponse(ResumeVersion):
 
 class SetActiveVersionRequest(BaseModel):
     """Request model for setting active version"""
-    version_id: str
+    version_id: int
 
 @router.post("/", response_model=ResumeVersion, status_code=201)
 async def create_resume_version(
-    user_id: str,
     resume_version_data: ResumeVersionCreate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new resume version for a specific company"""
     try:
@@ -89,33 +88,66 @@ async def create_resume_version(
         # Update the resume data with validated/cleaned data (keep as dict)
         resume_version_data.resume_data = validated_data
         
-        result = db.create_resume_version(resume_version_data, user_id)
+        result = db.create_resume_version(resume_version_data, current_user.id)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.get("/user/{user_id}", response_model=List[ResumeVersion])
+@router.get("/", response_model=List[ResumeVersion])
 async def get_resume_versions(
-    user_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all resume versions for a user"""
+    try:
+        versions = db.get_resume_versions(current_user.id)
+        return versions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.get("/user/{user_id}", response_model=List[ResumeVersion])
+async def get_resume_versions_for_user(
+    user_id: str,
+    db: DatabaseService = Depends(get_db)
+):
+    """Get all resume versions for a specific user ID (for M1 demo)"""
     try:
         versions = db.get_resume_versions(user_id)
         return versions
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
+@router.get("/user/{user_id}/{version_id}", response_model=ResumeVersion)
+async def get_resume_version_for_user(
+    user_id: str,
+    version_id: str,
+    db: DatabaseService = Depends(get_db)
+):
+    """Get a specific resume version by ID for a specific user ID (for M1 demo)"""
+    try:
+        version = db.get_resume_version(version_id, user_id)
+        if not version:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Resume version with ID {version_id} not found for user {user_id}"
+            )
+        return version
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 @router.get("/{version_id}", response_model=ResumeVersion)
 async def get_resume_version(
     version_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get a specific resume version by ID"""
     try:
-        version = db.get_resume_version(version_id)
+        version = db.get_resume_version(version_id, current_user.id)
         if not version:
             raise HTTPException(
                 status_code=404,
@@ -127,11 +159,41 @@ async def get_resume_version(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
+@router.put("/user/{user_id}/{version_id}", response_model=ResumeVersion)
+async def update_resume_version_for_user(
+    user_id: str,
+    version_id: str,
+    update_data: ResumeVersionUpdate,
+    db: DatabaseService = Depends(get_db)
+):
+    """Update a resume version for a specific user ID (for M1 demo)"""
+    try:
+        # Validate resume data if it's being updated
+        if hasattr(update_data, 'resume_data') and update_data.resume_data:
+            validated_data = validate_resume_data(update_data.resume_data)
+            # Convert back to dict for storage (database expects dict)
+            update_data.resume_data = validated_data
+        
+        result = db.update_resume_version(version_id, update_data, user_id)
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Resume version with ID {version_id} not found for user {user_id}"
+            )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        
 @router.put("/{version_id}", response_model=ResumeVersion)
 async def update_resume_version(
     version_id: str,
     update_data: ResumeVersionUpdate,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update a resume version"""
     try:
@@ -141,7 +203,7 @@ async def update_resume_version(
             # Convert back to dict for storage (database expects dict)
             update_data.resume_data = validated_data
         
-        result = db.update_resume_version(version_id, update_data)
+        result = db.update_resume_version(version_id, update_data, current_user.id)
         if not result:
             raise HTTPException(
                 status_code=404,
@@ -158,11 +220,12 @@ async def update_resume_version(
 @router.delete("/{version_id}", status_code=204)
 async def delete_resume_version(
     version_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Delete a resume version"""
     try:
-        success = db.delete_resume_version(version_id)
+        success = db.delete_resume_version(version_id, current_user.id)
         if not success:
             raise HTTPException(
                 status_code=404,
@@ -177,16 +240,16 @@ async def delete_resume_version(
 @router.post("/{version_id}/activate", response_model=dict)
 async def set_active_resume_version(
     version_id: str,
-    user_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Set a resume version as active (deactivate others for the user)"""
     try:
-        success = db.set_active_resume_version(version_id, user_id)
+        success = db.set_active_resume_version(version_id, current_user.id)
         if not success:
             raise HTTPException(
                 status_code=404,
-                detail=f"Resume version with ID {version_id} not found for user {user_id}"
+                detail=f"Resume version with ID {version_id} not found for user {current_user.id}"
             )
         return {"message": f"Resume version {version_id} set as active", "success": True}
     except HTTPException:
@@ -194,19 +257,18 @@ async def set_active_resume_version(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.get("/user/{user_id}/active", response_model=ResumeVersion)
+@router.get("/active", response_model=ResumeVersion)
 async def get_active_resume_version(
-    user_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Get the currently active resume version for a user"""
     try:
-        versions = db.get_resume_versions(user_id)
-        active_version = next((v for v in versions if v.is_active), None)
+        active_version = db.get_active_resume_version(current_user.id)
         if not active_version:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active resume version found for user {user_id}"
+                detail=f"No active resume version found for user {current_user.id}"
             )
         return active_version
     except HTTPException:
@@ -218,19 +280,20 @@ async def get_active_resume_version(
 async def copy_experiences_to_version(
     version_id: str,
     source_version_id: str,
-    db: DatabaseService = Depends(get_database_service)
+    db: DatabaseService = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Copy experiences from one resume version to another"""
     try:
-        # Verify both resume versions exist
-        source_version = db.get_resume_version(source_version_id)
+        # Verify both resume versions exist and belong to the user
+        source_version = db.get_resume_version(source_version_id, current_user.id)
         if not source_version:
             raise HTTPException(
                 status_code=404,
                 detail=f"Source resume version with ID {source_version_id} not found"
             )
         
-        target_version = db.get_resume_version(version_id)
+        target_version = db.get_resume_version(version_id, current_user.id)
         if not target_version:
             raise HTTPException(
                 status_code=404,

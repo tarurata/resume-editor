@@ -134,8 +134,9 @@ export const resumeVersionApi = {
     },
 
     // Get all resume versions for user
-    async getAll(): Promise<ResumeVersion[]> {
-        const response = await apiRequest<ResumeVersion[]>(`/resume-versions/`)
+    async getAll(userId?: string): Promise<ResumeVersion[]> {
+        const endpoint = userId ? `/resume-versions/user/${userId}` : `/resume-versions/`
+        const response = await apiRequest<ResumeVersion[]>(endpoint)
 
         if (!response.data) {
             throw new ApiError('Failed to fetch resume versions', response.status)
@@ -145,8 +146,9 @@ export const resumeVersionApi = {
     },
 
     // Get specific resume version
-    async getById(versionId: string): Promise<ResumeVersion> {
-        const response = await apiRequest<ResumeVersion>(`/resume-versions/${versionId}`)
+    async getById(versionId: string, userId?: string): Promise<ResumeVersion> {
+        const endpoint = userId ? `/resume-versions/user/${userId}/${versionId}` : `/resume-versions/${versionId}`
+        const response = await apiRequest<ResumeVersion>(endpoint)
 
         if (!response.data) {
             throw new ApiError('Failed to fetch resume version', response.status)
@@ -326,14 +328,17 @@ export const pdfExportApi = {
                 'Content-Type': 'application/json',
             }
 
-            if (typeof window  !== 'undefined') { 
+            if (typeof window  !== 'undefined') {
                 const token = localStorage.getItem('jwt_Token')
                 if (token) {
                     defaultHeaders['Authorization'] = `Bearer ${token}`
                 }
-
+            } // Moved closing brace here
             const response = await fetch(url, {
                 method: 'POST',
+                headers: {
+                    ...defaultHeaders,
+                },
                 body: JSON.stringify({
                     html_content: htmlContent,
                     filename: filename || 'document.pdf',

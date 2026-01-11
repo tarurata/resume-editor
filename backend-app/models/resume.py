@@ -1,6 +1,7 @@
 from typing import List, Optional, Literal, Dict, Set
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+import json
 
 
 class DateRange(BaseModel):
@@ -19,8 +20,8 @@ class DateRange(BaseModel):
     @field_validator('start', 'end')
     @classmethod
     def validate_date_format(cls, v):
-        if v is None:
-            return v
+        if v is None or v == '':
+            return None
         import re
         if not re.match(r'^\d{4}-\d{2}$', v):
             raise ValueError('Date must be in YYYY-MM format')
@@ -59,7 +60,7 @@ class ExperienceEntry(BaseModel):
         description="End date in YYYY-MM format, null for current position",
         example=None
     )
-    bullets: List[str] = Field(
+    achievements: List[str] = Field(
         ...,
         description="Array of achievement/description bullets",
         min_items=1,
@@ -70,7 +71,7 @@ class ExperienceEntry(BaseModel):
         ]
     )
 
-    @field_validator('bullets')
+    @field_validator('achievements')
     @classmethod
     def validate_bullets(cls, v):
         for bullet in v:
@@ -83,8 +84,8 @@ class ExperienceEntry(BaseModel):
     @field_validator('startDate', 'endDate')
     @classmethod
     def validate_date_format(cls, v):
-        if v is None:
-            return v
+        if v is None or v == '':
+            return None
         import re
         if not re.match(r'^\d{4}-\d{2}$', v):
             raise ValueError('Date must be in YYYY-MM format')
@@ -104,7 +105,7 @@ class SkillSubsection(BaseModel):
         ...,
         description="Array of skills in this subsection",
         min_items=1,
-        max_items=20,
+        max_items=50,
         example=["JavaScript", "TypeScript", "Python"]
     )
 
@@ -172,7 +173,6 @@ class Resume(BaseModel):
     experience: List[ExperienceEntry] = Field(
         ...,
         description="Array of work experience entries",
-        min_items=1,
         example=[
             {
                 "role": "Senior Software Engineer",
@@ -180,17 +180,16 @@ class Resume(BaseModel):
                 "location": "San Francisco, CA",
                 "startDate": "2021-03",
                 "endDate": None,
-                "bullets": [
+                "achievements": [
                     "Led development of microservices architecture serving 1M+ daily active users",
                     "Improved application performance by 40% through code optimization and caching strategies"
                 ]
             }
         ]
     )
-    skills: List['SkillSubsection'] = Field(
-        ...,
+    skills: Optional[List['SkillSubsection']] = Field(
+        None,
         description="Array of skill subsections with flexible category names",
-        min_items=1,
         example=[
             {"name": "Programming Languages", "skills": ["JavaScript", "TypeScript", "Python"]},
             {"name": "Frameworks", "skills": ["React", "Node.js", "Express"]},
@@ -205,21 +204,44 @@ class Resume(BaseModel):
     @field_validator('skills')
     @classmethod
     def validate_skills(cls, v):
-        if len(v) == 0:
-            raise ValueError("At least one skill subsection is required")
-        
+        if v is None:
+            return None
+
         # Check for unique subsection names
-        subsection_names = [subsection.name for subsection in v]
+        subsection_names = [subsection.name for subsection in v if hasattr(subsection, 'name')]
         if len(set(subsection_names)) != len(subsection_names):
             raise ValueError("Skill subsection names must be unique")
         
         # Validate each subsection
         for subsection in v:
-            if len(subsection.name.strip()) == 0:
+            if hasattr(subsection, 'name') and len(subsection.name.strip()) == 0:
                 raise ValueError("Skill subsection names cannot be empty")
         
         return v
 
+
+class ResumeVersion(BaseModel):
+    id: str = Field(..., description="Unique identifier for the resume version")
+    user_id: str = Field(..., description="The user this resume version belongs to")
+    company_name: str = Field(..., description="Company name for this version")
+    company_email: Optional[str] = Field(None, description="Company email for this version")
+    company_url: Optional[str] = Field(None, description="Company website URL")
+    job_title: str = Field(..., description="Job title for this version")
+    job_description: Optional[str] = Field(None, description="Job description for this version")
+    resume_data: Resume = Field(..., description="The actual resume data")
+    is_active: bool = Field(False, description="Is this the active resume version?")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
+    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+
+    class Config:
+        orm_mode = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            'resume_data': lambda v: v.json() if isinstance(v, Resume) else v
+        }
+        json_deserializers = {
+            'resume_data': lambda v: Resume.parse_raw(v) if isinstance(v, str) else v
+        }
 
 # API Request/Response Models
 
@@ -396,3 +418,22 @@ class StrategyEditResponse(BaseModel):
 
 # Forward reference resolution
 EditResponse.model_rebuild()
+
+
+class ResumeVersionCreate(BaseModel):
+    company_name: str
+    company_email: Optional[str] = None
+    company_url: Optional[str] = None
+    job_title: str
+    job_description: Optional[str] = None
+    resume_data: Resume
+    is_active: bool = True
+
+class ResumeVersionUpdate(BaseModel):
+    company_name: Optional[str] = None
+    company_email: Optional[str] = None
+    company_url: Optional[str] = None
+    job_title: Optional[str] = None
+    job_description: Optional[str] = None
+    resume_data: Optional[Resume] = None
+    is_active: Optional[bool] = None
