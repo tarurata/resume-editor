@@ -59,7 +59,7 @@ async function apiRequest<T>(
 
     // Retrieve JWT token  from localStorage
     if (typeof window !== 'undefined') { // Ensure localStorage is only accessed on the client side
-        const token = localStorage.getItem('jwt_Token')
+        const token = localStorage.getItem('token')
         if (token) {
             defaultHeaders['Authorization'] = `Bearer ${token}`
         }
@@ -329,7 +329,7 @@ export const pdfExportApi = {
             }
 
             if (typeof window  !== 'undefined') {
-                const token = localStorage.getItem('jwt_Token')
+                const token = localStorage.getItem('token')
                 if (token) {
                     defaultHeaders['Authorization'] = `Bearer ${token}`
                 }

@@ -12,15 +12,14 @@ BEGIN TRANSACTION;
 CREATE TABLE users_new (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
     email TEXT UNIQUE NOT NULL,
-    full_name TEXT NOT NULL,
     hashed_password TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Copy data from the old table to the new table
-INSERT INTO users_new (id, email, full_name, hashed_password, created_at, updated_at)
-SELECT id, email, full_name, hashed_password, created_at, updated_at
+INSERT INTO users_new (id, email, hashed_password, created_at, updated_at)
+SELECT id, email, hashed_password, created_at, updated_at
 FROM users;
 
 -- Drop the old table

@@ -7,8 +7,9 @@ import { ResumeService } from '@/lib/resumeService'
 import { Resume } from '@/types/resume'
 import { syncExperiencesToDatabase } from '@/lib/experiencesApi'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import withAuth from '@/lib/withAuth'
 
-export default function NewResumePage() {
+function NewResumePage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -403,3 +404,4 @@ export default function NewResumePage() {
         </div>
     )
 }
+export default withAuth(NewResumePage)

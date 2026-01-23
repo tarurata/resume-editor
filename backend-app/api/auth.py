@@ -12,6 +12,7 @@ def register_user(user: UserCreate, db: DatabaseService = Depends(get_db)):
     db_user = db.get_user_by_email(email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    print("!!!!!!!!!", user.password, "!!!!!!!!!! test2")
     hashed_password = get_password_hash(user.password)
     db_user = db.create_user(user=user, hashed_password=hashed_password)
     return db_user

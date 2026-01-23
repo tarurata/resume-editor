@@ -24,6 +24,7 @@ import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import { URLStateManager } from '@/components/editor/URLStateManager'
 import { SectionNavigation } from '@/components/editor/SectionNavigation'
 import { URLState, parseURLParams, paramsToState, validateURLParams } from '@/lib/urlUtils'
+import withAuth from '@/lib/withAuth'
 
 export interface EditorState {
     selectedSection: SectionId | null
@@ -49,7 +50,7 @@ interface EditorPageProps {
     }
 }
 
-export default function EditorPage({ params }: EditorPageProps) {
+function EditorPage({ params }: EditorPageProps) {
     const { resumeId } = params
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -1407,3 +1408,4 @@ export default function EditorPage({ params }: EditorPageProps) {
         </main>
     )
 }
+export default withAuth(EditorPage)

@@ -308,25 +308,9 @@ class AchievementUpdate(BaseModel):
 class User(BaseModel):
     """User model for database representation"""
     id: Optional[str] = None
-    user_id: str
     email: str
     hashed_password: str
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-
-class UserCreate(BaseModel):
-    """User model for registration"""
-    email: str
-    password: str
-
-
-class User(BaseModel):
-    """User model for database representation"""
-    id: Optional[str] = None
-    user_id: str
-    email: str
-    hashed_password: str
+    is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

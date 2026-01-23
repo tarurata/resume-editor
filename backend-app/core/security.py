@@ -4,13 +4,11 @@ from typing import Any, Union, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 
 from app.core.config import settings
 from app.database.database import DatabaseService, get_db
 from app.models.user import User
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
@@ -32,11 +30,14 @@ def create_access_token(
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
+    return hashed_password.decode('utf-8')
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: DatabaseService = Depends(get_db)) -> User:

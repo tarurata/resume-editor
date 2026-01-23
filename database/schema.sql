@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
     email TEXT UNIQUE NOT NULL,
-    full_name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

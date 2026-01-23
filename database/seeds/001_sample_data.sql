@@ -3,8 +3,8 @@
 -- Created: 2024-01-15
 
 -- Insert sample user
-INSERT OR IGNORE INTO users (id, email, full_name) VALUES 
-('sample_user', 'john.doe@example.com', 'John Doe');
+INSERT OR IGNORE INTO users (id, email) VALUES 
+('sample_user', 'john.doe@example.com');
 
 -- Insert sample personal info
 INSERT OR IGNORE INTO personal_info (id, user_id, full_name, email, phone, location, linkedin_url, portfolio_url) VALUES 

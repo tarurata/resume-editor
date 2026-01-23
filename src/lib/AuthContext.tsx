@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 
 interface AuthContextType {
   isAuthenticated: boolean
+  loading: boolean
   login: (token: string) => void
   logout: () => void
 }
@@ -11,27 +12,50 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
+  // On initial load, check localStorage for a token.
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      setIsAuthenticated(true)
+    try {
+      const storedToken = localStorage.getItem('token')
+      if (storedToken) {
+        setToken(storedToken)
+      }
+    } catch (error) {
+      console.error('Failed to read token from localStorage', error)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  const login = (token: string) => {
-    localStorage.setItem('token', token)
-    setIsAuthenticated(true)
+  // Listen for storage changes from other tabs/windows.
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'token') {
+        setToken(event.newValue)
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
+  const login = (newToken: string) => {
+    localStorage.setItem('token', newToken)
+    setToken(newToken)
   }
 
   const logout = () => {
     localStorage.removeItem('token')
-    setIsAuthenticated(false)
+    setToken(null)
   }
 
+  const isAuthenticated = !!token
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
