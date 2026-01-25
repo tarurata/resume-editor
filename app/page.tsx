@@ -1,62 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { WizardState } from '../src/types/resume'
-import StartScreen from '../src/components/wizard/StartScreen'
-import TextParserBackend from '../src/components/wizard/TextParserBackend'
-import SectionEditor from '../src/components/wizard/SectionEditor'
-import ValidationScreen from '../src/components/wizard/ValidationScreen'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
-    const [wizardState, setWizardState] = useState<WizardState>({
-        step: 'start',
-        parsedSections: [],
-        resume: {},
-        validationErrors: []
-    })
+  const router = useRouter()
 
-    const handleWizardUpdate = (updates: Partial<WizardState>) => {
-        setWizardState(prev => ({ ...prev, ...updates }))
+  useEffect(() => {
+    // We assume the token is stored in localStorage with the key 'token'.
+    // This is a common convention, but it's based on the assumption that
+    // the `login` function from your AuthContext saves it this way.
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      router.push('/resumes')
+    } else {
+      router.push('/login')
     }
+  }, [router])
 
-    const renderCurrentStep = () => {
-        switch (wizardState.step) {
-            case 'start':
-                return <StartScreen onNext={handleWizardUpdate} />
-            case 'parse':
-                return <TextParserBackend
-                    pastedText={wizardState.pastedText!}
-                    onNext={handleWizardUpdate}
-                    userId="default-user"
-                />
-            case 'edit':
-                return <SectionEditor
-                    parsedSections={wizardState.parsedSections}
-                    resume={wizardState.resume}
-                    pastedText={wizardState.pastedText}
-                    onNext={handleWizardUpdate}
-                />
-            case 'validate':
-                return <ValidationScreen
-                    resume={wizardState.resume as any}
-                    validationErrors={wizardState.validationErrors}
-                    onNext={handleWizardUpdate}
-                />
-            default:
-                return <StartScreen onNext={handleWizardUpdate} />
-        }
-    }
-
-    return (
-        <main className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-4 py-8">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
-                        Resume Editor
-                    </h1>
-                    {renderCurrentStep()}
-                </div>
-            </div>
-        </main>
-    )
+  // Render nothing or a loading indicator while the redirect is happening
+  return null
 }
