@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 30
     
     class Config:
-        env_file = ".env.local"
+        env_file = "/.env.local"
         env_file_encoding = "utf-8"
         case_sensitive = False
 
