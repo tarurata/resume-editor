@@ -73,23 +73,29 @@ class DatabaseService:
                 return PersonalInfo(**dict(row))
             return None
     
-    def update_personal_info(self, user_id: str, personal_info: PersonalInfo) -> PersonalInfo:
+    def update_personal_info(self, user_id: str, update_data: Dict[str, Any]) -> PersonalInfo:
         """Update personal information"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            personal_info.updated_at = datetime.now()
             
-            cursor.execute("""
-                UPDATE personal_info 
-                SET full_name = ?, email = ?, phone = ?, location = ?, 
-                    linkedin_url = ?, portfolio_url = ?, updated_at = ?
-                WHERE user_id = ?
-            """, (
-                personal_info.full_name, personal_info.email, personal_info.phone,
-                personal_info.location, personal_info.linkedin_url, personal_info.portfolio_url,
-                personal_info.updated_at, user_id
-            ))
+            update_fields = []
+            values = []
+            
+            for key, value in update_data.items():
+                update_fields.append(f"{key} = ?")
+                values.append(value)
+
+            if not update_fields:
+                return self.get_personal_info(user_id)
+
+            update_fields.append("updated_at = ?")
+            values.append(datetime.now())
+            values.append(user_id)
+            
+            query = f"UPDATE personal_info SET {', '.join(update_fields)} WHERE user_id = ?"
+            cursor.execute(query, values)
             conn.commit()
+            
             return self.get_personal_info(user_id)
     
     def delete_personal_info(self, user_id: str) -> bool:

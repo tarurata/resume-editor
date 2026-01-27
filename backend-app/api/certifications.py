@@ -31,8 +31,8 @@ class CertificationUpdate(BaseModel):
 
 class CertificationResponse(BaseModel):
     """Response model for certification"""
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     name: str
     issuer: str
     issue_date: str
@@ -71,7 +71,7 @@ async def get_certifications_list(
 
 @router.get("/{certification_id}", response_model=CertificationResponse)
 async def get_certification(
-    certification_id: int,
+    certification_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -91,7 +91,7 @@ async def get_certification(
 
 @router.put("/{certification_id}", response_model=CertificationResponse)
 async def update_certification(
-    certification_id: int,
+    certification_id: str,
     certification_data: CertificationUpdate,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -114,7 +114,7 @@ async def update_certification(
 
 @router.delete("/{certification_id}", status_code=204)
 async def delete_certification(
-    certification_id: int,
+    certification_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

@@ -6,6 +6,7 @@ CRUD operations for personal information
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
 from app.database.database import get_db, DatabaseService
+from app.database.models import PersonalInfo
 from app.models.user import User
 from app.core.security import get_current_user
 from pydantic import BaseModel
@@ -33,8 +34,8 @@ class PersonalInfoUpdate(BaseModel):
 
 class PersonalInfoResponse(BaseModel):
     """Response model for personal information"""
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     full_name: str
     email: str
     phone: Optional[str] = None
@@ -62,7 +63,11 @@ async def create_personal_info(
             )
         
         # Create new personal info
-        result = db.create_personal_info(current_user.id, personal_info_data)
+        personal_info = PersonalInfo(
+            user_id=current_user.id,
+            **personal_info_data.dict()
+        )
+        result = db.create_personal_info(personal_info)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -91,7 +96,8 @@ async def update_personal_info(
 ):
     """Update personal information for a user"""
     try:
-        result = db.update_personal_info(current_user.id, personal_info_data)
+        update_data = personal_info_data.dict(exclude_unset=True)
+        result = db.update_personal_info(current_user.id, update_data)
         if not result:
             raise HTTPException(
                 status_code=404,

@@ -33,8 +33,8 @@ class EducationUpdate(BaseModel):
 
 class EducationResponse(BaseModel):
     """Response model for education"""
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     degree: str
     institution: str
     field_of_study: str
@@ -74,7 +74,7 @@ async def get_education_list(
 
 @router.get("/{education_id}", response_model=EducationResponse)
 async def get_education(
-    education_id: int,
+    education_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -94,7 +94,7 @@ async def get_education(
 
 @router.put("/{education_id}", response_model=EducationResponse)
 async def update_education(
-    education_id: int,
+    education_id: str,
     education_data: EducationUpdate,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -117,7 +117,7 @@ async def update_education(
 
 @router.delete("/{education_id}", status_code=204)
 async def delete_education(
-    education_id: int,
+    education_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
