@@ -9,8 +9,10 @@ import ValidationScreen from '@/components/wizard/ValidationScreen'
 
 import { ResumeService } from '@/lib/resumeService'
 import withAuth from '@/lib/withAuth'
+import { useAuth } from '@/lib/AuthContext'
 
 function NewResumePage() {
+    const { userId } = useAuth()
     const [wizardState, setWizardState] = useState<WizardState>({
         step: 'start',
         parsedSections: [],
@@ -30,7 +32,7 @@ function NewResumePage() {
                 return <TextParserBackend
                     pastedText={wizardState.pastedText!}
                     onNext={handleWizardUpdate}
-                    userId="default-user"
+                    userId={userId}
                 />
             case 'edit':
                 return <SectionEditor

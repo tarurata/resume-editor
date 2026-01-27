@@ -1,7 +1,7 @@
 import { resumeVersionApi, ApiError } from './api'
 import { Resume } from '@/types/resume'
 
-const TEMP_USER_ID = 'temp-user-m1'
+
 
 // Extended ResumeVersion interface for the UI
 export interface ResumeListItem {
@@ -33,7 +33,7 @@ export class ResumeService {
     }): Promise<ResumeListItem[]> {
         try {
             // Try to fetch from API first
-            const resumes = await resumeVersionApi.getAll(TEMP_USER_ID)
+            const resumes = await resumeVersionApi.getAll()
 
             // Convert to ResumeListItem format
             let resumeList: ResumeListItem[] = resumes.map(resume => ({
@@ -244,7 +244,7 @@ export class ResumeService {
     // Get a specific resume by ID
     static async getResumeById(id: string): Promise<ResumeListItem | null> {
         try {
-            const resume = await resumeVersionApi.getById(id, TEMP_USER_ID)
+            const resume = await resumeVersionApi.getById(id)
             return {
                 id: resume.id,
                 company_name: resume.company_name,

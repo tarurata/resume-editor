@@ -9,26 +9,19 @@ from app.database.database import get_db, DatabaseService
 from app.models.user import User
 from app.core.security import get_current_user
 
-from app.models.resume import ResumeVersion, ResumeVersionCreate, ResumeVersionUpdate
+from app.models.resume import Resume, ResumeVersion, ResumeVersionCreate, ResumeVersionUpdate
 from pydantic import BaseModel, ValidationError
 import json
 
 router = APIRouter()
 
-def validate_resume_data(resume_data) -> Dict[str, Any]:
-    """Validate resume data JSON structure"""
+def validate_resume_data(resume_data: Resume) -> Dict[str, Any]:
+    """Validate resume data from a Resume model"""
+    if not isinstance(resume_data, Resume):
+        raise TypeError(f"Expected a Resume model, but got {type(resume_data).__name__}")
+
     try:
-        # Handle both string and dict inputs
-        if isinstance(resume_data, str):
-            data = json.loads(resume_data)
-        elif isinstance(resume_data, dict):
-            data = resume_data
-        else:
-            raise ValueError("Resume data must be a JSON string or dictionary")
-        
-        # Check required fields
-        if not isinstance(data, dict):
-            raise ValueError("Resume data must be a JSON object")
+        data = resume_data.model_dump()
         
         # Validate experience data structure
         if 'experience' in data and isinstance(data['experience'], list):
@@ -60,10 +53,11 @@ def validate_resume_data(resume_data) -> Dict[str, Any]:
                         raise ValueError(f"Experience entry {i} 'bullets' must be an array")
         
         return data
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in resume data: {str(e)}")
     except Exception as e:
-        raise ValueError(f"Resume data validation failed: {str(e)}")
+        # Re-raise with a more specific message if it's a validation issue.
+        if isinstance(e, (ValidationError, TypeError)):
+             raise e
+        raise ValueError(f"Resume data validation failed during processing: {str(e)}")
 
 # Request/Response models
 class ResumeVersionResponse(ResumeVersion):
