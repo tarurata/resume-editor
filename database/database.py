@@ -136,23 +136,30 @@ class DatabaseService:
             rows = cursor.fetchall()
             return [Education(**dict(row)) for row in rows]
     
-    def update_education(self, education_id: str, user_id: str, education: Education) -> Education:
+    def update_education(self, education_id: str, user_id: str, update_data: Dict[str, Any]) -> Education:
         """Update education entry"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            education.updated_at = datetime.now()
             
-            cursor.execute("""
-                UPDATE education 
-                SET degree = ?, institution = ?, field_of_study = ?, graduation_date = ?,
-                    gpa = ?, location = ?, updated_at = ?
-                WHERE id = ? AND user_id = ?
-            """, (
-                education.degree, education.institution, education.field_of_study,
-                education.graduation_date, education.gpa, education.location,
-                education.updated_at, education_id, user_id
-            ))
+            update_fields = []
+            values = []
+            
+            for key, value in update_data.items():
+                update_fields.append(f"{key} = ?")
+                values.append(value)
+
+            if not update_fields:
+                return self.get_education_by_id(education_id, user_id)
+
+            update_fields.append("updated_at = ?")
+            values.append(datetime.now())
+            values.append(education_id)
+            values.append(user_id)
+            
+            query = f"UPDATE education SET {', '.join(update_fields)} WHERE id = ? AND user_id = ?"
+            cursor.execute(query, values)
             conn.commit()
+            
             return self.get_education_by_id(education_id, user_id)
     
     def delete_education(self, education_id: str, user_id: str) -> bool:

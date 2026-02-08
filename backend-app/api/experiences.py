@@ -7,41 +7,40 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 from app.database.database import get_db, DatabaseService
+from app.database.models import Achievement, AchievementCreate, AchievementUpdate, Experience, ExperienceCreate, ExperienceUpdate
 from app.models.user import User
 from app.core.security import get_current_user
 from pydantic import BaseModel
 
 # Mock models since resume.py is not implemented
-class Achievement(BaseModel):
-    id: int
-    description: str
-    experience_id: int
 
-class AchievementCreate(BaseModel):
-    description: str
 
-class AchievementUpdate(BaseModel):
-    description: Optional[str] = None
+
+
+
 
 class Experience(BaseModel):
-    id: int
-    company_name: str
+    id: str
+    organization: str
     role: str
     start_date: str # Assuming date as string for simplicity
     end_date: Optional[str] = None
     description: Optional[str] = None
-    resume_version_id: int
+    resume_version_id: str
     # achievements: List[Achievement] = [] # Commenting out to avoid complexity
 
 class ExperienceCreate(BaseModel):
-    company_name: str
+    resume_version_id: str
+    organization: str
     role: str
     start_date: str
     end_date: Optional[str] = None
     description: Optional[str] = None
+    location: Optional[str] = None
+    order_index: int = 0
 
 class ExperienceUpdate(BaseModel):
-    company_name: Optional[str] = None
+    organization: Optional[str] = None
     role: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
@@ -72,7 +71,7 @@ async def create_experience(
 
 @router.get("/resume/{resume_version_id}", response_model=List[Experience])
 async def get_experiences(
-    resume_version_id: int,
+    resume_version_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -85,7 +84,7 @@ async def get_experiences(
 
 @router.get("/{experience_id}", response_model=Experience)
 async def get_experience(
-    experience_id: int,
+    experience_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -103,7 +102,7 @@ async def get_experience(
 
 @router.put("/{experience_id}", response_model=Experience)
 async def update_experience(
-    experience_id: int,
+    experience_id: str,
     update_data: ExperienceUpdate,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -122,7 +121,7 @@ async def update_experience(
 
 @router.delete("/{experience_id}")
 async def delete_experience(
-    experience_id: int,
+    experience_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -140,7 +139,7 @@ async def delete_experience(
 
 @router.get("/resume/{resume_version_id}/with-achievements")
 async def get_experiences_with_achievements(
-    resume_version_id: int,
+    resume_version_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -154,7 +153,7 @@ async def get_experiences_with_achievements(
 # Achievement endpoints
 @router.post("/{experience_id}/achievements", response_model=Achievement)
 async def create_achievement(
-    experience_id: int,
+    experience_id: str,
     achievement: AchievementCreateRequest,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -174,7 +173,7 @@ async def create_achievement(
 
 @router.get("/{experience_id}/achievements", response_model=List[Achievement])
 async def get_achievements(
-    experience_id: int,
+    experience_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -187,7 +186,7 @@ async def get_achievements(
 
 @router.get("/achievements/{achievement_id}", response_model=Achievement)
 async def get_achievement(
-    achievement_id: int,
+    achievement_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -205,7 +204,7 @@ async def get_achievement(
 
 @router.put("/achievements/{achievement_id}", response_model=Achievement)
 async def update_achievement(
-    achievement_id: int,
+    achievement_id: str,
     update_data: AchievementUpdate,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -224,7 +223,7 @@ async def update_achievement(
 
 @router.delete("/achievements/{achievement_id}")
 async def delete_achievement(
-    achievement_id: int,
+    achievement_id: str,
     db: DatabaseService = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

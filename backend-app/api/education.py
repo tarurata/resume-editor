@@ -6,6 +6,7 @@ CRUD operations for education entries
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from app.database.database import get_db, DatabaseService
+from app.database.models import Education
 from app.models.user import User
 from app.core.security import get_current_user
 from pydantic import BaseModel
@@ -53,7 +54,8 @@ async def create_education(
 ):
     """Create a new education entry"""
     try:
-        result = db.create_education(user_id=current_user.id, education_data=education_data)
+        education = Education(**education_data.dict())
+        result = db.create_education(current_user.id, education)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -101,11 +103,22 @@ async def update_education(
 ):
     """Update an education entry"""
     try:
-        result = db.update_education(education_id, current_user.id, education_data)
-        if not result:
+        existing_education = db.get_education_by_id(education_id, current_user.id)
+        if not existing_education:
             raise HTTPException(
                 status_code=404,
                 detail=f"Education entry with ID {education_id} not found"
+            )
+
+        update_data = education_data.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(existing_education, key, value)
+        
+        result = db.update_education(education_id, current_user.id, existing_education.dict())
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Education entry with ID {education_id} not found during update"
             )
         return result
     except HTTPException:

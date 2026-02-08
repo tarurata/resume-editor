@@ -93,6 +93,29 @@ def test_education_endpoints():
     else:
         print(f"✗ Error: {response.text}")
 
+    # Test PUT
+    update_data = {"gpa": 3.9}
+    response = requests.put(f"{BASE_URL}/education/{education_id}", json=update_data)
+    print(f"PUT /education/{education_id}: {response.status_code}")
+    if response.status_code == 200:
+        print("✓ Education entry updated successfully")
+        # Check if the GPA was updated
+        response = requests.get(f"{BASE_URL}/education/{education_id}")
+        if response.status_code == 200 and response.json()["gpa"] == 3.9:
+            print("✓ GPA updated correctly")
+        else:
+            print("✗ GPA was not updated correctly")
+    else:
+        print(f"✗ Error: {response.text}")
+
+    # Test DELETE
+    response = requests.delete(f"{BASE_URL}/education/{education_id}")
+    print(f"DELETE /education/{education_id}: {response.status_code}")
+    if response.status_code == 204:
+        print("✓ Education entry deleted successfully")
+    else:
+        print(f"✗ Error: {response.text}")
+
 def test_certifications_endpoints():
     """Test Certifications Management endpoints"""
     print("\nTesting Certifications endpoints...")
