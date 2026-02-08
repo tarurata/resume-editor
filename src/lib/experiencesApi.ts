@@ -63,8 +63,15 @@ async function apiRequest<T>(
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
 
-    const defaultHeaders = {
+    // Retrieve JWT token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+
+    const defaultHeaders: HeadersInit = {
         'Content-Type': 'application/json',
+    }
+
+    if (token) {
+        defaultHeaders['Authorization'] = `Bearer ${token}`
     }
 
     try {
@@ -82,9 +89,10 @@ async function apiRequest<T>(
             console.error('API Error Response:', {
                 status: response.status,
                 statusText: response.statusText,
-                data: data
+                data: data,
             })
-            const errorMessage = data?.detail || `HTTP ${response.status}: ${response.statusText}`
+            const errorMessage =
+                data?.detail || `HTTP ${response.status}: ${response.statusText}`
             throw new ApiError(errorMessage, response.status, data)
         }
 
